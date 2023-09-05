@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import json
 import platform
-
+import random
 import discord
 import pytz
 from colorama import Fore, Style, Back
@@ -39,6 +39,13 @@ gmt3_time = utc_time + datetime.timedelta(hours=3)
 gmt3_time_full = (Back.BLACK + Fore.GREEN + gmt3_time.strftime(
     "%d/%m/%y %H:%M:%S") + Back.RESET + Fore.WHITE + Style.BRIGHT)
 
+def generate_id():
+    # random 7 character string
+    uuid = ""
+    for i in range(7):
+        uuid += random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+    return uuid
+
 
 def generate_channel_id():
     # check for channel named diskord in category named automated
@@ -54,6 +61,13 @@ def generate_channel_id():
                         with open("config.json", "w") as f:
                             json.dump(config, f, indent=4)
                         return diskord_channel_id
+
+
+def get_channel_id():
+    with open("config.json", "r") as f:
+        config = json.load(f)
+        diskord_channel_id = config["diskord_channel_id"]
+    return diskord_channel_id
 
 
 class Client(commands.Bot):
@@ -153,6 +167,22 @@ class Client(commands.Bot):
             await self.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
                                                                  name=f"/help | {str(len(synced))} commands"))
             await asyncio.sleep(10)
+
+    #listen for messages in the channel
+    async def on_message(self, message):
+        channel_id = get_channel_id()
+        if message.channel.id == channel_id:
+            if message.author.id != self.user.id:
+                await message.channel.send("test")
+                # TODO: add file upload detection
+
+                # create new thread
+                thread_name = generate_id()
+                channel = message.channel
+                thread = await channel.create_thread(name=thread_name)
+                # send message to thread and tag server owner
+                server_owner = message.guild.owner
+                await thread.send(f"{server_owner.mention} New file uploaded")
 
 
 client = Client()
