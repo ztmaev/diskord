@@ -57,7 +57,7 @@ async def create_thread(thread_uuid):
 
 
 # Banner
-async def send_banner_embed(thread_url, file_name, file_id, file_type, file_size, chunks_number, chunk_size, file_thumbnail_url,
+async def send_banner_embed(thread_url, thread_id, is_thread, file_name, file_id, file_type, file_size, chunks_number, chunk_size, file_thumbnail_url,
                             filetype_image_url):
     async with aiohttp.ClientSession() as session:
         webhook = Webhook.from_url(get_webhook_url(), session=session)
@@ -74,7 +74,11 @@ async def send_banner_embed(thread_url, file_name, file_id, file_type, file_size
         embed.set_thumbnail(url=filetype_image_url)
         embed.url = thread_url
 
-        await webhook.send(embed=embed, username="Maev's helper",
+        if is_thread:
+            await webhook.send(embed=embed, username="Maev's helper",
+                           avatar_url=webhook_avatar_url, thread=discord.Object(thread_id))
+        else:
+            await webhook.send(embed=embed, username="Maev's helper",
                            avatar_url=webhook_avatar_url)
 
 
@@ -88,6 +92,19 @@ async def send_attachments(files, thread_id):
         await webhook.send(files=upload_list, username="Maev's helper",
                            avatar_url="https://xhost.maev.site/icons/github_logo.png",
                            thread=discord.Object(thread_id))
+
+# aysnc json metadata
+async def send_json_metadata(thread_id, content):
+    async with aiohttp.ClientSession() as session:
+        webhook = Webhook.from_url(get_webhook_url(), session=session)
+        # create json file in metadata folder
+        with open(f"metadata/{thread_id}.json", "w") as f:
+            json.dump(content, f, indent=4)
+        # send json file
+        await webhook.send(file=discord.File(f"metadata/{thread_id}.json"), username="Maev's helper",
+                           avatar_url="https://xhost.maev.site/icons/github_logo.png",
+                           thread=discord.Object(thread_id))
+
 
 # Tests
 # asyncio.run(thread_request())
