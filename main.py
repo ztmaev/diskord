@@ -234,7 +234,9 @@ class Client(commands.Bot):
                                 if message.content.startswith("//end"):
                                     if not end_flag:
                                         # remove duplicates with same name
-                                        # TODO: here
+                                        upload_list = [dict(t) for t in {tuple(d.items()) for d in upload_list}]
+
+
 
 
                                         # write to temp.json
