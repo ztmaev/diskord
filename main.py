@@ -3,7 +3,7 @@ import datetime
 import json
 import platform
 import random
-
+import os
 import discord
 import pytz
 from colorama import Fore, Style, Back
@@ -144,7 +144,7 @@ class Client(commands.Bot):
         # startup extras
         if is_channel:
             generate_channel_id()
-            print(f"{current_time()}{Fore.BLUE} CONFIG:{Fore.YELLOW} Generating channel id" + Fore.RESET)
+            print(f"{current_time()}{Fore.BLUE} CONFIG:{Fore.YELLOW} Channel id saved" + Fore.RESET)
 
             channel_id_local = generate_channel_id()
             # get all webhooks for the channel
@@ -211,6 +211,59 @@ class Client(commands.Bot):
 
                         await message.add_reaction("✅")
                         # await thread.send(f"{server_owner.mention} New file uploaded")
+
+                        # Attachment urls
+                        upload_list = []
+                        end_flag = False
+
+                        while True:
+                            thread_id = thread.id
+                            thread = self.get_channel(thread_id)
+                            async for message in thread.history(limit=100):
+                                for attachment in message.attachments:
+                                    if attachment.url in [i["file_url"] for i in upload_list]:
+                                        continue
+                                    else:
+                                        file_name = attachment.filename
+                                        file_url = attachment.url
+                                        entry = {"file_name": file_name, "file_url": file_url}
+
+                                        upload_list.append(entry)
+                                        await message.add_reaction("✅")
+
+                                if message.content.startswith("//end"):
+                                    if not end_flag:
+
+
+                                        # write to temp.json
+                                        json_path = f"configs/{thread_name}.json"
+
+                                        try:
+                                            with open(json_path, "r") as f:
+                                                pass
+                                        except FileNotFoundError:
+                                            # Create the directory if it doesn't exist
+                                            directory = os.path.dirname(json_path)
+                                            if not os.path.exists(directory):
+                                                os.makedirs(directory)
+
+                                            # Create the JSON file and write an empty array to it
+                                            with open(json_path, "w") as f:
+                                                json.dump([], f, indent=4)
+
+                                        with open(json_path, "r") as f:
+                                            ids_config = json.load(f)
+                                            ids_config.append({"thread_id": thread_id, "thread_name": thread_name,
+                                                               "thread_url": thread_url})
+                                        with open(json_path, "w") as f:
+                                            json.dump(upload_list, f, indent=4)
+
+                                        end_flag = True
+                                    break
+
+
+
+
                     except Exception as e:
                         await message.add_reaction("❌")
                         await message.delete(delay=5)
@@ -219,6 +272,8 @@ class Client(commands.Bot):
 
                 # Embed
                 elif message.embeds:
+                    pass
+                elif message.attachments:
                     pass
                 else:
                     await message.add_reaction("❌")

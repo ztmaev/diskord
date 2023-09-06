@@ -1,5 +1,6 @@
 import asyncio
 import os
+import time
 
 from dep_tests import *
 
@@ -56,6 +57,9 @@ asyncio.run(send_json_metadata(thread_id, content))
 # files
 asyncio.run(send_attachments(files, thread_id))
 
+# end message
+time.sleep(10)
+asyncio.run(send_end_message(thread_id))
 
 # TODO: Webhook edit message
 

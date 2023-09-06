@@ -85,13 +85,21 @@ async def send_banner_embed(thread_url, thread_id, is_thread, file_name, file_id
 # Aattachments
 async def send_attachments(files, thread_id):
     async with aiohttp.ClientSession() as session:
+        #
+        # upload_list = [discord.File(file) for file in files]
+        #
+        # webhook = Webhook.from_url(get_webhook_url(), session=session)
+        # await webhook.send(files=upload_list, username="Maev's helper",
+        #                    avatar_url="https://xhost.maev.site/icons/github_logo.png",
+        #                    thread=discord.Object(thread_id))
 
-        upload_list = [discord.File(file) for file in files]
+        for file in files:
+            webhook = Webhook.from_url(get_webhook_url(), session=session)
+            await webhook.send(file=discord.File(file), username="Maev's helper",
+                               avatar_url="https://xhost.maev.site/icons/github_logo.png",
+                               thread=discord.Object(thread_id))
 
-        webhook = Webhook.from_url(get_webhook_url(), session=session)
-        await webhook.send(files=upload_list, username="Maev's helper",
-                           avatar_url="https://xhost.maev.site/icons/github_logo.png",
-                           thread=discord.Object(thread_id))
+
 
 # aysnc json metadata
 async def send_json_metadata(thread_id, content):
@@ -102,6 +110,14 @@ async def send_json_metadata(thread_id, content):
             json.dump(content, f, indent=4)
         # send json file
         await webhook.send(file=discord.File(f"metadata/{thread_id}.json"), username="Maev's helper",
+                           avatar_url="https://xhost.maev.site/icons/github_logo.png",
+                           thread=discord.Object(thread_id))
+
+# end message to thread
+async def send_end_message(thread_id):
+    async with aiohttp.ClientSession() as session:
+        webhook = Webhook.from_url(get_webhook_url(), session=session)
+        await webhook.send("//end", username="Maev's helper",
                            avatar_url="https://xhost.maev.site/icons/github_logo.png",
                            thread=discord.Object(thread_id))
 
