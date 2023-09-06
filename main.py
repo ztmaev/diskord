@@ -233,6 +233,8 @@ class Client(commands.Bot):
 
                                 if message.content.startswith("//end"):
                                     if not end_flag:
+                                        # remove duplicates with same name
+                                        # TODO: here
 
 
                                         # write to temp.json
