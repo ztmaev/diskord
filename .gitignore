@@ -1,2 +1,3 @@
 venv
-cogs/tests/files/*
+cogs/tests/files/1.txt
+cogs/tests/files/2.txt
