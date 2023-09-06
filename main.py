@@ -3,6 +3,7 @@ import datetime
 import json
 import platform
 import random
+
 import discord
 import pytz
 from colorama import Fore, Style, Back
@@ -15,7 +16,6 @@ try:
     diskord_channel_id = config["diskord_channel_id"]
     webhook_url = config["webhook_url"]
 
-    print(webhook_url, diskord_channel_id)
 except KeyError:
     diskord_channel_id = " "
     webhook_url = " "
@@ -38,6 +38,7 @@ utc_time = datetime.datetime.utcnow()
 gmt3_time = utc_time + datetime.timedelta(hours=3)
 gmt3_time_full = (Back.BLACK + Fore.GREEN + gmt3_time.strftime(
     "%d/%m/%y %H:%M:%S") + Back.RESET + Fore.WHITE + Style.BRIGHT)
+
 
 def generate_id():
     # random 7 character string
@@ -68,6 +69,24 @@ def get_channel_id():
         config = json.load(f)
         diskord_channel_id = config["diskord_channel_id"]
     return diskord_channel_id
+
+
+def save_to_config(thread_id, thread_url, thread_name):
+    config_name = "ids_config.json"
+    # create config if it doesn't exist
+    try:
+        with open(config_name, "r") as f:
+            pass
+    except FileNotFoundError:
+        with open(config_name, "w") as f:
+            json.dump([], f, indent=4)
+
+    # save to config
+    with open(config_name, "r") as f:
+        ids_config = json.load(f)
+        ids_config.append({"thread_id": thread_id, "thread_name": thread_name, "thread_url": thread_url})
+    with open(config_name, "w") as f:
+        json.dump(ids_config, f, indent=4)
 
 
 class Client(commands.Bot):
@@ -168,21 +187,44 @@ class Client(commands.Bot):
                                                                  name=f"/help | {str(len(synced))} commands"))
             await asyncio.sleep(10)
 
-    #listen for messages in the channel
+    # listen for messages in the channel
     async def on_message(self, message):
         channel_id = get_channel_id()
+        channel = message.channel
         if message.channel.id == channel_id:
             if message.author.id != self.user.id:
-                await message.channel.send("test")
-                # TODO: add file upload detection
 
-                # create new thread
-                thread_name = generate_id()
-                channel = message.channel
-                thread = await channel.create_thread(name=thread_name)
-                # send message to thread and tag server owner
-                server_owner = message.guild.owner
-                await thread.send(f"{server_owner.mention} New file uploaded")
+                # get message content
+                content = message.content
+
+                # Thread creation
+                if content.startswith("//thread"):
+                    server_owner = message.guild.owner
+                    try:
+                        thread_name = content.split("//thread ")[1]
+
+                        thread = await channel.create_thread(name=thread_name, type=discord.ChannelType.public_thread)
+                        thread_url = thread.jump_url
+                        thread_id = thread.id
+
+                        save_to_config(thread_id, thread_url, thread_name)
+
+                        await message.add_reaction("✅")
+                        # await thread.send(f"{server_owner.mention} New file uploaded")
+                    except Exception as e:
+                        await message.add_reaction("❌")
+                        await message.delete(delay=5)
+                        print(e)
+
+
+                # Embed
+                elif message.embeds:
+                    pass
+                else:
+                    await message.add_reaction("❌")
+                    await message.delete(delay=5)
+
+                # TODO: add file upload detection
 
 
 client = Client()

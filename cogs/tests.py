@@ -83,8 +83,10 @@ class tests(commands.Cog):
         channel = interaction.channel
         try:
             thread = await channel.create_thread(name=name)
+            thread_url = thread.jump_url
+            thread_id = thread.id
             if thread:
-                await thread.send(f"Hi {interaction.user.mention}! Here is your thread.")
+                await thread.send(f"Hi {interaction.user.mention}! Here is your thread. {thread_url} | {thread_id}")
         except discord.Forbidden:
             embed.add_field(name="Thread", value=f"Could not create thread `{name}`", inline=False)
             await interaction.followup.send(embed=embed)
@@ -115,6 +117,14 @@ class tests(commands.Cog):
         await interaction.followup.send(embed=embed)
         print(f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/delthread {Fore.RESET}")
 
+    # invite command to get an invite link for the bot
+    @app_commands.command(name="invite", description="Get an invite link for the bot")
+    async def invite(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        embed = discord.Embed(title="Invite", color=discord.Color.purple(),timestamp=datetime.datetime.utcnow())
+        embed.add_field(name="Invite link", value="https://discord.com/api/oauth2/authorize?client_id=1141000843072647290&permissions=8&scope=bot", inline=False)
+        await interaction.followup.send(embed=embed)
+        print(f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/invite {Fore.RESET}")
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(tests(client))
