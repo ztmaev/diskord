@@ -1,9 +1,10 @@
 import asyncio
 import datetime
 import json
+import os
 import platform
 import random
-import os
+
 import discord
 import pytz
 from colorama import Fore, Style, Back
@@ -72,7 +73,7 @@ def get_channel_id():
 
 
 def save_to_config(thread_id, thread_url, thread_name):
-    config_name = "ids_config.json"
+    config_name = "temp/ids_config.json"
     # create config if it doesn't exist
     try:
         with open(config_name, "r") as f:
@@ -87,6 +88,65 @@ def save_to_config(thread_id, thread_url, thread_name):
         ids_config.append({"thread_id": thread_id, "thread_name": thread_name, "thread_url": thread_url})
     with open(config_name, "w") as f:
         json.dump(ids_config, f, indent=4)
+
+
+# json cleanup
+def json_cleanup(json_data):
+    cleaned_data = []  # To store the cleaned JSON data
+    encountered_names = set()  # To keep track of encountered "file_name" values
+
+    for item in json_data:
+        file_name = item.get("file_name")
+
+        if file_name not in encountered_names:
+            # If it's a new "file_name," add the item to the cleaned data list
+            cleaned_data.append(item)
+            # Add the "file_name" to the set of encountered values
+            encountered_names.add(file_name)
+
+    return cleaned_data
+
+
+def save_upload_data(upload_list, thread_id, thread_name, thread_url):
+    # print number of files
+    print(f"{current_time()}{Fore.BLUE} {len(upload_list)} files uploaded in thread"+Fore.YELLOW+f"[{thread_name}]" + Fore.RESET)
+    json_path = f"temp/configs/{thread_name}.json"
+    temp_json_path = f"temp/configs/temp/{thread_name}.json"
+
+    try:
+        with open(json_path, "r") as f:
+            pass
+    except FileNotFoundError:
+        # Create the directory if it doesn't exist
+        directory = os.path.dirname(json_path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            # create a temps subdirectory in the directory
+            os.makedirs(f"{directory}/temp")
+
+        # Create the JSON file and write an empty array to it
+        with open(json_path, "w") as f:
+            json.dump([], f, indent=4)
+
+    with open(json_path, "r") as f:
+        ids_config = json.load(f)
+        ids_config.append({"thread_id": thread_id, "thread_name": thread_name,
+                           "thread_url": thread_url})
+
+    # with open(json_path, "w") as f:
+    #     json.dump(upload_list, f, indent=4)
+
+    # combine json files
+    # add upload_list to "files" key in data_json.json
+    with open(temp_json_path, "r") as f:
+        data_json = json.load(f)
+        data_json["files"] = upload_list
+
+    with open(json_path, "w") as f:
+        json.dump(data_json, f, indent=4)
+
+    # delete temp json file
+    os.remove(temp_json_path)
 
 
 class Client(commands.Bot):
@@ -144,7 +204,7 @@ class Client(commands.Bot):
         # startup extras
         if is_channel:
             generate_channel_id()
-            print(f"{current_time()}{Fore.BLUE} CONFIG:{Fore.YELLOW} Channel id saved" + Fore.RESET)
+            print(f"{current_time()}{Fore.BLUE} CONFIG:{Fore.GREEN} Channel id saved" + Fore.RESET)
 
             channel_id_local = generate_channel_id()
             # get all webhooks for the channel
@@ -209,14 +269,18 @@ class Client(commands.Bot):
 
                         save_to_config(thread_id, thread_url, thread_name)
 
-                        await message.add_reaction("✅")
+                        # await message.add_reaction("✅")
                         # await thread.send(f"{server_owner.mention} New file uploaded")
 
                         # Attachment urls
                         upload_list = []
                         end_flag = False
+                        chunks_number = 0
 
                         while True:
+                            if end_flag:
+                                break
+
                             thread_id = thread.id
                             thread = self.get_channel(thread_id)
                             async for message in thread.history(limit=100):
@@ -229,46 +293,38 @@ class Client(commands.Bot):
                                         entry = {"file_name": file_name, "file_url": file_url}
 
                                         upload_list.append(entry)
-                                        await message.add_reaction("✅")
+                                        # await message.add_reaction("✅")
 
-                                if message.content.startswith("//end"):
-                                    if not end_flag:
-                                        # remove duplicates with same name
-                                        # TODO: here
+                                    # download metadata json from attachment named {thread_name}.json and get 'chunks' number
+                                    if file_name == f"{thread_name}.json":
+                                        file_path = f"temp/configs/temp/{thread_name}.json"
+                                        # check if temp directory exists and create it if it doesn't
+                                        directory = os.path.dirname(file_path)
+                                        if not os.path.exists(directory):
+                                            os.makedirs(directory)
 
+                                        await attachment.save(file_path)
+                                        with open(file_path, "r") as f:
+                                            config = json.load(f)
+                                            chunks_number = config["chunks_number"]
 
-                                        # write to temp.json
-                                        json_path = f"configs/{thread_name}.json"
+                                            # print("c1",chunks_number)
 
-                                        try:
-                                            with open(json_path, "r") as f:
-                                                pass
-                                        except FileNotFoundError:
-                                            # Create the directory if it doesn't exist
-                                            directory = os.path.dirname(json_path)
-                                            if not os.path.exists(directory):
-                                                os.makedirs(directory)
+                                upload_list = json_cleanup(upload_list)
+                                # print("c2",chunks_number)
+                                if len(upload_list) == chunks_number + 1 and not end_flag:
+                                    save_upload_data(upload_list, thread_id, thread_name, thread_url)
+                                    embed = discord.Embed(title="Upload saved", color=discord.Color.green())
+                                    #send embed to thread and lock thread to read only
+                                    await thread.send(embed=embed)
+                                    await thread.edit(archived=True)
 
-                                            # Create the JSON file and write an empty array to it
-                                            with open(json_path, "w") as f:
-                                                json.dump([], f, indent=4)
-
-                                        with open(json_path, "r") as f:
-                                            ids_config = json.load(f)
-                                            ids_config.append({"thread_id": thread_id, "thread_name": thread_name,
-                                                               "thread_url": thread_url})
-                                        with open(json_path, "w") as f:
-                                            json.dump(upload_list, f, indent=4)
-
-                                        end_flag = True
+                                    end_flag = True
                                     break
 
-
-
-
                     except Exception as e:
-                        await message.add_reaction("❌")
-                        await message.delete(delay=5)
+                        # await message.add_reaction("❌")
+                        # await message.delete(delay=5)
                         print(e)
 
 
@@ -278,7 +334,7 @@ class Client(commands.Bot):
                 elif message.attachments:
                     pass
                 else:
-                    await message.add_reaction("❌")
+                    await message.add_reaction("🚫")
                     await message.delete(delay=5)
 
                 # TODO: add file upload detection

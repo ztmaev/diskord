@@ -1,0 +1,19 @@
+{
+    "file_name": "unknown.png",
+    "file_id": "57012572-f29f-44c6-9ccc-7b4f7e5b4f5a",
+    "file_type": "png",
+    "file_size": "6.25 KB",
+    "chunks_number": 1,
+    "chunk_size": 1,
+    "filetype_icon_url": "https://xhost.maev.site/icons/allin.png",
+    "files": [
+        {
+            "file_name": "57012572-f29f-44c6-9ccc-7b4f7e5b4f5a.json",
+            "file_url": "https://cdn.discordapp.com/attachments/1150092035945140314/1150092045273288847/57012572-f29f-44c6-9ccc-7b4f7e5b4f5a.json"
+        },
+        {
+            "file_name": "5369cfec-43d3-462d_unknown.png_1.bin",
+            "file_url": "https://cdn.discordapp.com/attachments/1150092035945140314/1150092048758747187/5369cfec-43d3-462d_unknown.png_1.bin"
+        }
+    ]
+}

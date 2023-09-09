@@ -46,7 +46,10 @@ async def thread_request():
         test = "hjddmdk72nd"
         text = f"//thread {test}"
 
-        await webhook.send(text, username="Maev's helper", avatar_url="https://xhost.maev.site/icons/github_logo.png")
+        message = await webhook.send(text, username="Maev's helper", avatar_url="https://xhost.maev.site/icons/github_logo.png", wait=True)
+
+        return message.id
+
 
 
 # send multiple attachments
@@ -66,6 +69,6 @@ async def send_attachments():
                            thread=discord.Object(thread_channel_id))
 
 
-# asyncio.run(thread_request())
+print(asyncio.run(thread_request()))
 # asyncio.run(foo())
-asyncio.run(send_attachments())
+# asyncio.run(send_attachments())

@@ -16,15 +16,6 @@ class help(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
 
-    #cogtest
-    #@app_commands.command(name="coghelp", description="test if cog `help`is working")
-    #async def coghelp(self, interaction: discord.Interaction):
-    #    embed = discord.Embed(title="Working", description="Cog `help` is working", color=discord.Color.red()(),timestamp=datetime.datetime.utcnow())
-    #    await interaction.response.send_message(embed=embed)
-    #    print(f"{gmt3_time_full}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/coghelp {Fore.RESET}")
-
-    #help command to get a list of all commands incliding their description
-    #self.cogslist = ["cogs.misc", "cogs.moderation", "cogs.nsfw", "cogs.technical", "cogs.utility", "cogs.fun",
     @app_commands.command(name="help", description="get a list of all commands")
     async def help(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -33,8 +24,7 @@ class help(commands.Cog):
         bot_avatar = self.client.user.avatar
         embed.set_thumbnail(url=bot_avatar)
         embed.url = "https://ups.maev.site"
-        #embed.add_field(name="NSFW", value="`/cognsfw`", inline=True)
-        #embed.add_field(name="Help", value="`/coghelp`", inline=True)
+
         embed.add_field(name="__NSFW Commands__", value=f"`/nsfwcheck`: Check if an image is NSFW. \n`/nsfwsearch`: Search for NSFW videos across multiple sites. \n`/nsfwvideo [number]`: Request a number of videos. \n`/nsfwvideo cached`: Get a random cached video. \n `/nsfwvideo stats`: Show server stats. \n`/nsfwvideo help`: Show the nsfwvideo help page.", inline=False)
         embed.add_field(name="__Help Commands__", value="`/help`: Show this tab", inline=False)
         if interaction.guild is not None:
@@ -43,8 +33,7 @@ class help(commands.Cog):
             except discord.HTTPException:
                 print("Guild icon not found, skipping thumbnail")
 
-        await message.delete()
-        await interaction.followup.send(embed=embed)
+        await message.edit(content=None, embed=embed)
         print(f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/help {Fore.RESET}")
 
 

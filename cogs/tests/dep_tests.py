@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from datetime import datetime
 
@@ -26,7 +27,7 @@ def get_webhook_url():
 
 
 def fetch_ids_config():
-    with open("../../ids_config.json") as f:
+    with open("../../temp/ids_config.json") as f:
         ids_config = json.load(f)
     return ids_config
 
@@ -52,66 +53,65 @@ async def create_thread(thread_uuid):
         webhook = Webhook.from_url(get_webhook_url(), session=session)
         message_content = f"//thread {thread_uuid}"
 
-        thread_request_message = await webhook.send(message_content, username="Maev's helper",
-                                                    avatar_url="https://xhost.maev.site/icons/github_logo.png")
+        message = await webhook.send(message_content, username="Maev's helper",
+                                     avatar_url="https://xhost.maev.site/icons/github_logo.png", wait=True)
+        # print(message.id)
+        return message.id
 
 
 # Banner
-async def send_banner_embed(thread_url, thread_id, is_thread, file_name, file_id, file_type, file_size, chunks_number, chunk_size, file_thumbnail_url,
-                            filetype_image_url):
+# edit the previous message (create thread)]
+async def send_banner_embed(thread_url, thread_id, file_name, file_id, file_type, file_size, chunks_number, chunk_size,
+                            file_thumbnail_url,
+                            filetype_icon_url, is_thread=False, message_id=None):
     async with aiohttp.ClientSession() as session:
         webhook = Webhook.from_url(get_webhook_url(), session=session)
         embed = discord.Embed(colour=discord.Color.purple(), title="📁 File uploaded", timestamp=current_time(),
                               description=f"""
-                        Filename: `{file_name}`
-                        Id: `{file_id}`
-                        Filetype: `{file_type}`
-                        Filesize: `{file_size}`
-                        Chunks: `{chunks_number}`
-                        Chunk size: `{chunk_size}`
+                        **Filename:** `{file_name}`
+                        **Id:** `{file_id}`
+                        **Filetype:** `{file_type}`
+                        **Filesize:** `{file_size}`
+                        **Chunks:** `{chunks_number}`
+                        **Chunk size:** `{chunk_size}`
                         """)
-        embed.set_image(url=file_thumbnail_url)
-        embed.set_thumbnail(url=filetype_image_url)
+        # embed.set_image(url=file_thumbnail_url)
+        embed.set_thumbnail(url=filetype_icon_url)
         embed.url = thread_url
 
         if is_thread:
             await webhook.send(embed=embed, username="Maev's helper",
-                           avatar_url=webhook_avatar_url, thread=discord.Object(thread_id))
+                               avatar_url=webhook_avatar_url, thread=discord.Object(thread_id))
         else:
-            await webhook.send(embed=embed, username="Maev's helper",
-                           avatar_url=webhook_avatar_url)
+            await webhook.edit_message(message_id=message_id, embed=embed, content=None)
 
 
 # Aattachments
 async def send_attachments(files, thread_id):
     async with aiohttp.ClientSession() as session:
-        #
-        # upload_list = [discord.File(file) for file in files]
-        #
-        # webhook = Webhook.from_url(get_webhook_url(), session=session)
-        # await webhook.send(files=upload_list, username="Maev's helper",
-        #                    avatar_url="https://xhost.maev.site/icons/github_logo.png",
-        #                    thread=discord.Object(thread_id))
-
         for file in files:
             webhook = Webhook.from_url(get_webhook_url(), session=session)
             await webhook.send(file=discord.File(file), username="Maev's helper",
                                avatar_url="https://xhost.maev.site/icons/github_logo.png",
                                thread=discord.Object(thread_id))
 
+        return True
 
 
 # aysnc json metadata
-async def send_json_metadata(thread_id, content):
+async def send_json_metadata(thread_id, file_id, content):
     async with aiohttp.ClientSession() as session:
         webhook = Webhook.from_url(get_webhook_url(), session=session)
         # create json file in metadata folder
-        with open(f"metadata/{thread_id}.json", "w") as f:
+        with open(f"metadata/{file_id}.json", "w") as f:
             json.dump(content, f, indent=4)
         # send json file
-        await webhook.send(file=discord.File(f"metadata/{thread_id}.json"), username="Maev's helper",
+        await webhook.send(file=discord.File(f"metadata/{file_id}.json"), username="Maev's helper",
                            avatar_url="https://xhost.maev.site/icons/github_logo.png",
                            thread=discord.Object(thread_id))
+        # delete json file
+        os.remove(f"metadata/{file_id}.json")
+
 
 # end message to thread
 async def send_end_message(thread_id):
@@ -120,14 +120,3 @@ async def send_end_message(thread_id):
         await webhook.send("//end", username="Maev's helper",
                            avatar_url="https://xhost.maev.site/icons/github_logo.png",
                            thread=discord.Object(thread_id))
-
-
-# Tests
-# asyncio.run(thread_request())
-# asyncio.run(send_banner_embed("jdhdj.png", "636hdb3b2", "zip", "123.74 mbs", "74", "1.67 mbs",
-#                               "https://media.discordapp.net/attachments/1148598158721564834/1148598159858208818/Screenshot_2023-09-05_153451.jpg?width=664&height=341",
-#                               "https://xhost.maev.site/icons/github_logo.png"))
-# asyncio.run(send_attachments())
-
-# print(fetch_ids_config())
-# print(get_thread_info("c386c4db-4b31-4ba6-8ad7-7d6960bef015"))
