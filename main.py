@@ -145,8 +145,7 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
     with open(json_path, "w") as f:
         json.dump(data_json, f, indent=4)
 
-    # delete temp json file
-    os.remove(temp_json_path)
+
 
 
 class Client(commands.Bot):

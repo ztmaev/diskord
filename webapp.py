@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from flask_webhook_bridge import master
 import os
 import uuid
+import threading
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'files/media'
@@ -40,17 +41,32 @@ def upload():
     verify_directories_exist()
     upload_dir = "temp/files/media"
     if request.method == 'POST':
-        file = request.files['file']
+        try:
+            file = request.files['file']
+        except Exception as e:
+            file = None
         if file:
             filename = file.filename
             temp_uuid = generate_temp_uuid()
             uuid_filename = temp_uuid + "_" + filename
             file.save(os.path.join(upload_dir, uuid_filename))
-            flash('File successfully uploaded')
+            # print('File successfully uploaded')
 
-            master(uuid_filename, temp_uuid)
+            # master(uuid_filename, temp_uuid, is_url=False)
+            # run master in thread
+            threading.Thread(target=master, args=(uuid_filename, temp_uuid, False)).start()
 
             return redirect(url_for('index'))
+
+        else:
+            # download from url
+            url = request.form['url']
+            if url:
+                temp_uuid = generate_temp_uuid()
+                master(url, temp_uuid, is_url=True)
+                return redirect(url_for('index'))
+
+
 
         flash('No file uploaded')
         return redirect(url_for('index'))
@@ -61,4 +77,4 @@ def upload():
 
 # init
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=4321)
