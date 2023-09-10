@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import threading
 import requests
 
@@ -212,18 +213,21 @@ def master_is_url(filename, temp_uuid):
 
 
 
-
-
 # master function
 def master(filename, temp_uuid, is_url=False):
     if is_url:
-
-        # print("URL")
+        # master_is_url(filename, temp_uuid)
         threading.Thread(target=master_is_url, args=(filename, temp_uuid)).start()
     else:
-        # print("File")
+        # master_is_file(filename, temp_uuid)
         threading.Thread(target=master_is_file, args=(filename, temp_uuid)).start()
-        # master_is_url(filename, temp_uuid)
+        
 
 
-# master("https://xhost.maev.site/resized/atafp.jpg", "temp_uuid", is_url=True)
+
+if len(sys.argv) >= 3:
+    filename = sys.argv[1]
+    temp_uuid = sys.argv[2]
+    is_url = sys.argv[3]
+
+    master(filename, temp_uuid, False)

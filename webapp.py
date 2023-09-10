@@ -4,11 +4,14 @@ from flask_webhook_bridge import master
 import os
 import uuid
 import threading
+import subprocess
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'files/media'
 secret = "maevisgod"
 app.secret_key = secret
+
+python_script = "flask_webhook_bridge.py"
 
 
 def generate_temp_uuid():
@@ -53,8 +56,8 @@ def upload():
             # print('File successfully uploaded')
 
             # master(uuid_filename, temp_uuid, is_url=False)
-            # run master in thread
-            threading.Thread(target=master, args=(uuid_filename, temp_uuid, False)).start()
+
+            subprocess.call(["python", python_script, uuid_filename, temp_uuid, False])
 
             return redirect(url_for('index'))
 
@@ -63,7 +66,9 @@ def upload():
             url = request.form['url']
             if url:
                 temp_uuid = generate_temp_uuid()
-                master(url, temp_uuid, is_url=True)
+                # master(url, temp_uuid, is_url=True)
+                subprocess.call(["python", python_script, uuid_filename, temp_uuid, True])
+
                 return redirect(url_for('index'))
 
 
