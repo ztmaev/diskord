@@ -1,5 +1,6 @@
 import asyncio
-import threading
+import sys
+
 import requests
 
 from file_management import split_file
@@ -75,8 +76,8 @@ def master_is_file(filename, temp_uuid):
             os.remove(f"temp/files/media/{filename}")
 
         # delete chunks
-        for chunk in chunks:
-            os.remove(chunk)
+        # for chunk in chunks:
+        #     os.remove(chunk)
 
         # create master json
         master_json = {
@@ -98,23 +99,28 @@ def master_is_file(filename, temp_uuid):
         with open(f"db_dir/{file_id}.json", "w") as f:
             json.dump(master_json, f, indent=4)
 
+
 def master_is_url(filename, temp_uuid):
     url = filename
     save_path = f"temp/files/media/{temp_uuid}_{url.split('/')[-1]}"
-    try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
+    while True:
+        if os.path.exists(save_path):
+            break
+        else:
+            try:
+                response = requests.get(url, stream=True)
+                response.raise_for_status()
 
-        with open(save_path, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    file.write(chunk)
+                with open(save_path, 'wb') as file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            file.write(chunk)
 
-        # print(f"Downloaded {url} to {save_path}")
+                print(f"Downloaded {url} to {save_path}")
 
-    except requests.exceptions.RequestException as e:
-        # print(f"Error downloading {url}: {e}")
-        return
+            except requests.exceptions.RequestException as e:
+                print(f"Error downloading {url}: {e}")
+                return
 
     filename = f"{temp_uuid}_{url.split('/')[-1]}"
     # print(filename)
@@ -123,9 +129,10 @@ def master_is_url(filename, temp_uuid):
     original_filename = filename.split(f"{temp_uuid}_", 1)[1]
 
     if os.path.exists(f"temp/files/media/{filename}"):
+        print("File exists")
         # split file
         split_file_data = split_file(f"temp/files/media/{filename}", chunk_size_mb)
-
+        print("Split file")
         # parse
         # file_name = split_file_data['file_name']
         file_name = original_filename
@@ -174,18 +181,16 @@ def master_is_url(filename, temp_uuid):
             "filetype_icon_url": filetype_icon_url,
             "files": chunks
         }
+        print("Sending json metadata")
         asyncio.run(send_json_metadata(thread_id, file_id, content))
 
+        print("Sending attachments")
         # files
         file_upload_check = asyncio.run(send_attachments(chunks, thread_id))
 
         # delete file if uploaded
         if file_upload_check:
             os.remove(f"temp/files/media/{filename}")
-
-        # delete chunks
-        for chunk in chunks:
-            os.remove(chunk)
 
         # create master json
         master_json = {
@@ -207,23 +212,49 @@ def master_is_url(filename, temp_uuid):
         with open(f"db_dir/{file_id}.json", "w") as f:
             json.dump(master_json, f, indent=4)
 
-        #delete file
-        os.remove(f"temp/files/media/{filename}")
-
-
-
-
 
 # master function
 def master(filename, temp_uuid, is_url=False):
+    print("Master")
     if is_url:
-
-        # print("URL")
-        threading.Thread(target=master_is_url, args=(filename, temp_uuid)).start()
+        print("URL")
+        master_is_url(filename, temp_uuid)
+        # threading.Thread(target=master_is_url, args=(filename, temp_uuid)).start()
     else:
-        # print("File")
-        threading.Thread(target=master_is_file, args=(filename, temp_uuid)).start()
+        print("File")
+        master_is_file(filename, temp_uuid)
+        # threading.Thread(target=master_is_file, args=(filename, temp_uuid)).start()
         # master_is_url(filename, temp_uuid)
 
 
-# master("https://xhost.maev.site/resized/atafp.jpg", "temp_uuid", is_url=True)
+# executor
+# get args
+filename = sys.argv[1]
+temp_uuid = sys.argv[2]
+file_url = sys.argv[3]
+if file_url == "url":
+    is_url = True
+else:
+    is_url = False
+
+# run master
+print(f"Running master:{filename},{temp_uuid},{is_url}")
+master(filename, temp_uuid, is_url=is_url)
+
+# Running master:https://xhost.maev.site/resized/atafp.jpg,58cf91c6-f4bf-4798-94df-6a226d0b9526, True
+# Running master:https://xhost.maev.site/resized/atafp.jpg,test1,    True
+
+# executor
+# filename = "https://xhost.maev.site/resized/atafp.jpg"
+# temp_uuid = "58cf91c6-f4bf-4798-94df-6a226d0b9526"
+# file_url = "url"
+# if file_url == "url":
+#     is_url = True
+#     print("URL")
+# else:
+#     is_url = False
+#     print("File")
+#
+# # run master
+# print(f"Running master:{filename},{temp_uuid},{is_url}")
+# master(filename, temp_uuid, is_url=True)

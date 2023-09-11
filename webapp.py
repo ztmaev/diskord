@@ -1,9 +1,10 @@
 # simple page with upload form
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify
-from flask_webhook_bridge import master
 import os
-import uuid
+import subprocess
 import threading
+import uuid
+
+from flask import Flask, render_template, request, redirect, url_for, flash
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'files/media'
@@ -13,6 +14,10 @@ app.secret_key = secret
 
 def generate_temp_uuid():
     return str(uuid.uuid4())[:18]
+
+
+def execute_command(command):
+    subprocess.run(command)
 
 
 def verify_directories_exist():
@@ -54,7 +59,14 @@ def upload():
 
             # master(uuid_filename, temp_uuid, is_url=False)
             # run master in thread
-            threading.Thread(target=master, args=(uuid_filename, temp_uuid, False)).start()
+            # threading.Thread(target=master, args=(uuid_filename, temp_uuid, False)).start()
+
+            file = "flask_webhook_bridge.py"
+
+            # execute
+            command = ["python3", file, uuid_filename, temp_uuid, "file"]
+            # execute
+            subprocess.run(command)
 
             return redirect(url_for('index'))
 
@@ -62,11 +74,20 @@ def upload():
             # download from url
             url = request.form['url']
             if url:
+                filename = url
                 temp_uuid = generate_temp_uuid()
-                master(url, temp_uuid, is_url=True)
+                uuid_filename = temp_uuid + "_" + filename
+                file = "flask_webhook_bridge.py"
+
+                # execute
+                command = ["python3", file, filename, temp_uuid, "url"]
+                # execute
+                # subprocess.run(command)
+                thread = threading.Thread(target=execute_command, args=(command,))
+                thread.start()
+
+                # master(url, temp_uuid, is_url=True)
                 return redirect(url_for('index'))
-
-
 
         flash('No file uploaded')
         return redirect(url_for('index'))

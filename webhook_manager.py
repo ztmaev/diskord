@@ -30,7 +30,7 @@ def fetch_ids_config():
     with open("temp/ids_config.json") as f:
         ids_config = json.load(f)
     # delete file
-    os.remove("temp/ids_config.json")
+    # os.remove("temp/ids_config.json")
     return ids_config
 
 
@@ -90,14 +90,64 @@ async def send_banner_embed(thread_url, thread_id, file_name, file_id, file_type
 
 # Aattachments
 async def send_attachments(files, thread_id):
-    async with aiohttp.ClientSession() as session:
-        for file in files:
-            webhook = Webhook.from_url(get_webhook_url(), session=session)
-            await webhook.send(file=discord.File(file), username="Maev's helper",
-                               avatar_url="https://xhost.maev.site/icons/github_logo.png",
-                               thread=discord.Object(thread_id))
+    # queue system for uploading files
+    queue = []
+    queue_file = "temp/queue.json"
+    if os.path.exists(queue_file):
+        # add thread id to bottom of queue
+        with open(queue_file) as f:
+            queue = json.load(f)
+        queue.append(thread_id)
+        with open(queue_file, "w") as f:
+            json.dump(queue, f)
 
-        return True
+        ##########################################
+
+    else:
+        # create file and add empty list then add the thread id
+        with open(queue_file, "w") as f:
+            json.dump([], f)
+        queue.append(thread_id)
+
+        # add thread id to bottom of queue
+        with open(queue_file) as f:
+            queue = json.load(f)
+        queue.append(thread_id)
+        with open(queue_file, "w") as f:
+            json.dump(queue, f)
+
+        ##########################################
+
+    # check if thread id is first in queue
+    # loop until thread id is first in queue and processed
+    while True:
+        try:
+            with open(queue_file) as f:
+                queue = json.load(f)
+        except Exception as e:
+            print(e)
+            pass
+        if queue[0] == thread_id:
+            print(files)
+            #
+            for file in files:
+                async with aiohttp.ClientSession() as session:
+                    webhook = Webhook.from_url(get_webhook_url(), session=session)
+                    await webhook.send(file=discord.File(file), username="Maev's helper",
+                                       avatar_url="https://xhost.maev.site/icons/github_logo.png",
+                                       thread=discord.Object(thread_id))
+                    # delete file
+                    os.remove(file)
+            # delete thread id from queue
+            with open(queue_file) as f:
+                queue = json.load(f)
+            queue.pop(0)
+            with open(queue_file, "w") as f:
+                json.dump(queue, f)
+            return True
+
+        else:
+            continue
 
 
 # aysnc json metadata
