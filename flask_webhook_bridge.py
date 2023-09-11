@@ -6,7 +6,7 @@ import requests
 from file_management import split_file
 from webhook_manager import *
 
-chunk_size_mb = 1
+chunk_size_mb = 20
 
 
 def master_is_file(filename, temp_uuid):
@@ -116,10 +116,10 @@ def master_is_url(filename, temp_uuid):
                         if chunk:
                             file.write(chunk)
 
-                print(f"Downloaded {url} to {save_path}")
+                # print(f"Downloaded {url} to {save_path}")
 
             except requests.exceptions.RequestException as e:
-                print(f"Error downloading {url}: {e}")
+                # print(f"Error downloading {url}: {e}")
                 return
 
     filename = f"{temp_uuid}_{url.split('/')[-1]}"
@@ -129,10 +129,10 @@ def master_is_url(filename, temp_uuid):
     original_filename = filename.split(f"{temp_uuid}_", 1)[1]
 
     if os.path.exists(f"temp/files/media/{filename}"):
-        print("File exists")
+        # print("File exists")
         # split file
         split_file_data = split_file(f"temp/files/media/{filename}", chunk_size_mb)
-        print("Split file")
+        # print("Split file")
         # parse
         # file_name = split_file_data['file_name']
         file_name = original_filename
@@ -181,10 +181,10 @@ def master_is_url(filename, temp_uuid):
             "filetype_icon_url": filetype_icon_url,
             "files": chunks
         }
-        print("Sending json metadata")
+        # print("Sending json metadata")
         asyncio.run(send_json_metadata(thread_id, file_id, content))
 
-        print("Sending attachments")
+        # print("Sending attachments")
         # files
         file_upload_check = asyncio.run(send_attachments(chunks, thread_id))
 
@@ -215,13 +215,13 @@ def master_is_url(filename, temp_uuid):
 
 # master function
 def master(filename, temp_uuid, is_url=False):
-    print("Master")
+    # print("Master")
     if is_url:
-        print("URL")
+        # print("URL")
         master_is_url(filename, temp_uuid)
         # threading.Thread(target=master_is_url, args=(filename, temp_uuid)).start()
     else:
-        print("File")
+        # print("File")
         master_is_file(filename, temp_uuid)
         # threading.Thread(target=master_is_file, args=(filename, temp_uuid)).start()
         # master_is_url(filename, temp_uuid)
@@ -238,7 +238,7 @@ else:
     is_url = False
 
 # run master
-print(f"Running master:{filename},{temp_uuid},{is_url}")
+# print(f"Running master:{filename},{temp_uuid},{is_url}")
 master(filename, temp_uuid, is_url=is_url)
 
 # Running master:https://xhost.maev.site/resized/atafp.jpg,58cf91c6-f4bf-4798-94df-6a226d0b9526, True

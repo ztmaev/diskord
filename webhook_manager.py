@@ -128,7 +128,7 @@ async def send_attachments(files, thread_id):
             print(e)
             pass
         if queue[0] == thread_id:
-            print(files)
+            # print(files)
             #
             for file in files:
                 async with aiohttp.ClientSession() as session:
