@@ -109,10 +109,10 @@ def json_cleanup(json_data):
 
 def save_upload_data(upload_list, thread_id, thread_name, thread_url):
     # print number of files
-    print(f"{current_time()}{Fore.BLUE} {len(upload_list)} files uploaded in thread"+Fore.YELLOW+f"[{thread_name}]" + Fore.RESET)
+    print(
+        f"{current_time()}{Fore.BLUE} {len(upload_list)} files uploaded in thread" + Fore.YELLOW + f"[{thread_name}]" + Fore.RESET)
     json_path = f"temp/configs/{thread_name}.json"
     temp_json_path = f"temp/configs/temp/{thread_name}.json"
-
     try:
         with open(json_path, "r") as f:
             pass
@@ -138,6 +138,7 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
 
     # combine json files
     # add upload_list to "files" key in data_json.json
+    json_path = f"db_dir/{thread_name}.json"
     with open(temp_json_path, "r") as f:
         data_json = json.load(f)
         data_json["files"] = upload_list
@@ -145,7 +146,12 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
     with open(json_path, "w") as f:
         json.dump(data_json, f, indent=4)
 
+    # delete the temp json files
+    temp_file_1 = f"temp/configs/temp/{thread_name}.json"
+    temp_file_2 = f"temp/configs/{thread_name}.json"
 
+    os.remove(temp_file_1)
+    os.remove(temp_file_2)
 
 
 class Client(commands.Bot):
@@ -314,7 +320,7 @@ class Client(commands.Bot):
                                 if len(upload_list) == chunks_number + 1 and not end_flag:
                                     save_upload_data(upload_list, thread_id, thread_name, thread_url)
                                     embed = discord.Embed(title="Upload saved", color=discord.Color.green())
-                                    #send embed to thread and lock thread to read only
+                                    # send embed to thread and lock thread to read only
                                     await thread.send(embed=embed)
                                     await thread.edit(archived=True)
 

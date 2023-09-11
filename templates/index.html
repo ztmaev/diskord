@@ -9,12 +9,12 @@
 </head>
 <body>
     <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
+        <input type="file" name="file" required>
         <input type="submit" value="Upload">
     </form>
     <form action="/upload" method="post">
         <label for="url">URL</label>
-        <input type="text" name="url" id="url ">
+        <input type="text" name="url" id="url" required>
         <input type="submit" value="Upload">
     </form>
 
