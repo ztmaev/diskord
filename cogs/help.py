@@ -20,13 +20,14 @@ class help(commands.Cog):
     async def help(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         message = await interaction.followup.send(f"sending help...")
-        embed = discord.Embed(title="Help", color=discord.Color.red(),timestamp=datetime.datetime.utcnow())
+        embed = discord.Embed(title="Help", color=discord.Color.purple(),timestamp=datetime.datetime.utcnow())
         bot_avatar = self.client.user.avatar
         embed.set_thumbnail(url=bot_avatar)
-        embed.url = "https://ups.maev.site"
+        embed.url = "https://maev.site"
 
-        embed.add_field(name="__NSFW Commands__", value=f"`/nsfwcheck`: Check if an image is NSFW. \n`/nsfwsearch`: Search for NSFW videos across multiple sites. \n`/nsfwvideo [number]`: Request a number of videos. \n`/nsfwvideo cached`: Get a random cached video. \n `/nsfwvideo stats`: Show server stats. \n`/nsfwvideo help`: Show the nsfwvideo help page.", inline=False)
-        embed.add_field(name="__Help Commands__", value="`/help`: Show this tab", inline=False)
+        embed.add_field(name="__🛡️ Mod Commands__", value=f"`/reset`: Reset the server. (destroys everything!)\n`/clearall`: Clear all messages in the channel", inline=False)
+        embed.add_field(name="__💾 Diskord__", value=f"`/newsetup`: Setup the server for use with `Diskord` or get config.", inline=False)
+        embed.add_field(name="__🧰 Help Commands__", value="`/help`: Show this tab", inline=False)
         if interaction.guild is not None:
             try:
                 embed.set_thumbnail(url=interaction.guild.icon)

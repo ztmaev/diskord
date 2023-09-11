@@ -36,15 +36,6 @@ class setups(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
 
-    # setuptest
-    @app_commands.command(name="cogsetup", description="test if cog `help`is working")
-    async def cogsetup(self, interaction: discord.Interaction):
-        embed = discord.Embed(title="Working", description="Cog `setup` is working", color=discord.Color.purple(),
-                              timestamp=datetime.datetime.utcnow())
-        await interaction.response.send_message(embed=embed)
-        print(
-            f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/cogsetup {Fore.RESET}")
-
     # setup command
     @app_commands.command(name="newsetup", description="Setup server for file storage")
     async def newsetup(self, interaction: discord.Interaction):
@@ -54,14 +45,17 @@ class setups(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         # if exists
-        if discord.utils.get(interaction.guild.categories, name=category_name) and  discord.utils.get(interaction.guild.channels, name=channel_name):
-            embed = discord.Embed(title="⚙️ Server setup", color=discord.Color.purple(),
+        if discord.utils.get(interaction.guild.categories, name=category_name) and discord.utils.get(
+                interaction.guild.channels, name=channel_name):
+            embed = discord.Embed(title="Server setup", color=discord.Color.purple(),
                                   timestamp=datetime.datetime.utcnow())
+            url = "https://maev.site"
+            embed.url = url
             # fetch channel id
             diskord_channel_id = discord.utils.get(interaction.guild.channels, name=channel_name).id
             # fetch/create webhook if not exists
             if discord.utils.get(interaction.guild.channels, name=channel_name).webhooks:
-                #get a list of all webhooks in the channel
+                # get a list of all webhooks in the channel
                 channel_id = diskord_channel_id
                 channel = self.client.get_channel(channel_id)
                 webhooks = await channel.webhooks()
@@ -71,8 +65,7 @@ class setups(commands.Cog):
                 webhook = await channel.create_webhook(name="Maevey")
                 webhook_url = webhook.url
 
-
-            embed.add_field(name="Server setup complete. ", value=f"""
+            embed.add_field(name="🛠️ Server setup complete. ", value=f"""
                                     ✅ Create category `{category_name}`
                                     ✅ Create channel `{channel_name}`
                                     **Channel Id:** {diskord_channel_id}
@@ -82,8 +75,11 @@ class setups(commands.Cog):
             await interaction.followup.send(embed=embed)
         else:
             # start
-            embed = discord.Embed(title="Server setup", color=discord.Color.purple(), timestamp=datetime.datetime.utcnow())
-            embed.add_field(name="Server setup starting... ", value=f"""
+            embed = discord.Embed(title="Server setup", color=discord.Color.purple(),
+                                  timestamp=datetime.datetime.utcnow())
+            url = "https://maev.site"
+            embed.url = url
+            embed.add_field(name="🛠️ Server setup starting... ", value=f"""
                             ❌ Create category `{category_name}`
                             ❌ Create channel `{channel_name}`
                             **Channel Id:** None
@@ -96,9 +92,11 @@ class setups(commands.Cog):
             if discord.utils.get(interaction.guild.categories, name=category_name) is None:
                 guild = interaction.guild
                 category = await guild.create_category(category_name)
-                embed = discord.Embed(title="⚙️ Server setup", color=discord.Color.purple(),
+                embed = discord.Embed(title="Server setup", color=discord.Color.purple(),
                                       timestamp=datetime.datetime.utcnow())
-                embed.add_field(name="Server setup started... ", value=f"""
+                url = "https://maev.site"
+                embed.url = url
+                embed.add_field(name="🛠️ Server setup started... ", value=f"""
                             ✅ Create category `{category_name}`
                             ❌ Create channel `{channel_name}`
                             **Channel Id:** None
@@ -109,15 +107,17 @@ class setups(commands.Cog):
 
             else:
                 category = discord.utils.get(interaction.guild.categories, name=category_name)
-                embed = discord.Embed(title="⚙️ Server setup", color=discord.Color.purple(),
+                embed = discord.Embed(title="⚙Server setup", color=discord.Color.purple(),
                                       timestamp=datetime.datetime.utcnow())
-                embed.add_field(name="Server setup started... ", value=f"""
+                url = "https://maev.site"
+                embed.url = url
+                embed.add_field(name="🛠️ Server setup started... ", value=f"""
                             ✅ Create category `{category_name}`
                             ❌ Create channel `{channel_name}`
                             **Channel Id:** None
                             **Webhook url:** None
                             """, inline=False)
-    #             embed.set_thumbnail(url=self.client.user.avatar)
+                #             embed.set_thumbnail(url=self.client.user.avatar)
                 await interaction.edit_original_response(embed=embed)
 
             if discord.utils.get(interaction.guild.channels, name=channel_name) is None:
@@ -134,15 +134,17 @@ class setups(commands.Cog):
                 print(f"{current_time()}{Fore.BLUE} CONFIG:{Fore.GREEN} Channel id saved" + Fore.RESET)
                 print(f"{current_time()}{Fore.BLUE} CONFIG:{Fore.GREEN} Webhook id saved" + Fore.RESET)
 
-                embed = discord.Embed(title="⚙️ Server setup", color=discord.Color.purple(),
+                embed = discord.Embed(title="Server setup", color=discord.Color.purple(),
                                       timestamp=datetime.datetime.utcnow())
-                embed.add_field(name="Server setup complete. ", value=f"""
+                url = "https://maev.site"
+                embed.url = url
+                embed.add_field(name="🛠️ Server setup complete. ", value=f"""
                             ✅ Create category `{category_name}`
                             ✅ Create channel `{channel_name}`
                             **Channel Id:** {diskord_channel_id}
                             **Webhook url:** {webhook_url}
                             """, inline=False)
-    #             embed.set_thumbnail(url=self.client.user.avatar)
+                #             embed.set_thumbnail(url=self.client.user.avatar)
                 await interaction.edit_original_response(embed=embed)
 
             else:
@@ -151,15 +153,17 @@ class setups(commands.Cog):
                 channel = self.client.get_channel(channel_id)
                 webhooks = await channel.webhooks()
                 webhook_url = webhooks[0].url
-                embed = discord.Embed(title="⚙️ Server setup", color=discord.Color.purple(),
+                embed = discord.Embed(title="Server setup", color=discord.Color.purple(),
                                       timestamp=datetime.datetime.utcnow())
-                embed.add_field(name="Server setup complete. ", value=f"""
+                url = "https://maev.site"
+                embed.url = url
+                embed.add_field(name="🛠️ Server setup complete. ", value=f"""
                             ✅ Create category `{category_name}`
                             ✅ Create channel `{channel_name}`
                             **Channel Id:** {diskord_channel_id}
                             **Webhook url:** {webhook_url}
                             """, inline=False)
-    #             embed.set_thumbnail(url=self.client.user.avatar)
+                #             embed.set_thumbnail(url=self.client.user.avatar)
                 await interaction.edit_original_response(embed=embed)
 
         print(

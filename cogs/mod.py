@@ -1,11 +1,13 @@
-import discord
 import datetime
-from colorama import Fore, Style, Back
-from discord.ext import commands
-from discord import app_commands
 import json
 
-#time in gmt+3
+import discord
+from colorama import Fore, Style, Back
+from discord import app_commands
+from discord.ext import commands
+
+
+# time in gmt+3
 def current_time():
     utc_time = datetime.datetime.utcnow()
     gmt3_time = utc_time + datetime.timedelta(hours=3)
@@ -13,28 +15,26 @@ def current_time():
         "%d/%m/%y %H:%M:%S") + Back.RESET + Fore.WHITE + Style.BRIGHT)
     return gmt3_time_full
 
+
 class mod(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
 
-    #setuptest
-    @app_commands.command(name="cogmod", description="test if cog `mod`is working")
-    async def cogmod(self, interaction: discord.Interaction):
-       embed = discord.Embed(title="Working", description="Cog `mod` is working", color=discord.Color.purple(),timestamp=datetime.datetime.utcnow())
-       await interaction.response.send_message(embed=embed)
-       print(f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/cogmod {Fore.RESET}")
-
-    # setup command
+    # clearall
     @app_commands.command(name="clearall", description="Clear all messages in a channel")
     async def clearall(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         # delete all messages in the channel and get the number of deleted messages
         deleted = await interaction.channel.purge(limit=None)
 
-        embed = discord.Embed(title="Channel Purged", description=f"Cleared ({len(deleted)}) messages", color=discord.Color.purple(),timestamp=datetime.datetime.utcnow())
-        await interaction.followup.send(embed=embed)
+        embed = discord.Embed(title="Channel Purged", description=f"Cleared ({len(deleted)}) messages",
+                              color=discord.Color.purple(), timestamp=datetime.datetime.utcnow())
+        message = await interaction.followup.send(embed=embed)
+        await message.delete(delay=5)
 
-        print(f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/clearall {Fore.RESET}")
+
+        print(
+            f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/clearall {Fore.RESET}")
 
     # reset
     @app_commands.command(name="reset", description="Reset the server")
@@ -62,15 +62,19 @@ class mod(commands.Cog):
             with open("config.json", "w") as f:
                 json.dump(config, f, indent=4)
 
-            embed = discord.Embed(title="Server Reset", description=f"Server has been reset by {interaction.user.mention}", color=discord.Color.purple(),timestamp=datetime.datetime.utcnow())
+            embed = discord.Embed(title="Server Reset",
+                                  description=f"Server has been reset by {interaction.user.mention}",
+                                  color=discord.Color.purple(), timestamp=datetime.datetime.utcnow())
 
             embed.set_thumbnail(url=self.client.user.avatar)
-            await guild.text_channels[0].send(embed=embed, delete_after=10)
+            await guild.text_channels[0].send(embed=embed, delete_after=5)
 
-            print(f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/reset {Fore.RESET}")
+            print(
+                f"{current_time()}{Fore.CYAN} {interaction.user}{Fore.RESET + Fore.WHITE + Style.BRIGHT} used command {Fore.YELLOW}/reset {Fore.RESET}")
         # show errors
         except Exception as e:
             print(e)
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(mod(client))
