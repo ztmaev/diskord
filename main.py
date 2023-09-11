@@ -252,7 +252,7 @@ class Client(commands.Bot):
                                                                  name=f"/help | {str(len(synced))} commands"))
             await asyncio.sleep(10)
 
-    # listen for messages in the channel
+    # listen for messages
     async def on_message(self, message):
         channel_id = get_channel_id()
         channel = message.channel
@@ -314,6 +314,8 @@ class Client(commands.Bot):
                                             chunks_number = config["chunks_number"]
 
                                             # print("c1",chunks_number)
+
+                                # TODO: fix this (monitor thread until all files are uploaded and then save the json)
 
                                 upload_list = json_cleanup(upload_list)
                                 # print("c2",chunks_number)
