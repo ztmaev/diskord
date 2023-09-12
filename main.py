@@ -9,6 +9,7 @@ import discord
 import pytz
 from colorama import Fore, Style, Back
 from discord.ext import commands
+from jsondb import write_to_db
 
 with open("config.json") as f:
     config = json.load(f)
@@ -133,9 +134,6 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
         ids_config.append({"thread_id": thread_id, "thread_name": thread_name,
                            "thread_url": thread_url})
 
-    # with open(json_path, "w") as f:
-    #     json.dump(upload_list, f, indent=4)
-
     # combine json files
     # add upload_list to "files" key in data_json.json
     json_path = f"db_dir/{thread_name}.json"
@@ -145,6 +143,9 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
 
     with open(json_path, "w") as f:
         json.dump(data_json, f, indent=4)
+
+
+    write_to_db(data_json)
 
     # delete the temp json files
     temp_file_1 = f"temp/configs/temp/{thread_name}.json"

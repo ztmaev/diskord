@@ -1,9 +1,9 @@
 # simple page with upload form
+import json
 import os
 import subprocess
 import threading
 import uuid
-import json
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 
@@ -14,12 +14,16 @@ app.config['UPLOAD_FOLDER'] = 'files/media'
 secret = "maevisgod"
 app.secret_key = secret
 
+upload_dir = "temp/files/media"
+webhook_file = "flask_webhook_bridge.py"
+
 
 def generate_temp_uuid():
     return str(uuid.uuid4())[:18]
 
 
 def execute_command(command):
+    # print(command)
     subprocess.run(command)
 
 
@@ -47,7 +51,6 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload():
     verify_directories_exist()
-    upload_dir = "temp/files/media"
     if request.method == 'POST':
         try:
             file = request.files['file']
@@ -64,12 +67,12 @@ def upload():
             # run master in thread
             # threading.Thread(target=master, args=(uuid_filename, temp_uuid, False)).start()
 
-            file = "flask_webhook_bridge.py"
+            # execute
+            command = ["python3", webhook_file, uuid_filename, temp_uuid, "file", owner_id]
+            # execute
+            thread = threading.Thread(target=execute_command, args=(command,))
+            thread.start()
 
-            # execute
-            command = ["python3", file, uuid_filename, temp_uuid, "file", owner_id]
-            # execute
-            subprocess.run(command)
 
             return redirect(url_for('index'))
 
@@ -79,13 +82,11 @@ def upload():
             if url:
                 filename = url
                 temp_uuid = generate_temp_uuid()
-                file = "flask_webhook_bridge.py"
 
                 # execute
-                command = ["python3", file, filename, temp_uuid, "url", owner_id]
+                command = ["python3", webhook_file, filename, temp_uuid, "url", owner_id]
 
                 # execute
-                # subprocess.run(command)
                 thread = threading.Thread(target=execute_command, args=(command,))
                 thread.start()
 
@@ -102,12 +103,12 @@ def upload():
 # url
 @app.route('/url/<path:url>')
 def url(url):
+    verify_directories_exist()
     filename = url
     temp_uuid = generate_temp_uuid()
-    file = "flask_webhook_bridge.py"
 
     # execute
-    command = ["python3", file, filename, temp_uuid, "url", owner_id]
+    command = ["python3", webhook_file, filename, temp_uuid, "url", owner_id]
     # execute
     # subprocess.run(command)
     thread = threading.Thread(target=execute_command, args=(command,))

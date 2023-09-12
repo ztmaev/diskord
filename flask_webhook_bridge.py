@@ -62,6 +62,7 @@ def master_is_file(filename, temp_uuid, owner_id):
             "file_type": file_type,
             "file_size": file_size,
             "chunks_number": chunks_number,
+            "owner_id": owner_id,
             "chunk_size": chunk_size,
             "filetype_icon_url": filetype_icon_url,
             "files": chunks
@@ -99,6 +100,9 @@ def master_is_file(filename, temp_uuid, owner_id):
 
         with open(f"db_dir/{file_id}.json", "w") as f:
             json.dump(master_json, f, indent=4)
+
+        # send end mmessage
+        asyncio.run(send_end_message(thread_id))
 
 
 def master_is_url(filename, temp_uuid, owner_id):
@@ -216,7 +220,6 @@ def master_is_url(filename, temp_uuid, owner_id):
 
         # send end mmessage
         asyncio.run(send_end_message(thread_id))
-
 
 
 # master function
