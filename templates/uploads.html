@@ -1,43 +1,9 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Upload_list</title>
-    <style>
-        *{
-            box-sizing: border-box;
-
-        }
-        body{
-            background-color: #191919;
-            color: #ccc;
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-        }
-        #upload-text{
-            margin-left: 30px;
-            font-size: 40px;
-        }
-        .container{
-            padding: 10px;
-            background: #2a1717;
-            width: 100%;
-            height: 100%;
-            border-radius: 10px;
-            position: relative;
-            bottom: 10px;
-            overflow-y: auto;
+{% extends "base.html" %}
+{% block styles %}
+<style>
+        #uploads-title {
+            margin-bottom: 1rem;
+            margin-left: 20px;
         }
         .list {
             list-style: -moz-ethiopic-numeric;
@@ -50,21 +16,32 @@
             text-decoration: underline;
         }
     </style>
-</head>
-<body>
-    <h1 id="upload-text">Uploads</h1>
-    <div class="container">
-    {% if not uploads or uploads|length == 0 %}
-        <p>No uploads found.</p>
-    {% else %}
-        <ul class="list">
-            {% for upload in uploads %}
-                <li>
-                    <a href="{{upload}}">{{ upload }}</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-        </div>
-</body>
-</html>
+{% endblock %}
+{% block title %}
+<title>Uploads | Diskord</title>
+{% endblock %}
+
+{% block content %}
+<h1 id="uploads-title">Uploads</h1>
+{% if session %}
+{% if not uploads or uploads|length == 0 %}
+<p>No uploads found.</p>
+{% else %}
+<ul class="list">
+    {% for upload in uploads %}
+    <li>
+        <a href="{{ url_for('uploads', file_id=upload["file_id"]) }}">{{ upload["file_name"] }}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% else %}
+<div class="not-logged-in">
+    <h1>Not logged in</h1>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+
+{% endblock %}

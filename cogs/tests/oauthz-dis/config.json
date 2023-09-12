@@ -1,0 +1,7 @@
+{
+  "token": "MTE0MTAwMDg0MzA3MjY0NzI5MA.G1jGag.htRqZBklgFzeIZI1Ka6xhcRLTW77OtEzN7e1VQ",
+  "client_id": 1141000843072647290,
+  "client_secret": "QWVGp6-duEfKk51-cX_fal2Z_EL1GDez",
+  "oauth_uri": "http://localhost:5000/oauth/callback",
+  "oauth_url": "https://discord.com/api/oauth2/authorize?client_id=1141000843072647290&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Foauth%2Fcallback&response_type=code&scope=identify"
+}

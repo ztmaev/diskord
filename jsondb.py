@@ -32,3 +32,4 @@ def write_to_db(json_data):
               (file_id, file_name, file_size, chunks_number, chunk_size, file_type, filetype_icon_url, owner_id, files))
     conn.commit()
     conn.close()
+

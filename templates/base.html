@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    {% block head %}
+
+    {% endblock %}
+
+    {% block title %}
+    <title>Untitled page</title>
+    {% endblock %}
+    {% block styles %}
+
+    {% endblock %}
+    <style>
+        :root {
+            --darker-color: #202225;
+            --dark-color: #2f3136;
+            --accent-color: #00b972;
+            --accent-darker-color: #00643c;
+            --lighter-color: #fff;
+            --light-color: #ccc;
+            --warning-color: #7c0000;
+        }
+
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .flash-messages li {
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .error-flash {
+            background-color: var(--warning-color);
+            color: var(--lighter-color);
+        }
+
+        .success-flash {
+            background-color: var(--accent-color);
+            color: var(--lighter-color);
+        }
+
+        .nav-items ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-items ul li {
+            margin: 0;
+            color: var(--darker-color);
+            background: var(--light-color);
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+        }
+
+        .nav-items ul li a{
+            height: 100%;
+
+            padding: 7px 20px;
+        }
+
+        .nav-items ul .active {
+            background-color: var(--accent-darker-color);
+            color: var(--lighter-color);
+        }
+
+        .nav-items ul .active:hover {
+            background-color: var(--accent-darker-color);
+            color: var(--lighter-color);
+        }
+
+        .nav-items ul li:hover {
+            background-color: var(--accent-color);
+            color: var(--lighter-color);
+        }
+
+        .nav-items ul li a {
+            text-decoration: none;
+            color: inherit;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        * {
+            box-sizing: border-box;
+            /*outline: 1px solid red;*/
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            height: 100vh;
+            background-color: var(--darker-color);
+            color: var(--light-color);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem;
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            height: 60px;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-group {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .profile-group img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-color);
+        }
+
+        .profile-group p {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .profile-btns {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid;
+            border-color: var(--dark-color);
+            background-color: var(--accent-darker-color);
+            color: var(--light-color);
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 500;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .profile-btns:hover {
+            cursor: pointer;
+        }
+
+        .profile-btns i {
+            font-size: 25px;
+        }
+
+        #login-btn {
+            padding: 0;
+        }
+
+        #login-btn i {
+            padding: 5px;
+            height: 40px;
+            width: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #login-btn i:first-child {
+            background: var(--accent-color);
+            color: #2f3136;
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+            border-right: var(--dark-color) 1px solid;
+        }
+
+        #login-btn i:last-child {
+            background: var(--accent-color);
+            color: #2f3136;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border-left: var(--dark-color) 1px solid;
+        }
+
+        #login-btn:hover i:first-child {
+            font-size: 30px;
+        }
+
+        #login-btn:hover i:last-child {
+            background: var(--accent-darker-color);
+            color: var(--lighter-color);
+        }
+
+        #logout-btn:hover {
+            background-color: var(--warning-color);
+            color: var(--lighter-color);
+        }
+
+    </style>
+</head>
+<body>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul class="flash-messages">
+    {% for message in messages %}
+
+    {% if message.startswith('error') %}
+    <li class="error-flash">{{ message[6:] }}</li>
+    {% elif message.startswith('success') %}
+    <li class="success-flash">{{ message[8:] }}</li>
+    {% else %}
+    <li class="info-flash">{{ message }}</li>
+    {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+<nav class="navbar">
+    <div class="left-group">
+        <div class="branding"></div>
+        <div class="nav-items">
+            <ul>
+                <li class="{{ 'active' if request.endpoint == 'index' }}"><a href="/">Home</a></li>
+                <li class="{{ 'active' if request.endpoint == 'uploads_list' }}"><a href="{{url_for('uploads_list')}}">Uploads</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="profile">
+        {% if session %}
+        <div class="profile-group">
+            <img src="{{session.avatar_url}}" alt="">
+            <p>{{session.username}}</p>
+        </div>
+        <a href="/logout" class="profile-btns" id="logout-btn"><i class="bx bx-log-out"></i></a>
+        {% else %}
+        <a href="{{oauth_url}}" class="profile-btns" id="login-btn"><i class='bx bxl-discord'></i><i
+                class="bx bx-log-in"></i></a>
+        {% endif %}
+    </div>
+</nav>
+<div class="content">
+    {% block content %}
+
+    {% endblock %}
+
+</div>
+{% block scripts %}
+
+{% endblock %}
+<script>
+    const flashMessages = document.querySelectorAll('.flash-messages li');
+    flashMessages.forEach((message) => {
+        setTimeout(() => {
+            message.remove();
+        }, 3000);
+    });
+</script>
+</body>
+</html>
