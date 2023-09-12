@@ -302,6 +302,9 @@ class Client(commands.Bot):
 
                                     # download metadata json from attachment named {thread_name}.json and get 'chunks' number
                                     if file_name == f"{thread_name}.json":
+                                        # get message id
+                                        message_id = message.id
+
                                         file_path = f"temp/configs/temp/{thread_name}.json"
                                         # check if temp directory exists and create it if it doesn't
                                         directory = os.path.dirname(file_path)
@@ -309,6 +312,9 @@ class Client(commands.Bot):
                                             os.makedirs(directory)
 
                                         await attachment.save(file_path)
+                                        # delete the message using the message id
+                                        await message.delete()
+
                                         with open(file_path, "r") as f:
                                             config = json.load(f)
                                             chunks_number = config["chunks_number"]
@@ -332,15 +338,20 @@ class Client(commands.Bot):
 
                                 # failsafe [listen for //end message]
                                 if message.content == "//end":
+                                    # get the message id for the //end message
+                                    end_message_id = message.id
+
                                     # check if all files are uploaded
                                     if len(upload_list) == chunks_number + 1 and not end_flag:
                                         save_upload_data(upload_list, thread_id, thread_name, thread_url)
                                         embed = discord.Embed(title="Upload saved", color=discord.Color.green())
                                         # send embed to thread and lock thread to read only
+                                        await thread.delete_messages([discord.Object(id=end_message_id)])
                                         await thread.send(embed=embed)
                                         await thread.edit(archived=True)
 
                                         end_flag = True
+
                                         break
 
                     except Exception as e:

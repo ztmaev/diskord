@@ -77,7 +77,6 @@ def upload():
             if url:
                 filename = url
                 temp_uuid = generate_temp_uuid()
-                uuid_filename = temp_uuid + "_" + filename
                 file = "flask_webhook_bridge.py"
 
                 # execute
@@ -96,6 +95,24 @@ def upload():
     flash('No file uploaded')
     return redirect(url_for('index'))
 
+# url
+@app.route('/url/<path:url>')
+def url(url):
+    filename = url
+    temp_uuid = generate_temp_uuid()
+    file = "flask_webhook_bridge.py"
+
+    # execute
+    command = ["python3", file, filename, temp_uuid, "url"]
+    # execute
+    # subprocess.run(command)
+    thread = threading.Thread(target=execute_command, args=(command,))
+    thread.start()
+
+    # master(url, temp_uuid, is_url=True)
+    return redirect(url_for('index'))
+
+
 # return uploads
 # /uploads/list
 @app.route('/uploads/list')
@@ -113,4 +130,4 @@ def uploads(filename):
 
 # init
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=4321)
+    app.run(debug=False, host="0.0.0.0", port=4321)
