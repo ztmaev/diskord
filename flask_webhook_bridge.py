@@ -212,6 +212,10 @@ def master_is_url(filename, temp_uuid):
         with open(f"db_dir/{file_id}.json", "w") as f:
             json.dump(master_json, f, indent=4)
 
+        # send end mmessage
+        asyncio.run(send_end_message(thread_id))
+
+
 
 # master function
 def master(filename, temp_uuid, is_url=False):

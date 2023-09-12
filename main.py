@@ -318,16 +318,30 @@ class Client(commands.Bot):
                                 # TODO: fix this (monitor thread until all files are uploaded and then save the json)
 
                                 upload_list = json_cleanup(upload_list)
-                                # print("c2",chunks_number)
-                                if len(upload_list) == chunks_number + 1 and not end_flag:
-                                    save_upload_data(upload_list, thread_id, thread_name, thread_url)
-                                    embed = discord.Embed(title="Upload saved", color=discord.Color.green())
-                                    # send embed to thread and lock thread to read only
-                                    await thread.send(embed=embed)
-                                    await thread.edit(archived=True)
 
-                                    end_flag = True
-                                    break
+                                # Save upload data
+                                # if len(upload_list) == chunks_number + 1 and not end_flag:
+                                #     save_upload_data(upload_list, thread_id, thread_name, thread_url)
+                                #     embed = discord.Embed(title="Upload saved", color=discord.Color.green())
+                                #     # send embed to thread and lock thread to read only
+                                #     await thread.send(embed=embed)
+                                #     await thread.edit(archived=True)
+                                #
+                                #     end_flag = True
+                                #     break
+
+                                # failsafe [listen for //end message]
+                                if message.content == "//end":
+                                    # check if all files are uploaded
+                                    if len(upload_list) == chunks_number + 1 and not end_flag:
+                                        save_upload_data(upload_list, thread_id, thread_name, thread_url)
+                                        embed = discord.Embed(title="Upload saved", color=discord.Color.green())
+                                        # send embed to thread and lock thread to read only
+                                        await thread.send(embed=embed)
+                                        await thread.edit(archived=True)
+
+                                        end_flag = True
+                                        break
 
                     except Exception as e:
                         # await message.add_reaction("❌")
