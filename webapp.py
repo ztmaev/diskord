@@ -7,6 +7,8 @@ import json
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 
+owner_id = "12345678"
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'files/media'
 secret = "maevisgod"
@@ -65,7 +67,7 @@ def upload():
             file = "flask_webhook_bridge.py"
 
             # execute
-            command = ["python3", file, uuid_filename, temp_uuid, "file"]
+            command = ["python3", file, uuid_filename, temp_uuid, "file", owner_id]
             # execute
             subprocess.run(command)
 
@@ -80,7 +82,8 @@ def upload():
                 file = "flask_webhook_bridge.py"
 
                 # execute
-                command = ["python3", file, filename, temp_uuid, "url"]
+                command = ["python3", file, filename, temp_uuid, "url", owner_id]
+
                 # execute
                 # subprocess.run(command)
                 thread = threading.Thread(target=execute_command, args=(command,))
@@ -95,6 +98,7 @@ def upload():
     flash('No file uploaded')
     return redirect(url_for('index'))
 
+
 # url
 @app.route('/url/<path:url>')
 def url(url):
@@ -103,7 +107,7 @@ def url(url):
     file = "flask_webhook_bridge.py"
 
     # execute
-    command = ["python3", file, filename, temp_uuid, "url"]
+    command = ["python3", file, filename, temp_uuid, "url", owner_id]
     # execute
     # subprocess.run(command)
     thread = threading.Thread(target=execute_command, args=(command,))
@@ -120,6 +124,7 @@ def uploads_list():
     uploads = os.listdir("db_dir")
     return render_template('uploads.html', uploads=uploads)
 
+
 # return upload json
 # /uploads/<filename>
 @app.route('/uploads/<filename>')
@@ -127,6 +132,7 @@ def uploads(filename):
     with open(f"db_dir/{filename}", "r") as f:
         content = json.load(f)
     return jsonify(content)
+
 
 # init
 if __name__ == '__main__':

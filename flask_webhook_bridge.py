@@ -9,7 +9,7 @@ from webhook_manager import *
 chunk_size_mb = 20
 
 
-def master_is_file(filename, temp_uuid):
+def master_is_file(filename, temp_uuid, owner_id):
     # print(filename)
     # check if file exists
     original_filename = filename.split(f"{temp_uuid}_", 1)[1]
@@ -87,6 +87,7 @@ def master_is_file(filename, temp_uuid):
             "file_size": file_size,
             "chunks_number": chunks_number,
             "chunk_size": chunk_size,
+            "owner_id": owner_id,
             "filetype_icon_url": filetype_icon_url,
             "thread_id": thread_id,
             "thread_url": thread_url,
@@ -100,7 +101,7 @@ def master_is_file(filename, temp_uuid):
             json.dump(master_json, f, indent=4)
 
 
-def master_is_url(filename, temp_uuid):
+def master_is_url(filename, temp_uuid, owner_id):
     url = filename
     save_path = f"temp/files/media/{temp_uuid}_{url.split('/')[-1]}"
     while True:
@@ -178,6 +179,7 @@ def master_is_url(filename, temp_uuid):
             "file_size": file_size,
             "chunks_number": chunks_number,
             "chunk_size": chunk_size,
+            "owner_id": owner_id,
             "filetype_icon_url": filetype_icon_url,
             "files": chunks
         }
@@ -218,15 +220,15 @@ def master_is_url(filename, temp_uuid):
 
 
 # master function
-def master(filename, temp_uuid, is_url=False):
+def master(filename, temp_uuid, owner_id, is_url=False):
     # print("Master")
     if is_url:
         # print("URL")
-        master_is_url(filename, temp_uuid)
+        master_is_url(filename, temp_uuid, owner_id)
         # threading.Thread(target=master_is_url, args=(filename, temp_uuid)).start()
     else:
         # print("File")
-        master_is_file(filename, temp_uuid)
+        master_is_file(filename, temp_uuid, owner_id)
         # threading.Thread(target=master_is_file, args=(filename, temp_uuid)).start()
         # master_is_url(filename, temp_uuid)
 
@@ -236,6 +238,7 @@ def master(filename, temp_uuid, is_url=False):
 filename = sys.argv[1]
 temp_uuid = sys.argv[2]
 file_url = sys.argv[3]
+owner_id = int(sys.argv[4])
 if file_url == "url":
     is_url = True
 else:
@@ -243,7 +246,7 @@ else:
 
 # run master
 # print(f"Running master:{filename},{temp_uuid},{is_url}")
-master(filename, temp_uuid, is_url=is_url)
+master(filename, temp_uuid, owner_id, is_url=is_url)
 
 # Running master:https://xhost.maev.site/resized/atafp.jpg,58cf91c6-f4bf-4798-94df-6a226d0b9526, True
 # Running master:https://xhost.maev.site/resized/atafp.jpg,test1,    True
