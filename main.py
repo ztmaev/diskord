@@ -312,7 +312,7 @@ class Client(commands.Bot):
                                             os.makedirs(directory)
 
                                         await attachment.save(file_path)
-                                        # delete the message using the message id
+
                                         await message.delete()
 
                                         with open(file_path, "r") as f:
