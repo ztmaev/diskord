@@ -6,11 +6,12 @@ import threading
 import time
 import uuid
 
+import mysql.connector
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from zenora import APIClient
-from file_management import merge_files
 
 from config import token, client_secret, redirect_uri, oauth_url
+from file_management import merge_files
 
 client = APIClient(token, client_secret=client_secret)
 app = Flask(__name__)
@@ -23,6 +24,17 @@ webhook_file = "flask_webhook_bridge.py"
 
 db_name = 'test.db'
 admin_ids = ["1135978748689256468"]
+
+
+def get_db():
+    db = mysql.connector.connect(
+        host="arc.maev.site",
+        user="maev",
+        passwd="Alph4",
+        port="3306",
+        database="test"
+    )
+    return db
 
 
 def generate_temp_uuid():
@@ -67,10 +79,11 @@ def save_user(user):
         # update user
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
-        c.execute("UPDATE users SET username=?, discriminator=?, avatar_url=?, bot=?, locale=?, email=?, bio=?, has_mfa=?, verified=? WHERE user_id=?",
-                  (
-                      user["username"], user["discriminator"], user["avatar_url"], user["bot"], user["locale"],
-                      user["email"], user["bio"], user["has_mfa"], user["verified"], user["user_id"]))
+        c.execute(
+            "UPDATE users SET username=?, discriminator=?, avatar_url=?, bot=?, locale=?, email=?, bio=?, has_mfa=?, verified=? WHERE user_id=?",
+            (
+                user["username"], user["discriminator"], user["avatar_url"], user["bot"], user["locale"],
+                user["email"], user["bio"], user["has_mfa"], user["verified"], user["user_id"]))
         conn.commit()
         conn.close()
 
@@ -122,7 +135,6 @@ def index():
             uploads = []
     else:
         uploads = []
-
 
     return render_template("index.html", oauth_url=oauth_url, uploads=uploads)
 
@@ -310,7 +322,6 @@ def uploads_list():
     return render_template('uploads.html', uploads=uploads)
 
 
-
 # return upload json
 # /uploads/<filename>
 @app.route('/uploads/<file_id>')
@@ -375,11 +386,12 @@ def uploads(file_id):
                     "filetype_icon_url": result[6],
                     "files": json.loads(result[8])
                 }
-                #"owner_id": result[7],
+                # "owner_id": result[7],
                 return jsonify(upload)
             else:
                 flash("error_You don't own this file.")
                 return redirect(url_for("index"))
+
 
 # delete upload
 # /uploads/delete/<file_id>
@@ -423,6 +435,7 @@ def uploads_delete(file_id):
             else:
                 flash("error_You don't own this file.")
                 return redirect(url_for("index"))
+
 
 # download
 @app.route('/download/<file_id>')
@@ -499,9 +512,8 @@ def page_not_found(e):
 if __name__ == "__main__":
     app.run(debug=True, port=5000, host="0.0.0.0")
 
-
 # TODO: add file deletion
 # TODO: add notifications
-# TODO: add merging and download
+# TODO: optimise merging and download
 # TODO: load balancing
-
+# TODO: switch to mysql
