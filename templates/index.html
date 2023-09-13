@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block styles %}
 <style>
-    #uploads-title {
-        margin-bottom: 1rem;
-        margin-left: 20px;
-    }
+
+
     .list {
         list-style: -moz-ethiopic-numeric;
     }
-    .list li a{
+
+    .list li a {
         text-decoration: none;
         color: #ccc;
     }
-    .list li a:hover{
+
+    .list li a:hover {
         text-decoration: underline;
     }
 
@@ -28,6 +28,88 @@
         font-weight: 500;
     }
 
+    /*    home forms   */
+    .home-forms {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 3px;
+        border: 1px solid var(--dark-color);
+        border-radius: 5px;
+        justify-content: center;
+
+    }
+
+    .home-forms form {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        align-items: center;
+        background: var(--dark-color);
+        height: 40px;
+        padding: 0 10px;
+    }
+
+    .home-forms form:first-child {
+        border-radius: 5px 0 0 5px;
+    }
+
+    .home-forms form:last-child {
+        border-radius: 0 5px 5px 0;
+    }
+
+
+    /*    upload list   */
+    .upload-list {
+        margin-top: 10px;
+        border: 1px solid var(--dark-color);
+        border-radius: 5px;
+    }
+
+    #uploads-title {
+        width: 100%;
+        background: var(--dark-color);
+        padding: 0;
+        margin: 0;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .list {
+        list-style: -moz-ethiopic-numeric;
+        /*    scroll */
+        margin-top: 0;
+    }
+
+    .list li {
+        display: list-item;
+    }
+
+    .list li div {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        align-items: center;
+        height: 45px;
+    }
+
+    .list li a {
+        background: var(--accent-darker-color);
+        text-decoration: none;
+        color: #ccc;
+        padding: 4px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .list li a:hover {
+        text-decoration: none;
+        background: var(--accent-color);
+        color: var(--lighter-color);
+    }
 
 </style>
 
@@ -38,16 +120,35 @@
 {% endblock %}
 
 {% block content %}
-{% if session %}
-<form action="/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="files[]" required multiple>
-    <input type="submit" value="Upload">
-</form>
-<form action="/upload" method="post">
-    <label for="url">URL</label>
-    <input type="text" name="url" id="url" required>
-    <input type="submit" value="Upload">
-</form>
+<div class="home-forms">
+    {% if session %}
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="files[]" required multiple>
+        <input type="submit" value="Upload">
+    </form>
+    <form action="/upload" method="post">
+        <label for="url">URL</label>
+        <input type="text" name="url" id="url" required>
+        <input type="submit" value="Upload">
+    </form>
+</div>
+
+<div class="upload-list">
+    <h1 id="uploads-title">Uploads</h1>
+    {% if not uploads or uploads|length == 0 %}
+    <p>No uploads found.</p>
+    {% else %}
+    <ol class="list">
+        {% for upload in uploads %}
+        <li>
+            <div><p>{{ upload["file_name"] }}</p><a href="{{ url_for('uploads', file_id=upload['file_id'])}}">json</a><a
+                    href="{{ url_for('download', file_id=upload['file_id'])}}" target="_blank">Download</a><a href="{{ url_for('uploads_delete', file_id=upload['file_id'])}}">Delete</a></div>
+        </li>
+        {% endfor %}
+    </ol>
+    {% endif %}
+
+</div>
 
 
 {% else %}

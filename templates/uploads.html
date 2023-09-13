@@ -1,21 +1,39 @@
 {% extends "base.html" %}
 {% block styles %}
 <style>
-        #uploads-title {
-            margin-bottom: 1rem;
-            margin-left: 20px;
-        }
-        .list {
-            list-style: -moz-ethiopic-numeric;
-        }
-        .list li a{
-            text-decoration: none;
-            color: #ccc;
-        }
-        .list li a:hover{
-            text-decoration: underline;
-        }
-    </style>
+    #uploads-title {
+        margin-bottom: 1rem;
+        margin-left: 20px;
+    }
+
+    .list {
+        list-style: -moz-ethiopic-numeric;
+    }
+
+    .list li {
+        display: list-item;
+    }
+
+    .list li div {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .list li a {
+        background: var(--accent-darker-color);
+        text-decoration: none;
+        color: #ccc;
+        padding: 4px 10px;
+        border-radius: 5px;
+    }
+
+    .list li a:hover {
+        background: var(--accent-color);
+        color: var(--lighter-color);
+    }
+</style>
 {% endblock %}
 {% block title %}
 <title>Uploads | Diskord</title>
@@ -27,13 +45,15 @@
 {% if not uploads or uploads|length == 0 %}
 <p>No uploads found.</p>
 {% else %}
-<ul class="list">
+<ol class="list">
     {% for upload in uploads %}
     <li>
-        <a href="{{ url_for('uploads', file_id=upload["file_id"]) }}">{{ upload["file_name"] }}</a>
+        <div><p>{{ upload["file_name"] }}</p><a href="{{ url_for('uploads', file_id=upload['file_id'])}}">json</a><a
+                href="{{ url_for('download', file_id=upload['file_id'])}}">Download</a><a
+                href="{{ url_for('uploads_delete', file_id=upload['file_id'])}}">Delete</a></div>
     </li>
     {% endfor %}
-</ul>
+</ol>
 {% endif %}
 
 {% else %}

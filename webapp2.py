@@ -3,10 +3,12 @@ import os
 import sqlite3
 import subprocess
 import threading
+import time
 import uuid
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from zenora import APIClient
+from file_management import merge_files
 
 from config import token, client_secret, redirect_uri, oauth_url
 
@@ -47,6 +49,7 @@ def verify_directories_exist():
 
 
 def save_user(user):
+    is_new = False
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users
@@ -70,7 +73,8 @@ def save_user(user):
                       user["email"], user["bio"], user["has_mfa"], user["verified"], user["user_id"]))
         conn.commit()
         conn.close()
-        return
+
+        return is_new
     else:
         # save user
         conn = sqlite3.connect(db_name)
@@ -83,6 +87,9 @@ def save_user(user):
         conn.commit()
         conn.close()
 
+        is_new = True
+        return is_new
+
 
 def get_user_id():
     user_id = session.get("user_id")
@@ -94,7 +101,27 @@ def get_user_id():
 
 @app.route("/")
 def index():
-    return render_template("index.html", oauth_url=oauth_url)
+    user_id = get_user_id()
+    if user_id:
+        # user uploads
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("SELECT * FROM files WHERE owner_id=?", (user_id,))
+        result = c.fetchall()
+        conn.close()
+
+        uploads = []
+        for entry in result:
+            upload = {
+                "file_id": entry[0],
+                "file_name": entry[1]
+            }
+            uploads.append(upload)
+    else:
+        uploads = []
+
+
+    return render_template("index.html", oauth_url=oauth_url, uploads=uploads)
 
 
 @app.route("/oauth/callback")
@@ -132,7 +159,7 @@ def callback():
         "verified": verified
     }
 
-    save_user(user)
+    is_new_user = save_user(user)
 
     session["username"] = username
     session["user_id"] = user_id
@@ -144,7 +171,10 @@ def callback():
     else:
         session["admin"] = False
 
-    flash("success_Logged in successfully as " + username)
+    if is_new_user:
+        flash("success_Welcome to diskord" + username + "!")
+    else:
+        flash("success_Logged in successfully as " + username)
     return redirect(url_for("index"))
 
 
@@ -181,6 +211,7 @@ def upload():
                     command = ["python3", webhook_file, uuid_filename, temp_uuid, "file", owner_id]
                     thread = threading.Thread(target=execute_command, args=(command,))
                     thread.start()
+                    time.sleep(1)
 
             flash('success_Files uploaded successfully')
             return redirect(url_for('index'))
@@ -241,11 +272,7 @@ def uploads_list():
         return redirect(url_for("index"))
 
     user_id = get_user_id()
-    if user_id not in admin_ids:
-        flash("error_You are not allowed to view this page")
-        return redirect(url_for("index"))
-    else:
-        # fetch entries from files table, filename and create a json for each
+    if user_id in admin_ids:
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
         c.execute("SELECT * FROM files")
@@ -262,6 +289,24 @@ def uploads_list():
 
         return render_template('uploads.html', uploads=uploads)
 
+    # user uploads
+    conn = sqlite3.connect(db_name)
+    c = conn.cursor()
+    c.execute("SELECT * FROM files WHERE owner_id=?", (user_id,))
+    result = c.fetchall()
+    conn.close()
+
+    uploads = []
+    for entry in result:
+        upload = {
+            "file_id": entry[0],
+            "file_name": entry[1]
+        }
+        uploads.append(upload)
+
+    return render_template('uploads.html', uploads=uploads)
+
+
 
 # return upload json
 # /uploads/<filename>
@@ -271,33 +316,172 @@ def uploads(file_id):
         flash("error_Log in to view this page.")
         return redirect(url_for("index"))
 
-    try:
+    user_id = get_user_id()
+    if user_id in admin_ids:
+        try:
+            conn = sqlite3.connect(db_name)
+            c = conn.cursor()
+            c.execute("SELECT * FROM files WHERE file_id=?", (file_id,))
+            result = c.fetchall()
+            conn.close()
+
+            uploads = []
+            for entry in result:
+                upload = {
+                    "file_id": entry[0],
+                    "file_name": entry[1],
+                    "file_size": entry[2],
+                    "chunks_number": entry[3],
+                    "chunk_size": entry[4],
+                    "file_type": entry[5],
+                    "filetype_icon_url": entry[6],
+                    "owner_id": entry[7],
+                    "files": json.loads(entry[8])
+                }
+                uploads.append(upload)
+
+            if len(uploads) == 1:
+                return jsonify(uploads[0])
+            else:
+                flash("error_File not found")
+                return redirect(url_for("index"))
+
+        except Exception as e:
+            return "File not found"
+
+    else:
+        # confirm user owns file
+        # fetch file from db
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
         c.execute("SELECT * FROM files WHERE file_id=?", (file_id,))
-        result = c.fetchall()
+        result = c.fetchone()
         conn.close()
 
-        uploads = []
-        for entry in result:
-            upload = {
-                "file_id": entry[0],
-                "file_name": entry[1],
-                "file_size": entry[2],
-                "chunks_number": entry[3],
-                "chunk_size": entry[4],
-                "file_type": entry[5],
-                "filetype_icon_url": entry[6],
-                "owner_id": entry[7],
-                "files": json.loads(entry[8])
-            }
-            uploads.append(upload)
+        if result:
+            # check if user owns file
+            if str(result[7]) == user_id:
+                # user owns file
+                upload = {
+                    "file_id": result[0],
+                    "file_name": result[1],
+                    "file_size": result[2],
+                    "chunks_number": result[3],
+                    "chunk_size": result[4],
+                    "file_type": result[5],
+                    "filetype_icon_url": result[6],
+                    "files": json.loads(result[8])
+                }
+                #"owner_id": result[7],
+                return jsonify(upload)
+            else:
+                flash("error_You don't own this file.")
+                return redirect(url_for("index"))
 
-        return jsonify(uploads)
+# delete upload
+# /uploads/delete/<file_id>
+@app.route('/uploads/delete/<file_id>')
+def uploads_delete(file_id):
+    if "user_id" not in session:
+        flash("error_Log in to view this page.")
+        return redirect(url_for("index"))
 
+    user_id = get_user_id()
+    if user_id in admin_ids:
+        # delete the file from db
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("DELETE FROM files WHERE file_id=?", (file_id,))
+        conn.commit()
+        conn.close()
+        flash("success_File deleted.")
+        return redirect(url_for("index"))
+    else:
+        # check if user owns file
+        # fetch file from db
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+        c.execute("SELECT * FROM files WHERE file_id=?", (file_id,))
+        result = c.fetchone()
+        conn.close()
 
-    except Exception as e:
-        return "File not found"
+        if result:
+            # check if user owns file
+            if str(result[7]) == user_id:
+                # user owns file
+                # delete the file from db
+                conn = sqlite3.connect(db_name)
+                c = conn.cursor()
+                c.execute("DELETE FROM files WHERE file_id=?", (file_id,))
+                conn.commit()
+                conn.close()
+                flash("success_File deleted.")
+                return redirect(url_for("index"))
+            else:
+                flash("error_You don't own this file.")
+                return redirect(url_for("index"))
+
+# download
+@app.route('/download/<file_id>')
+def download(file_id):
+    if "user_id" not in session:
+        flash("error_Log in to view this page.")
+        return redirect(url_for("index"))
+
+    # fetch file from db and create json
+    conn = sqlite3.connect(db_name)
+    c = conn.cursor()
+    c.execute("SELECT * FROM files WHERE file_id=?", (file_id,))
+    result = c.fetchone()
+    conn.close()
+
+    if result:
+        # parse
+        file_id = result[0]
+        file_name = result[1]
+        file_size = result[2]
+        chunks_number = result[3]
+        chunk_size = result[4]
+        file_type = result[5]
+        filetype_icon_url = result[6]
+        owner_id = result[7]
+        files = json.loads(result[8])
+
+        # create json
+        file_info_json = {
+            "file_id": file_id,
+            "file_name": file_name,
+            "file_size": file_size,
+            "chunks_number": chunks_number,
+            "chunk_size": chunk_size,
+            "file_type": file_type,
+            "filetype_icon_url": filetype_icon_url,
+            "owner_id": owner_id,
+            "files": json.loads(result[8])
+        }
+    else:
+        flash("error_File not found")
+        return redirect(url_for("index"))
+
+    # check if user owns file or is admin
+    user_id = get_user_id()
+    if user_id in admin_ids or user_id == str(owner_id):
+        # flash(f"success_Prepairing your file. Please wait...")
+        # merge files
+        file_path = merge_files(file_info_json)
+        # print(file_path)
+
+        if file_path:
+            return send_file(file_path, as_attachment=True)
+        else:
+            flash("error_File not found")
+            return redirect(url_for("index"))
+
+        # threading.Thread(target=merge_files, args=(file_info_json,)).start()
+        # return redirect(url_for("index"))
+    else:
+        flash("error_You don't own this file.")
+        return redirect(url_for("index"))
 
 
 # error
@@ -311,3 +495,10 @@ def page_not_found(e):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000, host="0.0.0.0")
+
+
+# TODO: add file deletion
+# TODO: add notifications
+# TODO: add merging and download
+# TODO: load balancing
+

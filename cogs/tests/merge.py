@@ -22,6 +22,8 @@ def merge_chunks(json_file_path, output_folder):
             for chunk_file in chunks:
                 with open(chunk_file, 'rb') as chunk:
                     output_file.write(chunk.read())
+
+
     except Exception as e:
         print(e)
         return

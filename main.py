@@ -135,6 +135,9 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
                            "thread_url": thread_url})
 
     # combine json files
+    # remove json from upload_list
+    upload_list = [i for i in upload_list if i["file_name"] != f"{thread_name}.json"]
+
     # add upload_list to "files" key in data_json.json
     json_path = f"db_dir/{thread_name}.json"
     with open(temp_json_path, "r") as f:
