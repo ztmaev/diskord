@@ -104,19 +104,22 @@ def index():
     user_id = get_user_id()
     if user_id:
         # user uploads
-        conn = sqlite3.connect(db_name)
-        c = conn.cursor()
-        c.execute("SELECT * FROM files WHERE owner_id=?", (user_id,))
-        result = c.fetchall()
-        conn.close()
+        try:
+            conn = sqlite3.connect(db_name)
+            c = conn.cursor()
+            c.execute("SELECT * FROM files WHERE owner_id=?", (user_id,))
+            result = c.fetchall()
+            conn.close()
 
-        uploads = []
-        for entry in result:
-            upload = {
-                "file_id": entry[0],
-                "file_name": entry[1]
-            }
-            uploads.append(upload)
+            uploads = []
+            for entry in result:
+                upload = {
+                    "file_id": entry[0],
+                    "file_name": entry[1]
+                }
+                uploads.append(upload)
+        except Exception as e:
+            uploads = []
     else:
         uploads = []
 
@@ -172,7 +175,7 @@ def callback():
         session["admin"] = False
 
     if is_new_user:
-        flash("success_Welcome to diskord" + username + "!")
+        flash("success_Welcome to diskord " + username + "!")
     else:
         flash("success_Logged in successfully as " + username)
     return redirect(url_for("index"))
