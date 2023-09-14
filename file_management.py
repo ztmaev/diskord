@@ -95,8 +95,6 @@ def merge_files(file_info_json):
 
     output_dir_name = file_id
 
-    merge_output_folder = "temp/files/out_merged"
-
     # create output folder
     output_folder = os.path.join(merge_output_folder, output_dir_name)
     if not os.path.exists(output_folder):
@@ -133,5 +131,4 @@ def merge_files(file_info_json):
     except Exception as e:
         print(e)
         return
-
 

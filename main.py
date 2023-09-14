@@ -75,6 +75,12 @@ def get_channel_id():
 
 def save_to_config(thread_id, thread_url, thread_name):
     config_name = "temp/ids_config.json"
+    # create temp directory if it doesn't exist
+    directory = os.path.dirname(config_name)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
     # create config if it doesn't exist
     try:
         with open(config_name, "r") as f:
@@ -89,6 +95,8 @@ def save_to_config(thread_id, thread_url, thread_name):
         ids_config.append({"thread_id": thread_id, "thread_name": thread_name, "thread_url": thread_url})
     with open(config_name, "w") as f:
         json.dump(ids_config, f, indent=4)
+
+
 
 
 # json cleanup
@@ -114,6 +122,7 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
         f"{current_time()}{Fore.BLUE} {len(upload_list)} files uploaded in thread" + Fore.YELLOW + f"[{thread_name}]" + Fore.RESET)
     json_path = f"temp/configs/{thread_name}.json"
     temp_json_path = f"temp/configs/temp/{thread_name}.json"
+    thread_json_path = "temp/ids_config.json"
     try:
         with open(json_path, "r") as f:
             pass
@@ -125,7 +134,7 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
             # create a temps subdirectory in the directory
             os.makedirs(f"{directory}/temp")
 
-        # Create the JSON file and write an empty array to it
+        # Create the JSON file and write an empty array to ithttps://discord.com/channels/1141002753754288160/1151661938791677983
         with open(json_path, "w") as f:
             json.dump([], f, indent=4)
 
@@ -139,10 +148,27 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
     upload_list = [i for i in upload_list if i["file_name"] != f"{thread_name}.json"]
 
     # add upload_list to "files" key in data_json.json
+    # create db_dir if it doesn't exist
+    db_dir_path = "db_dir"
+    if not os.path.exists(db_dir_path):
+        os.makedirs(db_dir_path)
+
+
     json_path = f"db_dir/{thread_name}.json"
     with open(temp_json_path, "r") as f:
         data_json = json.load(f)
         data_json["files"] = upload_list
+
+        # add thread info
+        with open(thread_json_path, "r") as f:
+            thread_json = json.load(f)
+            for i in thread_json:
+                if i["thread_name"] == thread_name:
+                    # remove thread_name key
+                    del i["thread_name"]
+                    data_json["thread_info"] = i
+
+
 
     with open(json_path, "w") as f:
         json.dump(data_json, f, indent=4)

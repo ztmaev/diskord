@@ -13,17 +13,17 @@ def generate_temp_uuid():
     return str(uuid.uuid4())[:18]
 
 def verify_directories_exist():
-    if not os.path.exists("files/media"):
-        os.makedirs("files/media")
+    if not os.path.exists("../files/media"):
+        os.makedirs("../files/media")
 
-    if not os.path.exists("files/out_split"):
-        os.makedirs("files/out_split")
+    if not os.path.exists("../files/out_split"):
+        os.makedirs("../files/out_split")
 
-    if not os.path.exists("files/out_merged"):
-        os.makedirs("files/out_merged")
+    if not os.path.exists("../files/out_merged"):
+        os.makedirs("../files/out_merged")
 
-    if not os.path.exists("metadata"):
-        os.makedirs("metadata")
+    if not os.path.exists("../metadata"):
+        os.makedirs("../metadata")
 
 # page
 @app.route('/')

@@ -2,15 +2,33 @@ import json
 import os
 import uuid
 from datetime import datetime
+import websockets
+from config import uri, webhook_avatar_url, webhook_url
 
 import aiohttp
 import discord
 import pytz
 from discord import Webhook
 
-with open("config.json") as f:
-    config = json.load(f)
-webhook_avatar_url = config["webhook_avatar_url"]
+
+#load config
+async def get_thread_info(thread_uuid):
+    try:
+        async with websockets.connect(uri) as websocket:
+            thread_name = thread_uuid
+            query = f"get_config_%_{thread_name}"
+            await websocket.send(query)
+
+            websocket_feedback = await websocket.recv()
+            if websocket_feedback:
+                thread_info = json.loads(websocket_feedback)
+                return thread_info
+            else:
+                return False
+    except Exception as e:
+        # print(e)
+        return False
+
 
 
 def current_time():
@@ -20,9 +38,6 @@ def current_time():
 
 
 def get_webhook_url():
-    with open("config.json") as f:
-        config = json.load(f)
-    webhook_url = config["webhook_url"]
     return webhook_url
 
 

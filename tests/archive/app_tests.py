@@ -5,7 +5,7 @@ from dep_tests import *
 
 # files
 files = []
-files_dir = "files/media"
+files_dir = "../files/media"
 for file in os.listdir(files_dir):
     files.append(f"{files_dir}/{file}")
 

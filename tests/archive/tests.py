@@ -56,7 +56,7 @@ async def thread_request():
 async def send_attachments():
     async with aiohttp.ClientSession() as session:
         files = []
-        files_dir = "files"
+        files_dir = "../files"
         for file in os.listdir(files_dir):
             files.append(f"{files_dir}/{file}")
         thread_channel_id = 1148973528146776084

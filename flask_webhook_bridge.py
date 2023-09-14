@@ -2,11 +2,31 @@ import asyncio
 import sys
 
 import requests
+import websockets
 
 from file_management import split_file
 from webhook_manager import *
+from config import uri
 
 chunk_size_mb = 20
+
+
+async def get_thread_info(thread_uuid):
+    try:
+        async with websockets.connect(uri) as websocket:
+            thread_name = thread_uuid
+            query = f"get_thread_info_%_{thread_name}"
+            await websocket.send(query)
+
+            websocket_feedback = await websocket.recv()
+            if websocket_feedback:
+                thread_info = json.loads(websocket_feedback)
+                return thread_info
+            else:
+                return False
+    except Exception as e:
+        # print(e)
+        return False
 
 
 def master_is_file(filename, temp_uuid, owner_id):
@@ -34,8 +54,8 @@ def master_is_file(filename, temp_uuid, owner_id):
 
         # get thread info
         while True:
-            thread_info = get_thread_info(thread_uuid)
-            if thread_info:
+            thread_info = asyncio.run(get_thread_info(thread_uuid))
+            if thread_info and thread_info["thread_id"]:
                 break
 
         # send banner
@@ -154,8 +174,8 @@ def master_is_url(filename, temp_uuid, owner_id):
 
         # get thread info
         while True:
-            thread_info = get_thread_info(thread_uuid)
-            if thread_info:
+            thread_info = asyncio.run(get_thread_info(thread_uuid))
+            if thread_info and thread_info["thread_id"]:
                 break
 
         # send banner
@@ -228,12 +248,9 @@ def master(filename, temp_uuid, owner_id, is_url=False):
     if is_url:
         # print("URL")
         master_is_url(filename, temp_uuid, owner_id)
-        # threading.Thread(target=master_is_url, args=(filename, temp_uuid)).start()
     else:
         # print("File")
         master_is_file(filename, temp_uuid, owner_id)
-        # threading.Thread(target=master_is_file, args=(filename, temp_uuid)).start()
-        # master_is_url(filename, temp_uuid)
 
 
 # executor
@@ -248,23 +265,4 @@ else:
     is_url = False
 
 # run master
-# print(f"Running master:{filename},{temp_uuid},{is_url}")
 master(filename, temp_uuid, owner_id, is_url=is_url)
-
-# Running master:https://xhost.maev.site/resized/atafp.jpg,58cf91c6-f4bf-4798-94df-6a226d0b9526, True
-# Running master:https://xhost.maev.site/resized/atafp.jpg,test1,    True
-
-# executor
-# filename = "https://xhost.maev.site/resized/atafp.jpg"
-# temp_uuid = "58cf91c6-f4bf-4798-94df-6a226d0b9526"
-# file_url = "url"
-# if file_url == "url":
-#     is_url = True
-#     print("URL")
-# else:
-#     is_url = False
-#     print("File")
-#
-# # run master
-# print(f"Running master:{filename},{temp_uuid},{is_url}")
-# master(filename, temp_uuid, is_url=True)

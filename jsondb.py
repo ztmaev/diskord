@@ -34,7 +34,7 @@ def write_to_db_sqlite(json_data):
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS files
-                    (file_id text, file_name text, file_size text, chunks_number integer, chunk_size integer, file_type text, filetype_icon_url text, owner_id integer, files text)''')
+                    (file_id text, file_name text, file_size text, chunks_number integer, chunk_size integer, file_type text, filetype_icon_url text, owner_id integer, files text, thread_info text)''')
     conn.commit()
     conn.close()
 
@@ -50,12 +50,13 @@ def write_to_db_sqlite(json_data):
     filetype_icon_url = data['filetype_icon_url']
     owner_id = data['owner_id']
     files = json.dumps(data['files'])
+    thread_info = json.dumps(data['thread_info'])
 
     # insert
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
-    c.execute("INSERT INTO files VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-              (file_id, file_name, file_size, chunks_number, chunk_size, file_type, filetype_icon_url, owner_id, files))
+    c.execute("INSERT INTO files VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              (file_id, file_name, file_size, chunks_number, chunk_size, file_type, filetype_icon_url, owner_id, files, thread_info))
     conn.commit()
     conn.close()
 
@@ -79,7 +80,7 @@ def write_to_db_remote(json_data):
     # create table if it doesn't exist
     db = connect_to_db_remote(db_name)
     db.cursor().execute('''CREATE TABLE IF NOT EXISTS files
-                        (file_id text, file_name text, file_size text, chunks_number integer, chunk_size integer, file_type text, filetype_icon_url text, owner_id bigint, files text)''')
+                        (file_id text, file_name text, file_size text, chunks_number integer, chunk_size integer, file_type text, filetype_icon_url text, owner_id bigint, files text, thread_info text)''')
     db.commit()
     db.close()
 
@@ -95,16 +96,17 @@ def write_to_db_remote(json_data):
     filetype_icon_url = data['filetype_icon_url']
     owner_id = int(data['owner_id'])
     files = json.dumps(data['files'])
+    thread_info = json.dumps(data['thread_info'])
 
     # insert
     db = connect_to_db_remote(db_name)
-    db.cursor().execute("INSERT INTO files VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+    db.cursor().execute("INSERT INTO files VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                         (file_id, file_name, file_size, chunks_number, chunk_size, file_type, filetype_icon_url,
-                         owner_id, files))
+                         owner_id, files, thread_info))
     db.commit()
     db.close()
 
 
 def write_to_db(json_data):
-    write_to_db_sqlite(json_data)
+    # write_to_db_sqlite(json_data)
     write_to_db_remote(json_data)

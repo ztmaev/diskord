@@ -58,7 +58,7 @@ def split_file(input_file, output_folder, json_folder, chunk_size_mb):
 
 if __name__ == "__main__":
     input_file_path = "files/media/2.txt"
-    output_folder_path = "files/out_split"
+    output_folder_path = "../files/out_split"
     json_folder = "files/json_data"
     chunk_size_mb = 1
 
