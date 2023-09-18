@@ -11,6 +11,7 @@ import pytz
 from discord import Webhook
 
 
+webhook_username = "Diskord"
 #load config
 async def get_thread_info(thread_uuid):
     try:
@@ -70,8 +71,8 @@ async def create_thread(thread_uuid):
         webhook = Webhook.from_url(get_webhook_url(), session=session)
         message_content = f"//thread {thread_uuid}"
 
-        message = await webhook.send(message_content, username="Maev's helper",
-                                     avatar_url="https://xhost.maev.site/icons/github_logo.png", wait=True)
+        message = await webhook.send(message_content, username=webhook_username,
+                                     avatar_url=webhook_avatar_url, wait=True)
         # print(message.id)
         return message.id
 
@@ -97,7 +98,7 @@ async def send_banner_embed(thread_url, thread_id, file_name, file_id, file_type
         embed.url = thread_url
 
         if is_thread:
-            await webhook.send(embed=embed, username="Maev's helper",
+            await webhook.send(embed=embed, username=webhook_username,
                                avatar_url=webhook_avatar_url, thread=discord.Object(thread_id))
         else:
             await webhook.edit_message(message_id=message_id, embed=embed, content=None)
@@ -148,8 +149,8 @@ async def send_attachments(files, thread_id):
             for file in files:
                 async with aiohttp.ClientSession() as session:
                     webhook = Webhook.from_url(get_webhook_url(), session=session)
-                    await webhook.send(file=discord.File(file), username="Maev's helper",
-                                       avatar_url="https://xhost.maev.site/icons/github_logo.png",
+                    await webhook.send(file=discord.File(file), username=webhook_username,
+                                       avatar_url=webhook_avatar_url,
                                        thread=discord.Object(thread_id))
                     # delete file
                     os.remove(file)
@@ -173,8 +174,8 @@ async def send_json_metadata(thread_id, file_id, content):
         with open(f"temp/metadata/{file_id}.json", "w") as f:
             json.dump(content, f, indent=4)
         # send json file
-        await webhook.send(file=discord.File(f"temp/metadata/{file_id}.json"), username="Maev's helper",
-                           avatar_url="https://xhost.maev.site/icons/github_logo.png",
+        await webhook.send(file=discord.File(f"temp/metadata/{file_id}.json"), username=webhook_username,
+                           avatar_url=webhook_avatar_url,
                            thread=discord.Object(thread_id))
         # delete json file
         os.remove(f"temp/metadata/{file_id}.json")
@@ -184,6 +185,6 @@ async def send_json_metadata(thread_id, file_id, content):
 async def send_end_message(thread_id):
     async with aiohttp.ClientSession() as session:
         webhook = Webhook.from_url(get_webhook_url(), session=session)
-        await webhook.send("//end", username="Maev's helper",
-                           avatar_url="https://xhost.maev.site/icons/github_logo.png",
+        await webhook.send("//end", username=webhook_username,
+                           avatar_url=webhook_avatar_url,
                            thread=discord.Object(thread_id))

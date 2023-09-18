@@ -8,7 +8,7 @@ import discord
 import pytz
 from discord import Webhook
 
-with open("../../config.json") as f:
+with open("../../bot/config.json") as f:
     config = json.load(f)
 webhook_avatar_url = config["webhook_avatar_url"]
 
@@ -20,7 +20,7 @@ def current_time():
 
 
 def get_webhook_url():
-    with open("../../config.json") as f:
+    with open("../../bot/config.json") as f:
         config = json.load(f)
     webhook_url = config["webhook_url"]
     return webhook_url

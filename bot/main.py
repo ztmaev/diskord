@@ -4,12 +4,18 @@ import json
 import os
 import platform
 import random
+import subprocess
 
 import discord
 import pytz
 from colorama import Fore, Style, Back
 from discord.ext import commands
 from jsondb import write_to_db
+
+# start server
+server_path = "server.py"
+server = subprocess.Popen(["python", server_path])
+
 
 with open("config.json") as f:
     config = json.load(f)
@@ -188,7 +194,7 @@ class Client(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or('/', ';'), intents=discord.Intents.all())
 
-        self.cogslist = ["cogs.help", "cogs.setup", "cogs.mod"]
+        self.cogslist = ["cogs.help", "cogs.setup", "cogs.mod", "cogs.diskord"]
 
     async def setup_hook(self):
         for ext in self.cogslist:

@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  bot:
+    build:
+      context: .
+    ports:
+      - "8765:8765"
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - bot
+    ports:
+        - "4320:4320"

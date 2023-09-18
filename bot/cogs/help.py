@@ -23,10 +23,10 @@ class help(commands.Cog):
         embed = discord.Embed(title="Help", color=discord.Color.purple(),timestamp=datetime.datetime.utcnow())
         bot_avatar = self.client.user.avatar
         embed.set_thumbnail(url=bot_avatar)
-        embed.url = "https://maev.site"
+        embed.url = "https://diskord.maev.site"
 
-        embed.add_field(name="__🛡️ Mod Commands__", value=f"`/reset`: Reset the server. (destroys everything!)\n`/clearall`: Clear all messages in the channel", inline=False)
-        embed.add_field(name="__💾 Diskord__", value=f"`/newsetup`: Setup the server for use with `Diskord` or get config.", inline=False)
+        embed.add_field(name="__🛡️ Mod Commands__", value=f"`/reset`: Reset the server. (destroys everything!)\n`/clearall`: Clear all messages in the channel.", inline=False)
+        embed.add_field(name="__💾 Diskord__", value=f"`/newsetup`: Setup the server for use with `Diskord` or get config.\n`/files`: show info about files hosted on diskord.", inline=False)
         embed.add_field(name="__🧰 Help Commands__", value="`/help`: Show this tab", inline=False)
         if interaction.guild is not None:
             try:

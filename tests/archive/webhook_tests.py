@@ -4,7 +4,7 @@ import json
 import aiohttp
 from discord import Webhook
 
-with open("../../config.json") as f:
+with open("../../bot/config.json") as f:
     config = json.load(f)
 
 channel_id = config["diskord_channel_id"]

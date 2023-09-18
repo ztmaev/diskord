@@ -2,7 +2,7 @@ import asyncio
 import websockets
 
 async def hello():
-    uri = "ws://localhost:8765"
+    uri = "ws://arc.maev.site:8765"
     async with websockets.connect(uri) as websocket:
         query = input("Enter query separated by _%_: ")
         await websocket.send(query)

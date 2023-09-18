@@ -9,7 +9,7 @@ import pytz
 from discord import Webhook
 
 # config.json in ../../config.json
-with open("../../config.json") as f:
+with open("../../bot/config.json") as f:
     config = json.load(f)
 webhook_url = config["webhook_url"]
 
