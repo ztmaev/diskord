@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}
+<title>Download | Diskord</title>
+{% endblock %}
+{% block styles %}
+<style>
+
+    @media (max-width: 400px) {
+        .download-container {
+            max-width: calc(100% - 20px);
+        }
+
+    }
+
+    @media (min-width: 400px) {
+        .download-container {
+            max-width: 80%;
+        }
+    }
+
+    .download-content {
+        position: fixed;
+    }
+
+    .download-container {
+        position: fixed;
+        top: calc(50% + 40px);
+        left: 50%;
+        transform: translate(-50%, -80%);
+        transition: 200ms ease-in-out;
+        border: 1px solid var(--grey-light-color);
+        border-radius: 10px;
+        z-index: 10;
+        background-color: var(--darker-color);
+        width: 500px;
+        color: var(--darkest-color);
+        padding: 0;
+    }
+
+    .download-container .header {
+        background: var(--dark-color);
+        color: var(--lighter-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 10px 10px 0 0;
+        padding: 5px 10px;
+        font-size: 1.1rem;
+
+    }
+
+    .download-container .header .g1 {
+        display: flex;
+        flex-direction: column;
+        width: calc(90% - 30px);
+        padding: 0;
+        margin: 0;
+    }
+
+    .download-container .header .g1 .p2 {
+        padding: 0;
+        margin: 5px 0;
+        font-size: 1rem;
+    }
+
+    .download-container .header .g2 {
+        width: 40px;
+        height: 40px;
+        background-color: var(--purple-dim-color);
+        margin: 10px;
+        border-radius: 50%;
+    }
+
+    .download-body {
+        padding: 5px;
+    }
+
+    .download-body .progress {
+        padding: 5px;
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: space-between;
+    }
+
+    .progress .progress-meter {
+        width: 60%;
+        background: none;
+        border-radius: 10px;
+        border: none;
+        height: 12px;
+        display: flex;
+        align-items: center;
+
+    }
+
+    .progress .progress-meter progress {
+        height: 10px;
+        width: 100%;
+        border: 1px solid var(--grey-light-color);
+        border-radius: 10px;
+    }
+
+    .progress .progress-meter progress::-webkit-progress-bar {
+        background-color: var(--dark-color);
+        border-radius: 10px;
+
+    }
+
+    .progress .progress-meter progress::-webkit-progress-value {
+        background-color: var(--accent-color);
+        border-radius: 10px;
+
+    }
+
+    .progress-banner {
+        background-color: var(--dark-color);
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        margin-top: 5px;
+
+    }
+
+    .progress-banner p {
+        font-size: 50px;
+        color: var(--light-color);
+    }
+
+    .info-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        height: 30px;
+        margin-top: 5px;
+    }
+
+    .progress-footer {
+        padding: 0 5px;
+        display: flex;
+        justify-content: flex-start;
+    }
+
+</style>
+
+
+{% endblock %}
+{% block content %}
+<div class="download-content">
+    <div class="download-container">
+        <div class="header">
+            <div class="g1">
+                <p class="p1">Your file is getting processed...</p>
+                <p class="p2">Please don't close this page</p>
+            </div>
+            <div class="g2">
+                <p class="loading-icon"></p>
+            </div>
+        </div>
+        <div class="download-body">
+            <div class="progress">
+                <p class="progress-meter">
+                    <progress id="progress-bar" max="100" value="56"></progress>
+                </p>
+                <p>File getting merged...</p>
+            </div>
+            <div class="progress-banner">
+                <p>56%</p>
+            </div>
+            <div class="info-footer">
+                <p class="filename">Filename</p>
+                <p class="size">4.37gb</p>
+            </div>
+            <div class="progress-footer">
+                <p>Download will start automatically</p>
+            </div>
+
+        </div>
+        <div class="file-info">
+
+        </div>
+
+
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+
+</script>
+
+{% endblock %}

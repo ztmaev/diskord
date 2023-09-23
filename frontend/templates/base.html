@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    {% block title %}
+    <title>Untitled Page</title>
+    {% endblock %}
+
+    {% block styles %}
+
+    {% endblock %}
+</head>
+<body class="active">
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<ul class="flash-messages" id="flash-messages">
+    {% for message in messages %}
+
+    {% if message.startswith('error') %}
+    <li class="error-flash">{{ message[6:] }}</li>
+    {% elif message.startswith('success') %}
+    <li class="success-flash">{{ message[8:] }}</li>
+    {% else %}
+    <li class="info-flash">{{ message }}</li>
+    {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+
+<nav class="navbar">
+    <div class="left-group">
+        <div class="branding">
+            <a href="{{url_for('index')}}"><img src="{{ url_for('static', filename='media/logo.png') }}" alt="logo"
+                                                id="logo"></a>
+        </div>
+        <div class="nav-items">
+            <ul>
+                <li class="active"><a href="{{url_for('index')}}">Home</a></li>
+                <li class=""><a href="">Uploads</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="profile">
+        {% if "username" in session %}
+        <div class="search-btn" id="search-trigger">
+            <i class='bx bx-search'></i>
+        </div>
+        {% endif %}
+        <div class="user-notifs-group">
+            <div class="notif-trigger" id="notif-trigger">
+                <i class='bx bxs-bell'></i>
+            </div>
+            <div class="user-notifs" id="user-notifs-popup">
+                <div class="notifs-header">
+                    <p>Notifications</p>
+                    <p class="clear-btn" id="clear-btn"><i class='bx bx-envelope-open'></i> clear</p>
+                </div>
+                <div class="notifs-list">
+                    <p class="bx-items">Lorem ipsum dolor sit amet.<i class='bx bxs-trash'></i></p>
+                    <template>
+                        <p class="bx-items">Lorem ipsum dolor sit amet.<i class='bx bxs-trash'></i></p>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+        {% if session %}
+        <div class="profile-group" onclick="showProfileOptions()">
+            <img src="{{ url_for('static', filename='media/profile.png') }}" alt="" id="session-pp">
+            <p id="session-name">{{ session['username']}}</p>
+        </div>
+        <div class="profile-options-menu" id="profile-options-menu">
+            <div id="main">
+                <div class="profile-options-items" id="profile-account"><i class='bx bxs-user'></i> Account</div>
+                <a href="{{ url_for('logout') }}" class="profile-options-items" id="profile-log-out"><i
+                        class='bx bx-log-out'></i> Log out</a>
+            </div>
+        </div>
+        {% else %}
+        <p data-modal-target="#modal" id="login-btn" href="" class="profile-btns" id="login-btn"><i
+                class='bx bx-log-in'></i></p>
+
+        {% endif %}
+    </div>
+</nav>
+<div class="modal" id="modal">
+    <div class="modal-notifs" id="modal-notifs">
+        <p id="modal-notif-message">Error</p>
+    </div>
+    <div class="modal-header">
+        <div class="title">Log in/Sign up with discord</div>
+        <button data-close-button class="close-btn">&times;</button>
+
+    </div>
+    <div class="modal-body">
+        Log in with discord or your <a href="" class="bot-url">synced account</a> to start uploading your files and see
+        your account details on discord using <a href="" class="bot-url">our bot.</a>
+    </div>
+    <div class="login-section">
+        <form onsubmit="formSubmission(event)" class="login-form">
+            <div class="form-fields">
+                <div>
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Username" autocomplete="username" required>
+                </div>
+                <div>
+                    <label for="password">Password</label>
+                    <div class="password-group" id="password-group">
+                        <input type="password" id="password" placeholder="Password" autocomplete="current-password"
+                               required>
+                        <div class="show-password" onclick="passwordToggle()" id="password-toggle"><i
+                                class='bx bxs-hide'></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-submit-btn">
+                <button>Log in</button>
+            </div>
+
+        </form>
+        <div class="discord-login">
+            <a href="{{ url_for('oauth') }}"><i class='bx bxl-discord-alt'></i></a>
+        </div>
+
+
+    </div>
+    <div class="invite-section">
+        <div class="bot-invite">
+            <p>Invite our bot to your server.</p>
+            <a href="">Invite <i class='bx bxl-discord-alt'></i></a>
+        </div>
+        <div class="community-server">
+            <p>Join the community server.</p>
+            <a href="">Join <i class='bx bxl-discord-alt'></i></a>
+        </div>
+
+    </div>
+    <div class="help-section">
+        <p>Recover files/Get help recovering files. </p>
+        <a href="">help <i class='bx bxs-help-circle'></i></a><a href="">SelfRecovery <i class='bx bxs-wrench'></i></a>
+    </div>
+</div>
+<div class="search-container" id="search-container">
+    <div class="header">
+        <div class="header-contents">
+            <i class='bx bx-search'></i>
+            <input type="search" id="search-box" placeholder="Filename">
+        </div>
+    </div>
+    <div class="body-contents">
+        <div class="search-item">
+            <div class="left">
+                <img src="{{ url_for('static', filename='media/logo.png') }}" alt="">
+                <p>Img.txt</p>
+            </div>
+            <p>40.71mb</p>
+        </div>
+        <div class="search-item">
+            <div class="left">
+                <img src="{{ url_for('static', filename='media/logo.png') }}" alt="">
+                <p>Screenshot_1-15_16.png</p>
+            </div>
+            <p>71kb</p>
+        </div>
+        <div class="search-item">
+            <div class="left">
+                <img src="{{ url_for('static', filename='media/logo.png') }}" alt="">
+                <p>Ikksjmg.7z</p>
+            </div>
+            <p>41.1mb</p>
+        </div>
+        <div class="search-item">
+            <div class="left">
+                <img src="{{ url_for('static', filename='media/logo.png') }}" alt="">
+                <p>wimdows_10.iso</p>
+            </div>
+            <p>1.71gb</p>
+        </div>
+
+
+    </div>
+
+</div>
+<div id="overlay"></div>
+<div id="overlay-clear"></div>
+<div id="overlay-content"></div>
+<div class="content">
+    {% block content %}
+
+    {% endblock %}
+</div>
+
+<script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</body>
+</html>

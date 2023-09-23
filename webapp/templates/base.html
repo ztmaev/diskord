@@ -85,7 +85,7 @@
 
         }
 
-        .nav-items ul li a{
+        .nav-items ul li a {
             height: 100%;
 
             padding: 7px 20px;
@@ -230,7 +230,7 @@
             color: var(--lighter-color);
         }
 
-        .content{
+        .content {
             padding: 10px;
             overflow-y: scroll;
             height: calc(100vh - 60px);
@@ -261,7 +261,8 @@
         <div class="nav-items">
             <ul>
                 <li class="{{ 'active' if request.endpoint == 'index' }}"><a href="/">Home</a></li>
-                <li class="{{ 'active' if request.endpoint == 'uploads_list' }}"><a href="{{url_for('uploads_list')}}">Uploads</a></li>
+                <li class="{{ 'active' if request.endpoint == 'uploads_list' }}"><a href="{{url_for('uploads_list')}}">Uploads</a>
+                </li>
             </ul>
         </div>
     </div>

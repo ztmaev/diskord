@@ -1,0 +1,992 @@
+:root {
+    --accent-color: #00b972;
+    --darkest-color: black;
+    --lightest-color: #fff;
+    --purple-color: mediumpurple;
+    --purple-light-color: #e7d8ff;
+    --purple-vivid-color: #8e69af;
+    --purple-dim-color: rgba(135, 132, 143, 0.07);
+}
+
+.active {
+    --accent-color: #00b972;
+    --darkest-color: #fff;
+    --lightest-color: black;
+    --purple-color: mediumpurple;
+    --purple-light-color: #50465d;
+    --purple-vivid-color: #8e69af;
+    --purple-dim-color: rgba(168, 145, 196, 0.32);
+    --darker-color: #202225;
+    --dark-color: #2f3136;
+    --accent-darker-color: #00643c;
+    --lighter-color: #fff;
+    --light-color: #ccc;
+    --warning-color: #7c0000;
+    --grey-light-color: #737373;
+}
+
+* {
+
+    font-family: monospace;
+}
+
+*, *::after, *::before {
+    box-sizing: border-box;
+    /*outline: 1px solid red;*/
+}
+
+/*Scrollbars*/
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--accent-color);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-track:hover {
+    background-color: var(--dark-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent-color);
+}
+
+/*Flash Messages*/
+.flash-messages {
+    opacity: 1;
+    pointer-events: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+}
+
+.flash-messages.hidden {
+    opacity: 0;
+    transition: opacity 3s ease-in-out;
+}
+
+.flash-messages li {
+    padding: 10px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.error-flash {
+    background-color: var(--warning-color);
+    color: var(--lighter-color);
+}
+
+.success-flash {
+    background-color: var(--accent-color);
+    color: var(--lighter-color);
+}
+
+
+/*Login Modal*/
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: 200ms ease-in-out;
+    border: 1px solid var(--grey-light-color);
+    border-radius: 10px;
+    z-index: 10;
+    background-color: var(--darker-color);
+    width: 500px;
+    color: var(--darkest-color);
+}
+
+.modal.active {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-notifs {
+    pointer-events: none;
+    display: none;
+    z-index: 11;
+    position: fixed;
+    background-color: var(--darker-color);
+    font-size: 1.1rem;
+    top: -10%;
+    left: 50%;
+    transform: translate(-50%, -40%);
+    height: 35px;
+    width: 80%;
+    border: 1px solid var(--grey-light-color);
+    border-radius: 20px;
+    padding: 5px;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    flex-wrap: nowrap;
+}
+
+.modal-notifs.active {
+    display: flex;
+}
+
+.modal-header {
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--grey-light-color);
+}
+
+.modal-header .title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--light-color);
+}
+
+.modal-header .close-btn {
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: none;
+    font-size: 1.9rem;
+    font-weight: bold;
+    color: var(--light-color);
+
+}
+
+.modal-body {
+    padding: 10px 15px;
+    font-size: 1.1rem;
+    color: var(--light-color);
+}
+
+/*Search*/
+.search-container.active {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.search-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    /*border: 1px solid var(--darker-color);*/
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: -5px;
+}
+
+.search-btn i {
+    cursor: pointer;
+    font-size: 1.9rem;
+    color: var(--lighter-color);
+}
+
+.search-btn i:hover {
+    text-shadow: 0 0 8px var(--lighter-color);
+    transition: font-size 0.3ms ease-in-out;
+    font-size: 2rem;
+    margin-top: 0.1rem;
+}
+
+.search-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: 200ms ease-in-out;
+    border: 1px solid var(--grey-light-color);
+    border-radius: 10px;
+    z-index: 10;
+    background-color: var(--darker-color);
+    width: 500px;
+    color: var(--darkest-color);
+    box-shadow: 0px 0px 20px var(--lightest-color);
+}
+
+.search-container .header-contents {
+    width: 100%;
+    background: var(--dark-color);
+    border-bottom: 1px solid var(--grey-light-color);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: row;
+    border-radius: 10px 10px 0 0;
+    position: relative;
+}
+
+.search-container .header-contents i {
+    position: absolute;
+    background: var(--accent-darker-color);
+    width: 3.5rem;
+    height: 3rem;
+    border-radius: 10px 0 0 10px;
+    margin: 0px;
+    padding: 0;
+    border: none;
+    font-size: 2.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-container .header-contents input {
+    width: 100%;
+    height: 3rem;
+    font-size: 1.5rem;
+    padding: 10px;
+    padding-left: 4rem;
+    border-radius: 10px;
+    outline: none;
+    background: var(--darker-color);
+    color: var(--lighter-color);
+    border: 1px solid var(--grey-light-color);
+}
+
+.search-container .body-contents {
+    margin-top: 5px;
+    height: 30rem;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: scroll;
+}
+
+.search-item {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid var(--grey-light-color);
+    border-radius: 5px;
+    gap: 10px;
+    padding: 3px 10px;
+    justify-content: space-between;
+
+}
+
+.hidden {
+    display: none;
+}
+
+
+
+.search-item .left{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+.search-item .left img{
+    width: 3rem;
+    height: 3rem;
+}
+
+
+#overlay,
+#overlay-clear,
+#overlay-content {
+    position: fixed;
+    opacity: 0;
+    transition: 200ms ease-in-out;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--lightest-color);
+    pointer-events: none;
+}
+
+#overlay.active {
+    opacity: 0.6;
+    pointer-events: all;
+}
+
+
+#overlay-content {
+    top: 50px;
+    z-index: 5;
+}
+
+#overlay-clear.active {
+    pointer-events: all;
+}
+
+#overlay-content.active {
+    opacity: 0.1;
+    pointer-events: all;
+}
+
+
+.bot-url {
+    color: var(--darkest-color);
+    text-decoration: none;
+    text-shadow: 1px 1px 1px var(--lightest-color);
+    font-weight: bold;
+}
+
+.bot-url:hover {
+    text-decoration: underline;
+    color: var(--darkest-color);
+    text-shadow: 0px 0px 5px var(--darkest-color);
+}
+
+.login-section {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--grey-light-color);
+}
+
+.invite-section {
+    margin-top: -10px;
+    padding: 10px 15px;
+    gap: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    font-size: 1rem;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--grey-light-color);
+
+}
+
+.invite-section div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+
+}
+
+.invite-section div a {
+    width: fit-content;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.login-section {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    margin-top: -10px;
+}
+
+.login-form {
+    width: 80%;
+    display: flex;
+    gap: 5px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+.login-form .form-fields {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+    width: 85%;
+}
+
+.login-form .form-fields div {
+    width: 100%;
+}
+
+.login-form label {
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    color: var(--light-color);
+    width: 100px;
+}
+
+.login-form .form-fields input {
+    outline: none;
+    height: 1.9rem;
+    border: 1px solid var(--grey-light-color);
+    border-radius: 5px 0 0 5px;
+    padding: 5px;
+    width: 70%;
+    background: var(--dark-color);
+    display: flex;
+    color: var(--darkest-color);
+    font-size: 1.1rem;
+}
+
+.login-form .form-fields .password-group #password {
+    padding-right: 2rem;
+}
+
+.login-form .form-submit-btn {
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+
+}
+
+.login-form .form-submit-btn button {
+    width: 100%;
+    height: 100%;
+    border-radius: 0 5px 5px 0px;
+    padding: 5px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    color: var(--darkest-color);
+    background: var(--accent-darker-color);
+    cursor: pointer;
+}
+
+#password-group {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    position: relative;
+}
+
+.password-group .show-password {
+    visibility: hidden;
+    cursor: pointer;
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+    background: none;
+    width: 1.5rem;
+    max-width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1.1rem;
+    align-items: center;
+}
+
+.password-group .show-password.active {
+    visibility: visible;
+}
+
+.login-form .form-submit-btn button:hover {
+    background: var(--accent-color);
+}
+
+.discord-login {
+    width: 20%;
+    background: var(--dark-color);
+    border-radius: 5px;
+    display: flex;
+}
+
+.discord-login a {
+    width: 100%;
+    height: 100%;
+    background: var(--accent-darker-color);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.discord-login a:hover {
+    background-color: var(--accent-color);
+    transition: all 0.2s ease-in;
+}
+
+.discord-login a i {
+    color: var(--lighter-color);
+    font-size: 3rem;
+}
+
+.discord-login a i:hover {
+    margin-top: 0.2rem;
+    font-size: 3.2rem;
+    transition: all 0.1s ease-in;
+}
+
+.invite-section p {
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+    color: var(--light-color);
+}
+
+.invite-section a, .help-section a {
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 2px 5px;
+    border-radius: 0 5px 0 5px;
+    border: 1px solid transparent;
+    font-weight: 500;
+    color: var(--darkest-color);
+    background: var(--accent-darker-color);
+    cursor: pointer;
+}
+
+.invite-section a:hover {
+    background: var(--accent-color);
+}
+
+.help-section {
+    padding: 10px 15px;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    margin-top: -10px;
+    align-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    padding-bottom: 0;
+    color: var(--light-color);
+}
+
+.help-section a {
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.help-section a i,
+.invite-section div a i {
+    font-size: 1.2rem;
+}
+
+.help-section a:hover {
+    background: var(--accent-color);
+}
+
+@media (min-width: 620px) {
+    .login-form .form-fields div {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 5px;
+    }
+
+    .login-form .form-fields input {
+        width: 100%;
+    }
+
+    .modal {
+        max-width: 80%;
+    }
+
+}
+
+@media (max-width: 620px) {
+    .login-form .form-fields div {
+        gap: 5px;
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+    }
+
+    .login-form .form-fields input {
+        width: 100%;
+    }
+
+    .login-form .form-fields label {
+        display: none;
+    }
+
+
+    .modal {
+        width: calc(100vw - 10px);
+        max-width: calc(100vw - 10px);
+    }
+
+}
+
+
+/*Navbar*/
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--darker-color);
+}
+
+.navbar {
+    z-index: 5;
+    padding: 10px;
+    height: 50px;
+    background: var(--dark-color);
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.left-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+}
+
+.left-group .branding {
+    width: 40px;
+    height: 40px;
+}
+
+.left-group .branding img {
+    width: 39px;
+    height: 39px;
+}
+
+.nav-items ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 10px;
+}
+
+.nav-items ul li {
+    margin: 0;
+    color: var(--darker-color);
+    background: var(--light-color);
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    height: 33px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.nav-items ul li a {
+    height: 39px;
+    padding: 7px 20px;
+    display: flex;
+    align-items: center;
+
+}
+
+.nav-items ul .active {
+    background-color: var(--accent-darker-color);
+    color: var(--lighter-color);
+}
+
+.nav-items ul .active:hover {
+    background-color: var(--accent-darker-color);
+    color: var(--lighter-color);
+}
+
+.nav-items ul li:hover {
+    background-color: var(--accent-color);
+    color: var(--lighter-color);
+}
+
+.nav-items ul li a {
+    text-decoration: none;
+    color: inherit;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+}
+
+/*notifications*/
+.notif-trigger {
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    /*border: 1px solid var(--darker-color);*/
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.notif-trigger i {
+    cursor: pointer;
+    font-size: 1.8rem;
+    color: var(--lighter-color);
+}
+
+.notif-trigger i:hover {
+    text-shadow: 0 0 8px var(--accent-color);
+    transition: all 0.2ms ease-in-out;
+    font-size: 1.9rem;
+}
+
+.user-notifs {
+    display: block;
+    z-index: 10;
+    position: fixed;
+    top: 55px;
+    right: 5px;
+    height: 180px;
+    width: 250px;
+    border: 1px solid var(--grey-light-color);
+    border-radius: 5px;
+    background-color: var(--darker-color);
+    transform: scale(0);
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0px 0px 10px var(--lightest-color);
+}
+
+.user-notifs.active {
+    transform: scale(1);
+    transition: all 0.2s ease-in-out;
+
+}
+
+.user-notifs .notifs-header {
+    height: 25px;
+    background-color: var(--dark-color);
+    padding: 15px 10px;
+    margin: 0px;
+    /* margin-top: -12px; */
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    border-radius: 5px 5px 0px 0px;
+    color: var(--light-color);
+    border-bottom: 1px solid var(--grey-light-color);
+}
+
+.user-notifs .notifs-header .clear-btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    color: var(--darker-color);
+    background: var(--light-color);
+    font-weight: 500;
+    padding: 3px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.user-notifs .notifs-header .clear-btn:hover {
+    color: var(--lighter-color);
+    background: var(--warning-color);
+    transition: color 0.2s ease-in-out;
+}
+
+.user-notifs .notifs-list {
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 145px;
+    overflow-y: scroll;
+    color: var(--light-color);
+    background: var(--darker-color);
+}
+
+.user-notifs .notifs-list .bx-items {
+    font-size: 0.9rem;
+    transition: all 0.1s ease-in-out;
+    background: var(--dark-color);
+    padding: 5px;
+    margin: 1px;
+    border-radius: 5px;
+    cursor: default;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-content: center;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/*delete` color*/
+.user-notifs .notifs-list .bx-items.hovered {
+    transition: all 0.1s ease-in-out;
+    background: var(--warning-color);
+}
+
+.user-notifs .notifs-list p i {
+    cursor: pointer;
+    font-size: 1.3rem;
+    height: 23px;
+    width: 23px;
+    display: flex;
+    margin: -5px;
+    /* padding: 0px; */
+    align-items: center;
+    justify-content: center;
+}
+
+.user-notifs .notifs-list p:hover {
+    color: var(--lighter-color);
+    background-color: var(--accent-darker-color);
+}
+
+
+.profile-group {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 5px;
+}
+
+.profile-group img {
+    width: 39px;
+    height: 39px;
+    border-radius: 50%;
+    border: 1px solid var(--accent-color);
+    cursor: pointer;
+}
+
+.profile-group img:hover {
+    border: 1px solid var(--lighter-color);
+}
+
+.profile-group img:hover + p {
+    color: var(--lighter-color);
+}
+
+
+.profile-group p {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--light-color);
+    cursor: pointer;
+}
+
+.profile-group p:hover {
+    color: var(--lighter-color);
+}
+
+
+.profile-btns {
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    border: 1px solid;
+    border-color: var(--dark-color);
+    background-color: var(--accent-darker-color);
+    color: var(--light-color);
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-btns:hover {
+    cursor: pointer;
+}
+
+.profile-btns i {
+    font-size: 25px;
+
+}
+
+.profile-options-menu {
+    z-index: 6;
+    display: flex;
+    position: absolute;
+    right: 5px;
+    top: 55px;
+    transform: scale(0);
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0px 0px 10px var(--lightest-color);
+}
+
+.profile-options-menu.active {
+    transform: scale(1);
+    transition: all 0.2s ease-in-out;
+}
+
+.profile-options-menu div {
+    border: 1px solid var(--dark-color);
+    border-radius: 5px;
+    background-color: var(--darker-color);
+    padding: 5px;
+    color: var(--light-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-options-menu div .profile-options-items {
+    text-decoration: none;
+    color: var(--lighter-color);
+    margin: 4px 0;
+    background: var(--dark-color);
+    padding: 5px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-start;
+}
+
+.profile-options-menu div .profile-options-items:hover {
+    background: var(--accent-darker-color);
+}
+
+#profile-log-out:hover {
+    background-color: var(--warning-color);
+}
+
+
+#login-btn {
+    padding: 0;
+}
+
+#login-btn i {
+    padding: 0 5px 0 3px;
+    height: 35px;
+    width: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--accent-darker-color);
+    color: var(--darkest-color);
+    border-radius: 5px;
+    border-right: var(--dark-color) 1px solid;
+}
+
+#login-btn:hover i {
+    font-size: 28px;
+    background-color: var(--accent-color);
+}
+
+#logout-btn:hover {
+    background-color: var(--warning-color);
+    color: var(--lighter-color);
+}
+
+@media (max-width: 400px) {
+    #session-name {
+        display: none;
+    }
+
+    .modal {
+        border-radius: 5px;
+    }
+
+    .profile-options-menu.active {
+        right: 5px;
+        top: 55px;
+    }
+}
