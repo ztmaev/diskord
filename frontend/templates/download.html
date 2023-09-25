@@ -5,14 +5,14 @@
 {% block styles %}
 <style>
 
-    @media (max-width: 400px) {
+    @media (max-width: 625px) {
         .download-container {
             max-width: calc(100% - 20px);
         }
 
     }
 
-    @media (min-width: 400px) {
+    @media (min-width: 625px) {
         .download-container {
             max-width: 80%;
         }
@@ -46,7 +46,7 @@
         border-radius: 10px 10px 0 0;
         padding: 5px 10px;
         font-size: 1.1rem;
-
+        border-bottom: 1px solid var(--grey-light-color);
     }
 
     .download-container .header .g1 {
@@ -55,6 +55,10 @@
         width: calc(90% - 30px);
         padding: 0;
         margin: 0;
+    }
+
+    .g1 .p1 {
+        font-size: 1.2rem;
     }
 
     .download-container .header .g1 .p2 {
@@ -79,8 +83,8 @@
         padding: 5px;
         display: flex;
         flex-direction: row;
-        gap: 10px;
-        justify-content: space-between;
+        gap: 20px;
+        justify-content: flex-start;
     }
 
     .progress .progress-meter {
@@ -153,7 +157,7 @@
     <div class="download-container">
         <div class="header">
             <div class="g1">
-                <p class="p1">Your file is getting processed...</p>
+                <p class="p1">Processing your file</p>
                 <p class="p2">Please don't close this page</p>
             </div>
             <div class="g2">
@@ -165,7 +169,7 @@
                 <p class="progress-meter">
                     <progress id="progress-bar" max="100" value="56"></progress>
                 </p>
-                <p>File getting merged...</p>
+                <p>Merging files...</p>
             </div>
             <div class="progress-banner">
                 <p>56%</p>

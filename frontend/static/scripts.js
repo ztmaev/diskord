@@ -120,25 +120,6 @@ clearOverlay.addEventListener("click", () => {
     hideSearch()
 })
 
-// hover del
-const icons = document.querySelectorAll('.bx');
-
-icons.forEach(icon => {
-    icon.addEventListener('mouseenter', () => {
-        const parentP = icon.closest('.bx-items');
-        if (parentP) {
-            parentP.classList.add('hovered');
-        }
-    });
-
-    icon.addEventListener('mouseleave', () => {
-        const parentP = icon.closest('.bx-items');
-        if (parentP) {
-            parentP.classList.remove('hovered');
-        }
-    });
-});
-
 
 function showProfileOptions() {
     profilePopup.classList.add("active")
@@ -192,7 +173,7 @@ function hideSearch() {
 const searchInput = document.getElementById("search-box");
 const searchItems = document.querySelectorAll(".search-item");
 
-searchInput.addEventListener("input", function(event) {
+searchInput.addEventListener("input", function (event) {
     const searchTerm = searchInput.value.toLowerCase();
 
     searchItems.forEach(item => {
@@ -205,9 +186,28 @@ searchInput.addEventListener("input", function(event) {
     });
 });
 
-//TODO: work on this
-
 //Notifs
+function hoverDel() {
+    const icons = document.querySelectorAll('.bx');
+
+
+    icons.forEach(icon => {
+        // mouse hover
+        icon.addEventListener('mouseenter', () => {
+            const parentP = icon.closest('.bx-items');
+            if (parentP) {
+                parentP.classList.add('hovered');
+            }
+        });
+        icon.addEventListener('mouseleave', () => {
+            const parentP = icon.closest('.bx-items');
+            if (parentP) {
+                parentP.classList.remove('hovered');
+            }
+        });
+    });
+}
+
 
 const notifsBox = document.getElementById("notif-trigger")
 notifsBox.addEventListener("click", () => {
@@ -219,6 +219,9 @@ function showNotifs() {
     notifsBox.classList.add("active")
     clearOverlay.classList.add("active")
     contentOverlay.classList.add("active")
+
+    fetchNotificationsAndDisplay()
+
 
 }
 
@@ -234,7 +237,6 @@ function hideNotifs() {
 // startup
 window.onload = hideFlashMessage()
 
-// TODO: fix this
 function hideFlashMessage() {
     const flashMessages = document.getElementById("flash-messages")
     if (flashMessages !== null) {
@@ -244,15 +246,21 @@ function hideFlashMessage() {
 }
 
 
-
 //Notifs tests
 // Function to fetch notifications and display them in the existing container
 function fetchNotificationsAndDisplay() {
+    // clear the existing container
+    const notificationsContainer = document.getElementById('user-notifs-popup');
+    notificationsContainer.querySelector('.notifs-list').innerHTML = '';
+
+
     fetch('/notifications')
         .then(response => response.json())
         .then(data => {
             // Handle the received notifications data
             displayNotifications(data);
+            hoverDel()
+
         })
         .catch(error => {
             console.error('Error fetching notifications:', error);
@@ -263,25 +271,42 @@ function fetchNotificationsAndDisplay() {
 function addNotificationToContainer(notification) {
     const notificationsContainer = document.getElementById('user-notifs-popup');
 
+
     // Create a new notification element
     const notificationElement = document.createElement('p');
     notificationElement.className = 'bx-items';
-    notificationElement.textContent = notification.message;
+
+    if (notification.url) {
+        const notifText = document.createElement('a');
+        notifText.href = notification.url;
+        notifText.target = "_blank"
+        notifText.textContent = notification.message;
+
+        notificationElement.appendChild(notifText);
+    } else {
+        const notifText = document.createElement('p');
+        notifText.textContent = notification.message;
+
+        notificationElement.appendChild(notifText);
+    }
 
     // Create a trash icon element
     const trashIcon = document.createElement('i');
     trashIcon.className = 'bx bxs-trash';
 
-    // Add a click event listener to the trash icon (you can implement clearing functionality)
-    trashIcon.addEventListener('click', function() {
-        // Handle deletion of the notification
-        // You can make an API request to your backend to delete the notification if needed
-        // Then remove the notificationElement from the container
-        // notificationElement.remove();
-    });
-
     // Append the trash icon to the notification element
     notificationElement.appendChild(trashIcon);
+
+    // remove notif when clicked
+    trashIcon.addEventListener('click', () => {
+            const messageId = trashIcon.closest('.bx-items').getAttribute('data-notification-id');
+            deleteNotif(messageId)
+            notificationElement.classList.add('hidden')
+        }
+    );
+
+    // add a data attribute to the notification element with the notification ID
+    notificationElement.setAttribute('data-notification-id', notification.id);
 
     // Append the notification element to the existing container
     notificationsContainer.querySelector('.notifs-list').appendChild(notificationElement);
@@ -294,8 +319,39 @@ function displayNotifications(notifications) {
     });
 }
 
-// Call the fetchNotificationsAndDisplay function to load notifications initially
-fetchNotificationsAndDisplay();
 
-// You can also set up a timer to periodically fetch and display notifications
-// setInterval(fetchNotificationsAndDisplay, 5000); // Example: Fetch notifications every 5 seconds
+function deleteNotif(id) {
+    const url = `/removenotif?id=${id}`;
+    fetch(url, {
+        method: 'GET',
+    })
+        .then((response) => {
+            if (response.ok) {
+                console.log('Notification removed successfully.');
+            } else {
+                console.error('Failed to remove notification.');
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+
+//clear all
+const clearAllBtn = document.getElementById("clear-btn")
+clearAllBtn.addEventListener("click", () => {
+    fetch('/clearnotifs', {
+        method: 'GET',
+    })
+        .then((response) => {
+            if (response.ok) {
+                console.log('Notifications cleared successfully');
+                fetchNotificationsAndDisplay()
+            } else {
+                console.error('Failed to clear notifications');
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+})
