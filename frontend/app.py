@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify, flash
+import os
 
 app = Flask(__name__)
 app.secret_key = "MaeV"
@@ -6,8 +7,6 @@ app.secret_key = "MaeV"
 users = ['maev', 'ian']
 notifs = []
 notif_id = 0
-
-
 
 
 @app.route('/')
@@ -129,6 +128,24 @@ def clearnotifs():
     notifications.clear()
     return jsonify({'message': 'cleared notifs successfully'}), 200
 
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    uploaded_files = request.files.getlist('files[]')
+    print(uploaded_files)
+
+    # Check if files were uploaded
+    if not uploaded_files:
+        return jsonify({'error': 'No files were uploaded'}), 400
+
+    for file in uploaded_files:
+        if file.filename == '':
+            continue  # Skip empty file inputs
+
+        # Save the file to the UPLOAD_FOLDER
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+
+    return jsonify({'message': 'Upload successful'}), 200
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
