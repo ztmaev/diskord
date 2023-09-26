@@ -19,7 +19,9 @@
     {% endblock %}
 </head>
 <body class="active">
-
+<div class="popnotifs hidden" id="popnotifs">
+    <p id="pop-notif">Sample notif</p>
+</div>
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <ul class="flash-messages" id="flash-messages">
@@ -164,9 +166,9 @@
             <div class="search-item">
                 <div class="left">
                     <img src="{{ url_for('static', filename='media/logo.png') }}" alt="">
-                    <p>{{file.filename}}</p>
+                    <p class="filename">{{file.filename}}</p>
                 </div>
-                <p>{{file.size}}</p>
+                <p class="filesize">{{file.size}}</p>
             </div>
         </a>
         {% endfor %}

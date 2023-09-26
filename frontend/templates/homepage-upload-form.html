@@ -159,117 +159,140 @@
 </div>
 </body>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const fileInput = document.getElementById('file-input');
-        const fileDropContainer = document.getElementById('file-drop-container');
-        const fileDropZone = document.querySelector('.file-drop-zone')
-        const fileList = document.getElementById('file-list');
-        const submitButton = document.getElementById('submit-button');
-        const fileInputIcon = document.querySelector('.custom-file-upload i');
-        fileInputIcon.addEventListener('click', () => {
-            event.preventDefault();
+   document.addEventListener('DOMContentLoaded', () => {
+    let selectedFiles = [];
+    const fileInput = document.getElementById('file-input');
+    const fileDropContainer = document.getElementById('file-drop-container');
+    const fileDropZone = document.querySelector('.file-drop-zone');
+    const fileList = document.getElementById('file-list');
+    const submitButton = document.getElementById('submit-button');
+    const fileInputIcon = document.querySelector('.custom-file-upload i');
 
-        })
-
-        fileInput.addEventListener('change', handleFileSelect);
-        fileDropContainer.addEventListener('dragover', handleDragOver);
-        fileDropContainer.addEventListener('dragleave', handleDragLeave);
-        fileDropContainer.addEventListener('drop', handleFileDrop);
-
-        submitButton.addEventListener('click', handleSubmitButtonClick);
-
-        fileDropZone.addEventListener('click', () => {
-            fileInput.click();
-        })
-
-        function handleFileSelect(e) {
-            fileList.innerHTML = '';
-            const files = e.target.files;
-            addFilesToList(files);
-            showSubmitButton(files.length > 0);
-
-            fileInput.value = ''
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            fileDropContainer.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            e.preventDefault();
-            fileDropContainer.classList.remove('drag-over');
-        }
-
-        function handleFileDrop(e) {
-            e.preventDefault();
-            fileDropContainer.classList.remove('drag-over');
-            const files = e.dataTransfer.files;
-            addFilesToList(files);
-            showSubmitButton(files.length > 0);
-        }
-
-        function addFilesToList(files) {
-            for (let i = 0; i < files.length; i++) {
-                const fileDiv = document.createElement('div');
-                fileDiv.className = 'file-info';
-
-                const fileGroup = document.createElement('div')
-                fileDiv.appendChild(fileGroup)
-                fileGroup.classList.add('filegroup')
-
-                const itemStatus = document.createElement('div')
-                itemStatus.classList.add('item-status')
-
-                // del
-                const itemDel = document.createElement('i')
-                itemDel.classList.add('bx')
-                itemDel.classList.add('bxs-trash')
-                itemStatus.appendChild(itemDel)
-
-                fileDiv.appendChild(itemStatus)
-
-                const fileName = document.createElement('p');
-                fileName.textContent = files[i].name;
-
-                const fileSize = document.createElement('p');
-                fileSize.textContent = formatFileSize(files[i].size);
-
-                fileGroup.appendChild(fileName);
-                fileName.classList.add("filename")
-                fileGroup.appendChild(fileSize);
-                fileSize.classList.add("filesize")
-                fileList.appendChild(fileDiv);
-
-                // Attach a click event listener to the trash icon for file removal.
-                itemDel.addEventListener("click", () => {
-                    fileDiv.remove(); // Remove the file info div when the trash icon is clicked.
-                    showSubmitButton(fileList.children.length > 0); // Check if there are remaining files.
-                    console.log(files)
-                });
-            }
-        }
-
-
-        function showSubmitButton(show) {
-            submitButton.style.display = show ? 'block' : 'none';
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Define the function to execute when the "Submit" button is clicked.
-        function handleSubmitButtonClick() {
-            // Replace this with your actual submission logic.
-            alert('Submit button clicked!');
-            // TODO: handle file submission
-        }
+    fileInputIcon.addEventListener('click', (event) => {
+        event.preventDefault();
     });
+
+    fileInput.addEventListener('change', handleFileSelect);
+    fileDropContainer.addEventListener('dragover', handleDragOver);
+    fileDropContainer.addEventListener('dragleave', handleDragLeave);
+    fileDropContainer.addEventListener('drop', handleFileDrop);
+
+    submitButton.addEventListener('click', handleSubmitButtonClick);
+
+    fileDropZone.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    function handleFileSelect(e) {
+        const files = e.target.files;
+        selectedFiles = selectedFiles.concat(Array.from(files)); // Append selected files to the global variable
+        addFilesToList(files);
+        showSubmitButton(selectedFiles.length > 0);
+        fileInput.value = '';
+    }
+
+    function handleFileDrop(e) {
+        e.preventDefault();
+        fileDropContainer.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        selectedFiles = selectedFiles.concat(Array.from(files)); // Append dropped files to the global variable
+        addFilesToList(files);
+        showSubmitButton(selectedFiles.length > 0);
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        fileDropContainer.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        e.preventDefault();
+        fileDropContainer.classList.remove('drag-over');
+    }
+
+    function addFilesToList(files) {
+        for (let i = 0; i < files.length; i++) {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'file-info';
+
+            const fileGroup = document.createElement('div');
+            fileDiv.appendChild(fileGroup);
+            fileGroup.classList.add('filegroup');
+
+            const itemStatus = document.createElement('div');
+            itemStatus.classList.add('item-status');
+
+            // del
+            const itemDel = document.createElement('i');
+            itemDel.classList.add('bx');
+            itemDel.classList.add('bxs-trash');
+            itemStatus.appendChild(itemDel);
+
+            fileDiv.appendChild(itemStatus);
+
+            const fileName = document.createElement('p');
+            fileName.textContent = files[i].name;
+
+            const fileSize = document.createElement('p');
+            fileSize.textContent = formatFileSize(files[i].size);
+
+            fileGroup.appendChild(fileName);
+            fileName.classList.add('filename');
+            fileGroup.appendChild(fileSize);
+            fileSize.classList.add('filesize');
+            fileList.appendChild(fileDiv);
+
+            // Attach a click event listener to the trash icon for file removal.
+            itemStatus.addEventListener('click', () => {
+                selectedFiles.splice(selectedFiles.indexOf(files[i]), 1); // Remove the file from selectedFiles array.
+                fileDiv.remove(); // Remove the file info div when the trash icon is clicked.
+                showSubmitButton(selectedFiles.length > 0); // Check if there are remaining files.
+            });
+        }
+    }
+
+    function showSubmitButton(show) {
+        submitButton.style.display = show ? 'block' : 'none';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Define the function to execute when the "Submit" button is clicked.
+    function handleSubmitButtonClick() {
+        if (selectedFiles.length === 0) {
+            addPopNotif('No files selected for submission');
+            return;
+        }
+
+        const formData = new FormData();
+        selectedFiles.forEach((file, index) => {
+            formData.append('files[]', file);
+        });
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData,
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                // Handle the response from the server
+                // console.log(data);
+                addPopNotif('Upload successful');
+                // You can perform any additional actions here as needed
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                addPopNotif('Error during upload');
+            });
+    }
+});
+
 
 </script>
 </html>

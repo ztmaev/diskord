@@ -1,12 +1,67 @@
-from flask import Flask, render_template, redirect, url_for, session, request, jsonify, flash
+import json
 import os
+
+from flask import Flask, render_template, redirect, url_for, session, request, jsonify, flash
 
 app = Flask(__name__)
 app.secret_key = "MaeV"
 
+upload_dir = "uploads"
+
 users = ['maev', 'ian']
 notifs = []
 notif_id = 0
+
+def convert_size(size_in_bytes):
+    # Define the conversion factors
+    GB = 1024 * 1024 * 1024
+    MB = 1024 * 1024
+    KB = 1024
+
+    if size_in_bytes >= GB:
+        size = size_in_bytes / GB
+        size_unit = "GB"
+    elif size_in_bytes >= MB:
+        size = size_in_bytes / MB
+        size_unit = "MB"
+    elif size_in_bytes >= KB:
+        size = size_in_bytes / KB
+        size_unit = "KB"
+    else:
+        size = size_in_bytes
+        size_unit = "Bytes"
+
+    return f"{size:.2f} {size_unit}"
+
+def filelist(directory_path='uploads'):
+    files_data = []
+
+    # Check if the directory exists
+    if not os.path.exists(directory_path):
+        return json.dumps({"error": "Directory does not exist"})
+
+    # Iterate over the files in the directory
+    for filename in os.listdir(directory_path):
+        file_path = os.path.join(directory_path, filename)
+        if os.path.isfile(file_path):
+            # Get file size in bytes
+            size_bytes = os.path.getsize(file_path)
+
+            # Convert bytes to kilobytes (KB)
+            size = convert_size(size_bytes)
+
+            # Create a dictionary for each file
+            file_info = {
+                "filename": filename,
+                "size": size,
+                "url": "",  # You can fill in the URL if needed
+            }
+            files_data.append(file_info)
+
+    # Convert the list of dictionaries to JSON
+    json_data = json.dumps(files_data, indent=4)
+
+    return json_data
 
 
 @app.route('/')
@@ -19,7 +74,9 @@ def index():
         {"filename": "Stash_bk_7_23.rar", "size": "7.61 gb", "url": ""}
     ]
 
-    return render_template("homepage.html", oauth_url=oauth_url, files=files)
+    files_2 = json.loads(filelist())
+
+    return render_template("homepage.html", oauth_url=oauth_url, files=files_2)
 
 
 @app.route('/download')
@@ -129,23 +186,40 @@ def clearnotifs():
     return jsonify({'message': 'cleared notifs successfully'}), 200
 
 
+# @app.route('/upload', methods=['POST'])
+# def upload():
+#     files = request.files.copy()
+#     print(files)
+#
+#
+#     uploaded_files = request.files.getlist('files[]')
+#     print(len(uploaded_files))
+#     # print(uploaded_files)
+#
+#     # Check if files were uploaded
+#     if not uploaded_files:
+#         return jsonify({'error': 'No files were uploaded'}), 400
+#     return jsonify({'message': 'Upload successful'}), 200
+
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
 @app.route('/upload', methods=['POST'])
 def upload():
     uploaded_files = request.files.getlist('files[]')
-    print(uploaded_files)
 
     # Check if files were uploaded
     if not uploaded_files:
         return jsonify({'error': 'No files were uploaded'}), 400
 
     for file in uploaded_files:
-        if file.filename == '':
-            continue  # Skip empty file inputs
-
-        # Save the file to the UPLOAD_FOLDER
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+        if file:
+            filename = file.filename
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
     return jsonify({'message': 'Upload successful'}), 200
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

@@ -55,7 +55,8 @@
 }
 
 /*Flash Messages*/
-.flash-messages {
+.flash-messages,
+.popnotifs {
     opacity: 1;
     pointer-events: none;
     list-style: none;
@@ -72,12 +73,14 @@
     z-index: 100;
 }
 
-.flash-messages.hidden {
+.flash-messages.hidden,
+.popnotifs.hidden {
     opacity: 0;
     transition: opacity 3s ease-in-out;
 }
 
-.flash-messages li {
+.flash-messages li,
+.popnotifs p {
     padding: 10px;
     border-radius: 20px;
     width: 100%;
@@ -92,7 +95,8 @@
     color: var(--lighter-color);
 }
 
-.success-flash {
+.success-flash,
+.popnotifs p {
     background-color: var(--accent-color);
     color: var(--lighter-color);
 }
@@ -214,7 +218,7 @@
     z-index: 10;
     background-color: var(--darker-color);
     width: 500px;
-    max-width: calc(100vw - 10px) ;
+    max-width: calc(100vw - 10px);
     color: var(--darkest-color);
     box-shadow: 0px 0px 20px var(--lightest-color);
 }
@@ -281,15 +285,20 @@
     background: var(--dark-color);
 }
 
-.search-item:hover{
+.search-item:hover {
     background: var(--accent-darker-color);
 }
 
-.search-urls{
+.search-item .filesize {
+    width: 5.7rem;
+    text-align: right;
+}
+
+.search-urls {
     text-decoration: none;
 }
 
-.search-item p, .search-item div{
+.search-item p, .search-item div {
     text-decoration: none;
     color: var(--lighter-color);
 }
@@ -299,13 +308,13 @@
 }
 
 
-
-.search-item .left{
+.search-item .left {
     display: flex;
     flex-direction: row;
     gap: 10px;
 }
-.search-item .left img{
+
+.search-item .left img {
     width: 3rem;
     height: 3rem;
 }
@@ -828,11 +837,13 @@ body {
     align-items: center;
     justify-content: space-between;
 }
-.user-notifs .notifs-list .bx-items.hidden{
+
+.user-notifs .notifs-list .bx-items.hidden {
     display: none;
 }
+
 .bx-items p,
-.bx-items a{
+.bx-items a {
     margin: 3px;
     text-decoration: none;
     color: var(--light-color);

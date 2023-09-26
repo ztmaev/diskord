@@ -74,7 +74,7 @@ function formSubmission() {
     const username = document.querySelector('#username').value;
     const password = document.querySelector('#password').value;
     if (!username || !password) {
-        alert('please enter your username and password or use discord login.');
+        showModalNotif('please enter your username and password or use discord login.');
         return;
     }
     if (password[7] === undefined) {
@@ -355,3 +355,17 @@ clearAllBtn.addEventListener("click", () => {
             console.error('Error:', error);
         });
 })
+
+
+//ALternate notifs
+const popNotifs = document.getElementById("popnotifs");
+const popNotifItem = document.getElementById("pop-notif");
+
+function addPopNotif(message) {
+    popNotifItem.innerHTML = message;
+    popNotifs.classList.remove("hidden")
+    setTimeout(function (){
+            popNotifs.classList.add("hidden");
+    }, 10);
+
+}
