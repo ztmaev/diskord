@@ -1,6 +1,79 @@
+// Navbar
+const sidebarBtn = document.querySelector('.toggle-btn i')
+const sideBarContainer = document.querySelector('.sidebar')
+const bodyContainer = document.querySelector('.body-container')
+const windowWidth = window.innerWidth
+
+
+const sidebarItems1 = document.querySelectorAll('.sidebar-items .group-up div a p')
+const sidebarItems2 = document.querySelectorAll('.sidebar-items .group-down div a p')
+
+const sidebarItemsDiv1 = document.querySelectorAll('.sidebar-items .group-up a')
+const sidebarItemsDiv2 = document.querySelectorAll('.sidebar-items .group-down a')
+
+
+sidebarBtn.addEventListener("click", () => {
+
+    //check
+    if (bodyContainer.matches('.min')) {
+        sideBarContainer.classList.remove('min')
+        bodyContainer.classList.remove('min')
+        sidebarBtn.classList.remove('bx-arrow-from-left')
+        sidebarBtn.classList.add('bx-arrow-from-right')
+        sidebarItemsDiv1.forEach(item => {
+            item.classList.remove('min')
+        })
+        sidebarItemsDiv2.forEach(item => {
+            item.classList.remove('min')
+        })
+
+        sidebarItems1.forEach(item => {
+            item.classList.remove('hidden')
+        })
+        sidebarItems2.forEach(item => {
+            item.classList.remove('hidden')
+        })
+
+    } else {
+        sideBarContainer.classList.add('min')
+        bodyContainer.classList.add('min')
+        sidebarBtn.classList.remove('bx-arrow-from-right')
+        sidebarBtn.classList.add('bx-arrow-from-left')
+        sidebarItemsDiv1.forEach(item => {
+            item.classList.add('min')
+        })
+        sidebarItemsDiv2.forEach(item => {
+            item.classList.add('min')
+        })
+
+        sidebarItems1.forEach(item => {
+            item.classList.add('hidden')
+        })
+        sidebarItems2.forEach(item => {
+            item.classList.add('hidden')
+        })
+
+    }
+});
+
+function loginPrompt(page) {
+    openModal(modal)
+    showModalNotif('Log in to ' + page)
+}
+
+
 const openModalButtons = document.querySelectorAll('[data-modal-target]')
 const closeModalButtons = document.querySelectorAll('[data-close-button]')
 const overlay = document.getElementById('overlay')
+const loginBtn2 = document.getElementById('login-btn-2')
+
+if (loginBtn2 !== null && loginBtn2) {
+    loginBtn2.addEventListener('click', () => {
+        const modal = document.querySelector(button.dataset.modalTarget)
+        openModal(modal)
+    })
+}
+
 
 openModalButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -44,7 +117,6 @@ passInput.addEventListener("input", function (event) {
     } else {
         hidePassIcon()
     }
-    console.log(passInput.value)
 })
 
 function showPassIcon() {
@@ -89,8 +161,14 @@ function formSubmission() {
     })
         .then(response => {
             if (response.status === 200) {
-                // Redirect to homepage
-                window.location.href = '/';
+                response.json().then(data => {
+                    showModalNotif(data.message)
+                });
+                setTimeout(function () {
+                    // Redirect to homepage
+                    window.location.href = '/';
+                }, 1000);
+
             } else {
                 // Handle other status codes or error responses here
                 response.json().then(data => {
@@ -150,25 +228,30 @@ if (searchTrigger !== null) {
         showSearch()
     })
 }
+const searchTrigger2 = document.getElementById("search-trigger-2")
+if (searchTrigger2 !== null) {
+    searchTrigger2.addEventListener("click", () => {
+        showSearch()
+    })
+}
 
 function showSearch() {
+    fetchFilesAndDisplay()
     const searchContainer = document.getElementById("search-container")
     searchContainer.classList.add("active")
     clearOverlay.classList.add("active")
-    contentOverlay.classList.add("active")
+    // contentOverlay.classList.add("active")
+    overlay.classList.add('active')
 }
 
 function hideSearch() {
     const searchContainer = document.getElementById("search-container")
     searchContainer.classList.remove("active")
     clearOverlay.classList.remove("active")
-    contentOverlay.classList.remove("active")
+    // contentOverlay.classList.remove("active")
+    overlay.classList.remove('active')
 }
 
-// const searchInput = document.getElementById("search-box")
-// searchInput.addEventListener("input", function(event){
-//     console.log(searchInput.value)
-// })
 
 const searchInput = document.getElementById("search-box");
 const searchItems = document.querySelectorAll(".search-item");
@@ -213,6 +296,13 @@ const notifsBox = document.getElementById("notif-trigger")
 notifsBox.addEventListener("click", () => {
     showNotifs()
 })
+const notifsBox2 = document.getElementById("notif-trigger-2")
+if (notifsBox2 !== null) {
+    notifsBox2.addEventListener("click", () => {
+        showNotifs()
+    })
+}
+
 
 function showNotifs() {
     const notifsBox = document.getElementById("user-notifs-popup")
@@ -240,7 +330,9 @@ window.onload = hideFlashMessage()
 function hideFlashMessage() {
     const flashMessages = document.getElementById("flash-messages")
     if (flashMessages !== null) {
-        flashMessages.classList.add("hidden")
+        setTimeout(function () {
+            flashMessages.classList.add("hidden");
+        }, 3000);
     }
 
 }
@@ -363,9 +455,94 @@ const popNotifItem = document.getElementById("pop-notif");
 
 function addPopNotif(message) {
     popNotifItem.innerHTML = message;
+    popNotifs.classList.remove("none")
     popNotifs.classList.remove("hidden")
-    setTimeout(function (){
-            popNotifs.classList.add("hidden");
-    }, 10);
+    setTimeout(function () {
+        popNotifs.classList.add("hidden");
+    }, 3000);
 
 }
+
+const searchItemsContainer = document.querySelector('.body-contents');
+
+function fetchFilesAndDisplay() {
+    // clear the existing container
+    searchItemsContainer.innerHTML = '';
+
+    fetch('/files')
+        .then(response => response.json())
+        .then(data => {
+            // Handle the received files data
+            displayFiles(data);
+        })
+        .catch(error => {
+            console.error('Error fetching files:', error);
+        });
+}
+
+// Function to add a single file to the existing container
+function addFileToContainer(file) {
+    searchUrl = document.createElement('a');
+    searchUrl.href = 'view/' + file.id;
+    searchUrl.classList.add('search-urls');
+
+    searchItem = document.createElement('div');
+    searchItem.classList.add('search-item');
+    left = document.createElement('div');
+    left.classList.add('left');
+    icon = document.createElement('i');
+    icon.classList.add('bx')
+    icon.classList.add('bxs-file')
+
+    filename = document.createElement('p');
+    filename.classList.add('filename');
+    filename.textContent = file.filename;
+    filesize = document.createElement('p');
+    filesize.classList.add('filesize');
+    filesize.textContent = file.size;
+
+    left.appendChild(icon);
+    left.appendChild(filename);
+    searchItem.appendChild(left);
+    searchItem.appendChild(filesize);
+    searchUrl.appendChild(searchItem);
+    searchItemsContainer.appendChild(searchUrl);
+
+}
+
+// Function to display files in your existing container
+function displayFiles(files) {
+    files.forEach(file => {
+        addFileToContainer(file);
+    });
+    //update search
+    const searchItems = document.querySelectorAll(".search-item");
+
+    searchInput.addEventListener("input", function (event) {
+        const searchTerm = searchInput.value.toLowerCase();
+
+        searchItems.forEach(item => {
+            const fileName = item.querySelector("p").textContent.toLowerCase();
+            if (fileName.includes(searchTerm)) {
+                item.classList.remove("hidden"); // Remove the "hidden" class
+            } else {
+                item.classList.add("hidden"); // Add the "hidden" class
+            }
+        });
+    });
+}
+
+const body = document.querySelector('*')
+body.addEventListener('scroll', () => {
+alert('scrolling')
+})
+
+// if ('serviceWorker' in navigator) {
+//     navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+//         .then(function (registration) {
+//             // console.log('Service Worker registered with scope:', registration.scope);
+//         })
+//         .catch(function (error) {
+//             console.error('Service Worker registration failed:', error);
+//         });
+// }

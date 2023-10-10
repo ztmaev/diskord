@@ -3,12 +3,76 @@
 <title>Home | Diskord</title>
 {% endblock %}
 {% block styles %}
+<style>
+    .upload-container {
+        display: flex;
+        flex-direction: column;
+        margin-top: 2.5rem;
+    }
+
+    .body-group {
+        padding: 5px;
+    }
+
+    .body-group-inner {
+        background: var(--dark-color);
+        color: var(--light-color);
+        padding: 10px 15px;
+        width: 500px;
+        max-width: 100%;
+        border-radius: 5px;
+    }
+
+    .body-group-inner .h3 p {
+        font-size: 1.5rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .body-group-inner .img {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .body-group-inner .img img {
+        max-width: 300px;
+        right: 0;
+    }
+</style>
 
 
 {% endblock %}
 {% block content %}
 
-{% include "homepage-upload-form.html" %}
+<div class="upload-container">
+    <div class="upload-form">
+        {% include "homepage-urlform.html" %}
+    </div>
+    <div class="url-form">
+        {% include "homepage-upload-form.html" %}
+    </div>
+</div>
+
+<div class="body-group">
+    <div class="body-group-inner">
+        <div class="h3">
+            <p>Discord</p>
+        </div>
+        <div class="text">
+            <p>Unlimited free storage</p>
+        </div>
+        <div class="text2">
+            <p>Get unlimited free cloud storage</p>
+        </div>
+<!--        <div class="img">-->
+<!--            <img src="{{ url_for('static', filename='media/logo.png') }}" alt="">-->
+
+<!--        </div>-->
+    </div>
+</div>
 
 {% endblock %}
 {% block scripts %}

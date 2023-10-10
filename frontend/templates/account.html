@@ -1,0 +1,928 @@
+{% extends "base.html" %}
+{% block title %}
+<title>Account | Diskord</title>
+{% endblock %}
+{% block styles %}
+<style>
+    @media (max-width: 625px) {
+        .accounts-list .account {
+            width: 100%;
+        }
+
+        .body-container {
+            margin: 0;
+        }
+
+        .files p,
+        .storage p {
+            text-align: right;
+        }
+
+        .account-dashboard .storage p, .account-dashboard .files p {
+            font-size: 1.5rem;
+        }
+
+        .account-dashboard .storage, .account-dashboard .files {
+            font-size: 3rem;
+        }
+
+        .account-dashboard .storage,
+        .account-dashboard .files {
+            gap: 2px;
+        }
+
+        .tfa-form {
+            width: 100%;
+        }
+
+        .account-delete-footer {
+
+            max-width: 100%;
+        }
+
+    }
+
+    @media (min-width: 625px) {
+        .accounts-list .account {
+            width: 300px;
+        }
+
+
+        .account-dashboard .storage p, .account-dashboard .files p {
+            font-size: 2rem;
+        }
+
+        .account-dashboard .storage, .account-dashboard .files {
+            font-size: 4rem;
+        }
+
+        .account-dashboard .storage,
+        .account-dashboard .files {
+            gap: 30px;
+        }
+
+        .tfa-form {
+            width: 300px;
+        }
+
+        .account-delete-footer {
+
+            max-width: 300px;
+        }
+    }
+
+
+    .account-dashboard {
+        /*display: none;*/
+        margin: 5px auto;
+        width: calc(100% - 10px);
+        /*background: var(--dark-color);*/
+        /*border: 1px solid var(--grey-light-color);*/
+        border-radius: 5px;
+        /*padding: 5px;*/
+        color: var(--light-color);
+    }
+
+    .account-dashboard-inner {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+    }
+
+    .account-dashboard .storage,
+    .account-dashboard .files {
+        width: 50%;
+        background: var(--dark-color);
+        border: 1px solid var(--grey-light-color);
+        border-radius: 5px;
+        color: var(--light-color);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .account-dashboard .storage p,
+    .account-dashboard .files p {
+        /*media*/
+        margin: 0;
+    }
+
+    /*Main*/
+
+
+    /*Account Deletion*/
+    .heading {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .account-delete-footer {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 3rem;
+    }
+
+    .account-delete-confirm {
+        color: var(--lighter-color);
+        background: var(--warning-color);
+        width: fit-content;
+        padding: 5px 10px;
+        border-radius: 0.2rem;
+        cursor: pointer;
+    }
+
+    .account-delete-cancel {
+        color: var(--lighter-color);
+        background: var(--accent-darker-color);
+        width: fit-content;
+        padding: 5px 10px;
+        border-radius: 0.2rem;
+        cursor: pointer;
+    }
+
+    .account-delete-cancel:hover{
+        background: var(--accent-color);
+    }
+    .account-delete-confirm:hover{
+        outline: 1px solid var(--lighter-color);
+    }
+
+    .deletion-confirm-container,
+    .deletion-confirm-container::before,
+    .deletion-confirm-container::after {
+        z-index: 6;
+    }
+
+    .deletion-confirm-container {
+        position: absolute;
+        border: 1px solid var(--grey-light-color);
+        border-radius: 5px;
+        background: var(--dark-color);
+        width: 500px;
+        max-width: calc(100% - 20px);
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transform: translate(0, -30%) scale(0);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .deletion-confirm-container.active {
+        transform: translate(0, -30%) scale(1);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .deletion-confirm-container p,
+    .account-delete-footer p {
+        margin: 0;
+    }
+
+    .deletion-confirm-container .options-btns {
+        width: 100%;
+        display: flex;
+        padding: 0;
+        margin: 0;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .deletion-confirm-container .options-btns p {
+        margin: 0;
+    }
+
+    .account-delete-container,
+    .username-update-container,
+    .synced-account-container,
+    .tfa-container,
+    .extra-links{
+        padding: 0 5px;
+    }
+
+    .username-update-container-inner,
+    .account-delete-container-inner,
+    .synced-account-container-inner,
+    .tfa-container-inner,
+    .extra-links-inner{
+        position: relative;
+        background: var(--dark-color);
+        border-radius: 5px;
+        padding: 0;
+    }
+
+    .username-update-container-inner .header,
+    .account-delete-container-inner .header,
+    .synced-account-container-inner .header,
+    .tfa-container-inner .header,
+    .extra-links-inner .header{
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--darker-color);
+        font-weight: 600;
+    }
+
+    .username-update-container-inner .body,
+    .account-delete-container-inner .body,
+    .synced-account-container-inner .body,
+    .tfa-container-inner .body{
+        padding: 5px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .body p {
+        margin: 0;
+    }
+    .extra-links-inner{
+        margin-bottom: 5px;
+    }
+
+    .extra-links-inner .body{
+        padding: 5px 7px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 10px;
+    }
+     .extra-links-inner .body a{
+         text-decoration: none;
+         color: var(--lighter-color);
+         background: var(--accent-darker-color);
+         display: flex;
+         flex-direction: row;
+         align-items: center;
+         gap: 10px;
+         padding: 5px 10px;
+         border-radius: 2px;
+     }
+
+     .extra-links-inner .body a:hover{
+         background: var(--accent-color);
+         font-weight: 600;
+         transition: all 0.1s ease-in-out;
+     }
+
+    .body-container button {
+        cursor: pointer;
+        width: fit-content;
+        color: var(--lighter-color);
+        background: var(--accent-darker-color);
+        border: 1px solid transparent;
+        padding: 5px 10px;
+        border-radius: 2px;
+    }
+
+    .body-container button:hover {
+        color: var(--lighter-color);
+        background: var(--accent-color);
+        transition: all 0.1s ease-in-out;
+        font-weight: 600;
+    }
+
+    .body-container input {
+        font-size: 1.1rem;
+        height: 2rem;
+        outline: none;
+        border: 1px solid var(--grey-light-color);
+        border-radius: 3px 0 0 3px;
+        padding: 0.1rem 0.5rem;
+        background: var(--form-color);
+    }
+
+    .body-container button:hover {
+        opacity: 0.8;
+    }
+
+    .accounts-list .account {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+        gap: 3rem;
+        padding: 2px;
+        justify-content: space-between;
+    }
+
+    .overlay-dull {
+        z-index: 6;
+        position: fixed;
+        opacity: 0;
+        transition: 200ms ease-in-out;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--lightest-color);
+        pointer-events: none;
+    }
+
+    #overlay-dull.active {
+        opacity: 0.3;
+        pointer-events: all;
+    }
+
+    /*email*/
+    .tfa-container .body {
+        position: relative;
+    }
+
+    .tfa-container .body .email-confirm {
+        position: absolute;
+        border: 1px solid var(--grey-light-color);
+        border-radius: 5px;
+        background: var(--dark-color);
+        width: 500px;
+        max-width: calc(100% - 20px);
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transform: translate(0, -30%) scale(0);
+        transition: all 0.2s ease-in-out;
+        z-index: 6;
+    }
+
+    .tfa-container .body .email-confirm.active {
+        transform: translate(0, -30%) scale(1);
+        z-index: 6;
+    }
+
+    .email-confirm .email-confirm-text p {
+        margin: 0;
+    }
+
+    .tfa-form {
+        display: flex;
+        gap: 5px;
+        justify-content: space-between;
+    }
+
+    .body input,
+    #new-email {
+        width: calc(100% - 80px);
+    }
+
+    #newpass,
+    #changepass,
+    #email-btn,
+    .submit-btns,
+    .email-2fa-submit {
+        border-radius: 0 5px 5px 0;
+    }
+
+</style>
+{% endblock %}
+{% block content %}
+<div id="overlay-dull" class="overlay-dull"></div>
+
+<!--Account Dashboard-->
+<div class="account-dashboard">
+    <div class="account-dashboard-inner">
+        <div class="storage">
+            <i class="bx bx-disk"></i>
+            <p>{{account_info.storage_size}}</p>
+        </div>
+        <div class="files">
+            <i class="bx bx-file"></i>
+            <p>{{account_info.files_number}} Files</p>
+        </div>
+
+    </div>
+</div>
+<!--create/edit synced account-->
+<div class="synced-account-container">
+    <div class="synced-account-container-inner">
+        <div class="header">
+            <p class="heading">Synced account</p>
+        </div>
+        <div class="body">
+            {% if not session['password'] %}
+            <p>Add a password to login to your account with a username and password.</p>
+            <p>Your discord username is your login username</p>
+            <form onsubmit="setPass(event)" class="tfa-form">
+                <input type="password" id="set-password" required placeholder="New Password" required>
+                <button id="newpass" class="submit-btns">Submit</button>
+            </form>
+            {% else %}
+            <p>Change your linked account password</p>
+            <form onsubmit="updatePass(event)" class="tfa-form">
+                <input type="password" id="update-password" required placeholder="New Password" required>
+                <button id="changepass" class="submit-btns">Submit</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="username-update-container">
+    <div class="username-update-container-inner">
+        <div class="update-username">
+            <div class="header">
+                <p class="heading">Update username </p>
+            </div>
+            <div class="body">
+                <p>This action requires you to log in again with discord. You will be logged out
+                    automatically</p>
+                <p>Current username: Maev</p>
+                <button id="update-username">Update Username</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--2fa-->
+<div class="tfa-container">
+    <div class="tfa-container-inner">
+        <div class="header">
+            <p class="heading">Two Factor Authentication(2FA)</p>
+        </div>
+        <div class="body">
+            <p>Add an email to secure your account</p>
+            <form onsubmit="emailForm(event)" class="tfa-form">
+                <input type="email" id="new-email" required placeholder="Email" required>
+                <button class="email-2fa-submit" id="email-btn">Submit</button>
+            </form>
+            <div class="email-confirm" id="email-confirm">
+                <p class="email-confirm-text">Enter the verification code sent to:
+                <p id="email-to-link"></p></p>
+                <form onsubmit="submit2faCode(event)" class="tfa-form">
+                    <input type="text" id="verificaton-code" placeholder="Enter code" required>
+                    <button class="email-2fa-submit" id="email-btn">Submit</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="tfa-container">
+    <div class="tfa-container-inner">
+        <div class="2fa-accounts">
+            <div class="header">
+                <p class="heading">Connected Emails</p>
+            </div>
+            <div class="body">
+                <div class="accounts-list">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!--Delete account-->
+<div class="account-delete-container">
+    <div class="account-delete-container-inner">
+        <div class="account-delete">
+            <div class="header">
+                <p class="heading">Delete account</p>
+            </div>
+            <div class="body">
+                {% if session['await_deletion'] %}
+
+                <div class="account-delete-footer">
+                    <p>Cancel account deletion</p>
+                    <p id="account-delete-cancel" class="account-delete-cancel">Cancel</p>
+                </div>
+                {% else %}
+                <div class="account-delete-footer">
+                    <p>Request account deletion</p>
+                    <p id="account-delete-btn" class="account-delete-confirm">Delete</p>
+                </div>
+                {% endif %}
+
+                <div class="deletion-confirm-container">
+                    <p>Are you sure you want to delete your account?<br>All your files will be deleted upon account
+                        deletion.</p>
+                    <div class="options-btns">
+                        <p class="account-delete-cancel">Cancel</p>
+                        <p class="account-delete-confirm" id="account-delete-confirm">Delete</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!--Other links-->
+<div class="extra-links">
+    <div class="extra-links-inner">
+        <div class="header">
+            <p class="heading">Other links</p>
+        </div>
+        <div class="body">
+            <a href="{{url_for('join_community')}}">
+                <i class="bx bxl-discord"></i>
+                <p>Join community server</p>
+            </a>
+            <a href="{{url_for('invitebot')}}">
+                <i class="bx bxl-discord-alt"></i>
+                <p>Invite our bot to your discord server</p>
+            </a>
+            <a href="{{url_for('get_help')}}">
+                <i class="bx bx-help-circle"></i>
+                <p>Get help</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block scripts %}
+<script>
+    const overlayDull = document.getElementById('overlay-dull')
+
+    overlayDull.addEventListener('click', () => {
+        overlayDull.classList.remove('active')
+        hideDelConfirmBox()
+        hideEmailConfirm()
+    })
+
+    // Account Deletion
+    const accountDeleteBtn = document.getElementById('account-delete-btn')
+
+    if (accountDeleteBtn !== null) {
+        accountDeleteBtn.addEventListener('click', () => {
+            showDelConfirmBox()
+            overlayDull.classList.add('active')
+        });
+    }
+
+
+    //delete confirmation
+    const accountDelContainer = document.querySelector('.deletion-confirm-container')
+    const accountDelConfirm = document.getElementById('account-delete-confirm')
+    const accountDelCancel = document.querySelector('.account-delete-cancel')
+
+    if (accountDelConfirm !== null) {
+        accountDelConfirm.addEventListener('click', () => {
+            accountDelete()
+            hideDelConfirmBox()
+
+        });
+    }
+    if (accountDelCancel !== null) {
+        accountDelCancel.addEventListener('click', () => {
+            hideDelConfirmBox()
+            overlayDull.classList.remove('active')
+        });
+    }
+
+
+    function showDelConfirmBox() {
+        accountDelContainer.classList.add('active')
+
+
+    }
+
+    function hideDelConfirmBox() {
+        accountDelContainer.classList.remove('active')
+    }
+
+    function accountDelete() {
+        fetch('/delete_account', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                        setTimeout(function () {
+                            addPopNotif('Logging out')
+                        }, 3000);
+                        setTimeout(function () {
+                            //logout
+                            window.location.href = '/logout';
+                        }, 4000);
+
+                    });
+
+                } else {
+                    // Handle other status codes or error responses here
+                    response.json().then(data => {
+                        showModalNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addPopNotif('Request failed, please check your connection')
+            });
+    }
+
+    //cancel deletion
+    const cancelDeletionBtn = document.getElementById('account-delete-cancel')
+
+    if (cancelDeletionBtn !== null) {
+        cancelDeletionBtn.addEventListener('click', () => {
+            fetch('/cancel_deletion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        response.json().then(data => {
+                            addPopNotif(data.message)
+
+
+                            cancelDeletionBtn.innerText = 'Canceled'
+                            cancelDeletionBtn.style.pointerEvents = 'none'
+
+
+                        });
+
+                    } else {
+                        // Handle other status codes or error responses here
+                        response.json().then(data => {
+                            showModalNotif(data.message)
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addPopNotif('Request failed, please check your connection')
+                });
+        })
+    }
+
+
+    //passwords
+    function setPass(event) {
+        event.preventDefault()
+    }
+
+    function updatePass(event) {
+        event.preventDefault()
+    }
+
+    const password = document.getElementById('set-password')
+    const newpassword = document.getElementById('update-password')
+
+    const setPassBtn = document.getElementById('newpass')
+    const updatePassBtn = document.getElementById('changepass')
+
+    if (setPassBtn != null) {
+        setPassBtn.addEventListener('click', () => {
+            const bufferPass = password.value
+            if (!bufferPass) {
+                addPopNotif('please enter a password.');
+                return;
+            }
+            if (bufferPass.length < 8) {
+                addPopNotif("Password should be at least 8 characters.");
+                return;
+            }
+            if (bufferPass.length > 16) {
+                addPopNotif("Password should have a maximum of 16 characters.");
+                return;
+            }
+            fetch('/setpassword', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({bufferPass}),
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        addPopNotif('Password changed successfully')
+                        password.value = ''
+                        setTimeout(function () {
+                            window.location.href = '/account';
+                        }, 1000);
+
+                    } else {
+                        // Handle other status codes or error responses here
+                        response.json().then(data => {
+                            addPopNotif(data.message)
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        })
+    }
+    if (updatePassBtn != null) {
+        updatePassBtn.addEventListener('click', () => {
+            const bufferPass = newpassword.value
+            if (!bufferPass) {
+                addPopNotif('please enter a password.');
+                return;
+            }
+            if (bufferPass.length < 8) {
+                addPopNotif("Password should be at least 8 characters.");
+                return;
+            }
+            if (bufferPass.length > 16) {
+                addPopNotif("Password should have a maximum of 16 characters.");
+                return;
+            }
+            fetch('/updatepassword', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({bufferPass}),
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        addPopNotif('Password changed successfully')
+                        setTimeout(function () {
+                            window.location.href = '/account';
+                        }, 1000);
+                    } else {
+                        response.json().then(data => {
+                            addPopNotif(data.message)
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        })
+    }
+
+    // Update Username
+    const updateUserBtn = document.getElementById('update-username')
+
+    updateUserBtn.addEventListener('click', () => {
+        fetch('/update_username', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                        setTimeout(function () {
+                            addPopNotif('Logging out')
+                        }, 3000);
+                        setTimeout(function () {
+                            window.location.href = '/logout';
+                        }, 3000);
+
+                    });
+                } else {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    })
+
+
+    //add email
+
+
+    //submits
+    function emailForm(event) {
+        const newEmail = document.getElementById('new-email').value
+        const emailPopup = document.getElementById('email-to-link')
+        event.preventDefault()
+        fetch('/requestemailcode', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({newEmail}),
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                        emailPopup.innerText = newEmail
+                        showEmailConfirm()
+                    });
+                } else {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+    }
+
+    const emailConfirmBox = document.getElementById('email-confirm')
+
+    function showEmailConfirm() {
+        emailConfirmBox.classList.add('active')
+        overlayDull.classList.add('active')
+
+    }
+
+    function hideEmailConfirm() {
+        emailConfirmBox.classList.remove('active')
+        overlayDull.classList.remove('active')
+    }
+
+    //2fa code
+    function submit2faCode(event) {
+        event.preventDefault()
+        const tfaCode = document.getElementById('verificaton-code')
+        code = tfaCode.value
+        fetch('/linkemail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({code}),
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        const emailField = document.getElementById('new-email')
+                        addPopNotif(data.message)
+                        tfaCode.value = ' '
+                        emailField.value = ' '
+                        hideEmailConfirm()
+                        updateAccounts()
+
+                    });
+                } else {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+    }
+
+    // connected accounts
+    const accountsContainer = document.querySelector('.accounts-list')
+
+
+    function updateAccounts() {
+        fetch('/linkedaccounts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                while (accountsContainer.firstChild) {
+                    accountsContainer.removeChild(accountsContainer.firstChild)
+                }
+
+                displayAccounts(data);
+                // console.log(data)
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function displayAccounts(data) {
+        // create a div with p and button
+        data.forEach(emailData => {
+            // console.log(emailData)
+            const account = document.createElement('div')
+            account.className = 'account'
+            const email = document.createElement('p')
+            email.innerText = emailData
+            const button = document.createElement('button')
+            button.innerText = 'unlink'
+
+            account.appendChild(email)
+            account.appendChild(button)
+
+            accountsContainer.appendChild(account)
+
+        })
+    }
+
+
+    //unlink
+    // remove email from list and send unlink request
+
+
+    updateAccounts()
+
+
+</script>
+{% endblock %}

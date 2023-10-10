@@ -8,17 +8,18 @@
 
         .container {
             max-width: 500px;
-            margin: 10px;
+            margin: 0;
             padding: 20px;
             background-color: var(--dark-color);
             color: var(--light-color);
-            border-radius: 5px;
+            border-radius: 0 0 5px 5px;
             box-shadow: 0px 0px 10px var(--lightest-color);
         }
 
         .container-heading {
             text-align: center;
             margin-top: 0;
+            font-size: 1.5rem;
         }
 
         #file-upload-form {
@@ -82,8 +83,7 @@
         }
 
         .file-info {
-            margin: 10px 0;
-
+            margin: 5px 0;
             background-color: var(--darker-color);
             border: 1px solid var(--grey-light-color);
             border-radius: 5px;
@@ -142,6 +142,11 @@
         .container #submit-button:hover {
             background: var(--accent-color);
         }
+
+        .non-click{
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body>
@@ -157,6 +162,7 @@
     <ul id="file-list"></ul>
     <button id="submit-button" style="display:none;">Upload</button>
 </div>
+
 </body>
 <script>
    document.addEventListener('DOMContentLoaded', () => {
@@ -263,8 +269,10 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
+
+    const uploadBtn = document.getElementById('submit-button')
     // Define the function to execute when the "Submit" button is clicked.
-    function handleSubmitButtonClick() {
+    function handleSubmitButtonClickOld() {
         if (selectedFiles.length === 0) {
             addPopNotif('No files selected for submission');
             return;
@@ -284,13 +292,68 @@
                 // Handle the response from the server
                 // console.log(data);
                 addPopNotif('Upload successful');
-                // You can perform any additional actions here as needed
+                // clear items
+                selectedFiles = [];
+                fileList.innerHTML = '';
+                showSubmitButton(false);
             })
             .catch((error) => {
                 console.error('Error:', error);
                 addPopNotif('Error during upload');
             });
     }
+    function handleSubmitButtonClick() {
+    if (selectedFiles.length === 0) {
+        addPopNotif('No files selected for submission');
+        return;
+    }
+
+    const formData = new FormData();
+    selectedFiles.forEach((file, index) => {
+        formData.append('files[]', file);
+    });
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            const progressNo = (`${percentComplete.toFixed(2)}%`)
+            // console.log(`Upload Progress: ${percentComplete.toFixed(2)}%`);
+            uploadBtn.innerText = 'Uploading ' + progressNo
+            uploadBtn.classList.add('non-click')
+        }
+    });
+
+    xhr.upload.addEventListener('load', () => {
+        // console.log('Upload completed');
+        uploadBtn.innerText = 'Upload Complete'
+    });
+
+    xhr.upload.addEventListener('error', () => {
+        // console.error('Error during upload');
+        addPopNotif('Error during upload');
+    });
+
+    xhr.open('POST', '/upload', true);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            // Handle the response from the server
+            const response = JSON.parse(xhr.responseText);
+            // console.log('Server Response:', response);
+            addPopNotif('Upload successful');
+            // Clear items
+            selectedFiles = [];
+            fileList.innerHTML = '';
+            showSubmitButton(false);
+            uploadBtn.innerText = 'Upload'
+            uploadBtn.classList.remove('non-click')
+        }
+    };
+
+    xhr.send(formData);
+}
+
 });
 
 

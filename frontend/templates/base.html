@@ -5,10 +5,9 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-<!--    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>-->
+    <!--    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>-->
     <link rel="stylesheet" href="{{ url_for('static', filename='boxicons-2.1.4/css/boxicons.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
     {% block title %}
     <title>Untitled Page</title>
@@ -19,8 +18,8 @@
     {% endblock %}
 </head>
 <body class="active">
-<div class="popnotifs hidden" id="popnotifs">
-    <p id="pop-notif">Sample notif</p>
+<div class="popnotifs hidden none" id="popnotifs">
+    <p id="pop-notif"></p>
 </div>
 {% with messages = get_flashed_messages() %}
 {% if messages %}
@@ -42,13 +41,17 @@
 <nav class="navbar">
     <div class="left-group">
         <div class="branding">
-            <a href="{{url_for('index')}}"><img src="{{ url_for('static', filename='media/logo.png') }}" alt="logo"
-                                                id="logo"></a>
+            <a href="{{url_for('index')}}">
+                <img src="{{ url_for('static', filename='media/logo.png') }}" alt="logo"
+                     id="logo">
+                <p class="branding-name">Diskord</p>
+            </a>
+
         </div>
         <div class="nav-items">
             <ul>
                 <li class="active"><a href="{{url_for('index')}}">Home</a></li>
-                <li class=""><a href="">Uploads</a>
+                <li class="uploads-btn-nav"><a href="">Uploads</a>
                 </li>
             </ul>
         </div>
@@ -69,7 +72,6 @@
                     <p class="clear-btn" id="clear-btn"><i class='bx bx-envelope-open'></i> clear</p>
                 </div>
                 <div class="notifs-list">
-                    <p class="bx-items">Lorem ipsum dolor sit amet.<i class='bx bxs-trash'></i></p>
                     <template>
                         <p class="bx-items">Lorem ipsum dolor sit amet.<i class='bx bxs-trash'></i></p>
                     </template>
@@ -79,12 +81,13 @@
         </div>
         {% if session %}
         <div class="profile-group" onclick="showProfileOptions()">
-            <img src="{{ url_for('static', filename='media/profile.png') }}" alt="" id="session-pp">
+            <img src="{{session['avatar_url']}}" alt="" id="session-pp">
             <p id="session-name">{{ session['username']}}</p>
         </div>
         <div class="profile-options-menu" id="profile-options-menu">
             <div id="main">
-                <div class="profile-options-items" id="profile-account"><i class='bx bxs-user'></i> Account</div>
+                <a href="{{ url_for('account') }}" class="profile-options-items" id="profile-account"><i
+                        class='bx bxs-user'></i> Account</a>
                 <a href="{{ url_for('logout') }}" class="profile-options-items" id="profile-log-out"><i
                         class='bx bx-log-out'></i> Log out</a>
             </div>
@@ -132,7 +135,7 @@
 
         </form>
         <div class="discord-login">
-            <a href="{{ url_for('oauth') }}"><i class='bx bxl-discord-alt'></i></a>
+            <a href="{{ oauth_url }}"><i class='bx bxl-discord-alt'></i></a>
         </div>
 
 
@@ -140,17 +143,17 @@
     <div class="invite-section">
         <div class="bot-invite">
             <p>Invite our bot to your server.</p>
-            <a href="">Invite <i class='bx bxl-discord-alt'></i></a>
+            <a href="{{url_for('invitebot')}}">Invite <i class='bx bxl-discord-alt'></i></a>
         </div>
         <div class="community-server">
             <p>Join the community server.</p>
-            <a href="">Join <i class='bx bxl-discord-alt'></i></a>
+            <a href="{{url_for('join_community')}}">Join <i class='bx bxl-discord-alt'></i></a>
         </div>
 
     </div>
     <div class="help-section">
         <p>Recover files/Get help recovering files. </p>
-        <a href="">help <i class='bx bxs-help-circle'></i></a><a href="">SelfRecovery <i class='bx bxs-wrench'></i></a>
+        <a href="{{url_for('get_help')}}">help <i class='bx bxs-help-circle'></i></a><a href="{{url_for('self_recovery')}}">SelfRecovery <i class='bx bxs-wrench'></i></a>
     </div>
 </div>
 <div class="search-container" id="search-container">
@@ -162,10 +165,10 @@
     </div>
     <div class="body-contents">
         {% for file in files %}
-        <a href="{{file.url}}" class="search-urls">
+        <a href="{{url_for('view', id='1')}}" class="search-urls">
             <div class="search-item">
                 <div class="left">
-                    <img src="{{ url_for('static', filename='media/logo.png') }}" alt="">
+                    <i class="bx-file"></i>
                     <p class="filename">{{file.filename}}</p>
                 </div>
                 <p class="filesize">{{file.size}}</p>
@@ -175,15 +178,111 @@
     </div>
 
 </div>
+<div class="bottom-bar">
+    <div class="bottom-bar-inner">
+        <div class="{{ 'active' if request.endpoint == 'index'}}"><a href="{{url_for('index')}}" ><i class="bx bxs-home"></i></a></div>
+        {% if 'username' in session %}
+        <div class="{{ 'active' if request.endpoint == 'uploads'}}"><a href="{{url_for('uploads')}}"><i class="bx bxs-cloud-upload"></i></a></div>
+        <div class=""><i class="bx bx-search" id="search-trigger-2"></i></div>
+        <div class=""><i class="bx bxs-bell" id="notif-trigger-2"></i></div>
+        <div class="{{ 'active' if request.endpoint == 'account'}}"><a href="{{url_for('account')}}"><i class="bx bxs-user"></i></a></div>
+        {% else %}
+        <div onclick="loginPrompt('view your uploads.')" ><i class="bx bxs-cloud-upload"></i></div>
+        <div onclick="loginPrompt('search your files.')"><i class="bx bx-search"></i></div>
+        <div onclick="loginPrompt('view notifications.')"><i class="bx bxs-bell"></i></div>
+        <div onclick="loginPrompt('view your account page.')"><i class="bx bxs-user"></i></div>
+        {% endif %}
+
+    </div>
+</div>
 <div id="overlay"></div>
 <div id="overlay-clear"></div>
 <div id="overlay-content"></div>
 <div class="content">
-    {% block content %}
 
-    {% endblock %}
+    <div class="main-container">
+        <div class="sidebar min">
+            <div class="toggle-btn">
+                <i class="bx bx-arrow-from-left"></i>
+            </div>
+            <div class="sidebar-items">
+                <div class="group-up">
+                    <div class="active">
+                        <a class="min" href="{{url_for('index')}}">
+                            <i class="bx bx-home"></i>
+                            <p class="hidden">Home</p>
+                        </a>
+                    </div>
+                    {% if 'username' in session %}
+                    <div>
+                        <a class="min" href="{{url_for('uploads')}}">
+                            <i class="bx bx-cloud-upload"></i>
+                            <p class="hidden">Uploads</p>
+                        </a>
+                    </div>
+                    {% else %}
+                    <div>
+                        <div onclick="loginPrompt('view your uploads.')">
+                            <a class="min">
+                                <i class="bx bx-cloud-upload"></i>
+                                <p class="hidden">Uploads</p>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="group-down">
+                    {% if 'username' in session %}
+                    <div>
+                        <a class="min" href="{{url_for('account')}}">
+                            <i class="bx bx-user"></i>
+                            <p class="hidden">Account</p>
+                        </a>
+                    </div>
+                    {% else %}
+                    <div>
+                        <a class="min" onclick="loginPrompt('view your account page.')">
+                            <i class="bx bx-user"></i>
+                            <p class="hidden">Account</p>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if 'username' in session %}
+                    <div>
+                        <a class="min" href="{{url_for('logout')}}" id="logout-btn">
+                            <i class="bx bx-log-out"></i>
+                            <p class="hidden">Log out</p>
+                        </a>
+                    </div>
+                    {% else %}
+                    <div>
+                        <a class="min" onclick="loginPrompt('view/upload files.')">
+                            <i class="bx bx-log-in"></i>
+                            <p class="hidden">Log in</p>
+                        </a>
+                    </div>
+
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+
+        <div class="body-container min">
+            {% block content %}
+
+            {% endblock %}
+        </div>
+    </div>
+
 </div>
 
 <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+
+
+{% block scripts %}
+
+{% endblock %}
 </body>
 </html>

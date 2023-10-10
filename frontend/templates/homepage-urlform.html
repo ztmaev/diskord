@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+    <style>
+        @media (min-width: 625px) {
+            #url-form {
+                max-width: calc(100% - 20px);
+            }
+        }
+
+        @media (max-width: 625px) {
+            #url-form {
+                max-width: 100%;
+            }
+        }
+        .url-form{
+            padding: 0 5px;
+        }
+
+        #url-form {
+            background: var(--dark-color);
+            border-radius: 5px 5px 0 0;
+            width: 500px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px var(--lightest-color);
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        #url-form .form-group {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            width: 100%;
+            justify-content: space-between;
+            align-items: stretch;
+        }
+
+        #url-form p,
+        #url-form h3 {
+            margin: 0;
+        }
+
+        #url-form input {
+            outline: none;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 2px;
+            padding: 0 10px;
+            width: calc(100% - 80px);
+            color: var(--darker-color);
+            background: var(--form-color);
+        }
+
+        #url-form button {
+            cursor: pointer;
+            width: fit-content;
+            color: var(--lighter-color);
+            background: var(--accent-darker-color);
+            border: 1px solid transparent;
+            padding: 5px 10px;
+            border-radius: 2px;
+        }
+
+        #url-form button:hover {
+            background: var(--accent-color);
+            color: var(--lighter-color);
+        }
+
+    </style>
+</head>
+<body>
+<div class="url-form">
+    <form onsubmit="urlForm(event)" id="url-form">
+        <h3>Upload from direct link</h3>
+        <p>Enter file's direct link.</p>
+        <div class="form-group">
+            <input type="text" placeholder="Url" required>
+            <button>Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function urlForm(event) {
+        event.preventDefault()
+        console.log('hhh')
+    }
+</script>
+</body>
+</html>

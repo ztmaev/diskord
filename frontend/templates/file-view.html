@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block title %}
+<title>{{ file_info.filename }} | Diskord</title>
+{% endblock %}
+{% block styles %}
+<style>
+    .file-info-container {
+        position: relative;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        transition: 200ms ease-in-out;
+        border: 1px solid var(--grey-light-color);
+        border-radius: 5px;
+        background-color: var(--darker-color);
+        width: 500px;
+        max-width: calc(100% - 10px);
+        color: var(--light-color);
+    }
+
+    .file-info-container .header {
+        padding: 10px 15px;
+        color: var(--light-color);
+        font-size: 2rem;
+        background: var(--dark-color);
+        border-bottom: 1px solid var(--grey-light-color);
+        border-radius: 5px 5px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .file-info-container .body {
+        padding: 0 15px;
+        border-bottom: 1px solid var(--grey-light-color);
+    }
+
+    .file-info-container .links {
+        padding: 10px 15px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .file-info-container .links a {
+        text-decoration: none;
+        color: var(--lighter-color);
+        background: var(--accent-darker-color);
+        padding: 4px 6px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+
+    .file-info-container .links a:hover {
+        background: var(--accent-color);
+        color: var(--darker-color);
+    }
+
+    .file-info-container .links a i {
+        font-size: 1.5rem;
+    }
+
+    .links .json {
+        position: relative;
+    }
+
+    .links .json .copy-popup {
+        display: none;
+        position: absolute;
+        transform: translate(20%, -350%);
+        background: var(--accent-color);
+        color: var(--dark-color);
+        padding: 2px 5px;
+        border-radius: 5px;
+        align-items: center;
+    }
+
+    .links .json .copy-popup.active {
+        display: flex;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .edit p,
+    .delete p {
+        margin: 0;
+    }
+
+    #delete-btn {
+        background: #9C1A1C;
+    }
+
+    .edit {
+        position: relative;
+    }
+
+    .edit .edit-popup {
+        transform: translate(-55%, 5%);
+        position: absolute;
+        background: var(--dark-color);
+        border: 1px solid var(--grey-light-color);
+        border-radius: 5px;
+        padding: 10px;
+        display: none;
+        gap: 10px;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 300px;
+        z-index: 6;
+    }
+
+    .edit .edit-popup.active {
+        display: flex;
+        transform: translate(-55%, 5%);
+    }
+
+    .edit-popup form {
+        gap: 9px;
+        display: flex;
+        align-items: flex-start;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .edit-popup form button,
+    .group-buttons p {
+        background: var(--accent-darker-color);
+        color: var(--lighter-color);
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .edit-popup form button:hover,
+    .group-buttons p:hover {
+        background: var(--accent-color);
+        color: var(--darker-color);
+    }
+
+    .edit .edit-popup input {
+        width: 100%;
+        color: var(--darker-color);
+        outline: 1px solid var(--grey-light-color);
+        border: none;
+        border-radius: 2px;
+        padding: 8px 10px;
+        background: var(--light-color);
+        font-weight: 600;
+    }
+
+    .edit-popup h3 {
+        margin: 0;
+    }
+
+    .overlay-dull {
+        z-index: 6;
+        position: fixed;
+        opacity: 0;
+        transition: 200ms ease-in-out;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--lightest-color);
+        pointer-events: none;
+    }
+
+    .hidden-json {
+        display: none;
+    }
+
+    #overlay-dull.active {
+        opacity: 0.3;
+        pointer-events: all;
+    }
+
+    .group-buttons {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+</style>
+
+
+{% endblock %}
+{% block content %}
+<div id="overlay-dull" class="overlay-dull"></div>
+
+<div class="file-info-container">
+    <div class="inner">
+        <div class="header">
+            {{file_info.filename}}
+            <i class="bx bxs-file"></i>
+        </div>
+        <div class="body">
+            <h3>File info</h3>
+            <div class="info">
+                <p class="filename"><strong>Filename:</strong> {{file_info.filename}}</p>
+                <p class="filesize"><strong>Filesize:</strong> {{file_info.filesize}}</p>
+                <p class="date"><strong>Upload Date:</strong> {{file_info.date_uploaded}}</p>
+            </div>
+        </div>
+        <div class="links">
+            <div class="download">
+                <a href="{{url_for('download')}}"><i class="bx bxs-download"></i>Download</a>
+            </div>
+            <div class="json">
+                <a href=""><i class="bx bx-code-alt"></i>Json</a>
+                <p class="copy-popup">
+                    copied
+                </p>
+                <p class="hidden-json">{{file_info.json}}</p>
+            </div>
+            <div class="edit">
+                <a onclick="showHidePopup()">
+                    <i class="bx bx-pen"></i>
+                    <p>Edit</p>
+                </a>
+                <div class="edit-popup">
+                    <h3>Change filename</h3>
+                    <form onsubmit="renameFile(event)">
+                        <input type="text" name="filename" placeholder="Filename" value="{{file_info.filename}}"
+                               class="new-filename">
+                        <div class="group-buttons">
+                            <p onclick="hidePopup()">Cancel</p>
+                            <button>Change name</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="delete">
+                <a href="" id="delete-btn">
+                    <i class="bx bx-trash"></i>
+                    <p>Delete</p>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block scripts %}
+<script>
+    const jsonBtn = document.querySelector('.json')
+    const copyPopup = document.querySelector('.copy-popup')
+
+    jsonBtn.addEventListener("click", () => {
+        event.preventDefault()
+        copyToClipboard()
+        showCopiedNotif()
+    })
+
+    function showCopiedNotif() {
+        copyPopup.classList.add('active')
+        setTimeout(function () {
+            copyPopup.classList.remove('active');
+        }, 3000);
+    }
+
+    function copyToClipboard() {
+        const jsonText = document.querySelector('.hidden-json').innerText
+        console.log(jsonText)
+
+        const textArea = document.createElement("textarea");
+        textArea.value = jsonText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+    }
+
+    //Edit popup
+    const nameChangePopup = document.querySelector('.edit-popup')
+
+    function showHidePopup() {
+        if (nameChangePopup.matches('.active')) {
+            hidePopup()
+        } else {
+            showPopup()
+        }
+    }
+
+    function showPopup() {
+        nameChangePopup.classList.add('active')
+    }
+
+    function hidePopup() {
+        nameChangePopup.classList.remove('active')
+    }
+
+    function renameFile(event) {
+        event.preventDefault()
+        const fileName = document.querySelector('.new-filename').value
+
+        fetch('/update_filename', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({fileName}),
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    addPopNotif('filename changed successfully')
+                    updateName(fileName)
+                    hidePopup()
+                } else {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+
+    }
+
+    //change name
+    const oldName = document.querySelector('.info .filename')
+
+    function updateName(newfilename) {
+        oldName.innerHTML = "<strong>Filename: </strong>" + newfilename
+    }
+</script>
+
+{% endblock %}

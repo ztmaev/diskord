@@ -10,12 +10,12 @@ import discord
 import pytz
 from colorama import Fore, Style, Back
 from discord.ext import commands
+
 from jsondb import write_to_db
 
 # start server
 server_path = "server.py"
 server = subprocess.Popen(["python", server_path])
-
 
 with open("config.json") as f:
     config = json.load(f)
@@ -86,7 +86,6 @@ def save_to_config(thread_id, thread_url, thread_name):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-
     # create config if it doesn't exist
     try:
         with open(config_name, "r") as f:
@@ -101,8 +100,6 @@ def save_to_config(thread_id, thread_url, thread_name):
         ids_config.append({"thread_id": thread_id, "thread_name": thread_name, "thread_url": thread_url})
     with open(config_name, "w") as f:
         json.dump(ids_config, f, indent=4)
-
-
 
 
 # json cleanup
@@ -123,9 +120,6 @@ def json_cleanup(json_data):
 
 
 def save_upload_data(upload_list, thread_id, thread_name, thread_url):
-    # print number of files
-    print(
-        f"{current_time()}{Fore.BLUE} {len(upload_list)} files uploaded in thread" + Fore.YELLOW + f"[{thread_name}]" + Fore.RESET)
     json_path = f"temp/configs/{thread_name}.json"
     temp_json_path = f"temp/configs/temp/{thread_name}.json"
     thread_json_path = "temp/ids_config.json"
@@ -159,7 +153,6 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
     if not os.path.exists(db_dir_path):
         os.makedirs(db_dir_path)
 
-
     json_path = f"db_dir/{thread_name}.json"
     with open(temp_json_path, "r") as f:
         data_json = json.load(f)
@@ -174,11 +167,8 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
                     del i["thread_name"]
                     data_json["thread_info"] = i
 
-
-
     with open(json_path, "w") as f:
         json.dump(data_json, f, indent=4)
-
 
     write_to_db(data_json)
 
@@ -188,6 +178,9 @@ def save_upload_data(upload_list, thread_id, thread_name, thread_url):
 
     os.remove(temp_file_1)
     os.remove(temp_file_2)
+    # print number of files
+    print(
+        f"{current_time()}{Fore.BLUE} {len(upload_list)} files uploaded in thread" + Fore.YELLOW + f"[{thread_name}]" + Fore.RESET)
 
 
 class Client(commands.Bot):
@@ -321,8 +314,6 @@ class Client(commands.Bot):
                         while True:
                             if end_flag:
                                 break
-
-                            thread_id = thread.id
                             thread = self.get_channel(thread_id)
                             async for message in thread.history(limit=100):
                                 for attachment in message.attachments:
@@ -355,7 +346,7 @@ class Client(commands.Bot):
                                             config = json.load(f)
                                             chunks_number = config["chunks_number"]
 
-                                            # print("c1",chunks_number)
+                                            print("c1", chunks_number)
 
                                 # TODO: fix this (monitor thread until all files are uploaded and then save the json)
 

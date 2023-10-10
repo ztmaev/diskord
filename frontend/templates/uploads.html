@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}
+<title>Uploads | Diskord</title>
+{% endblock %}
+{% block styles %}
+<style>
+    .file-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .file-list a {
+        text-decoration: none;
+        color: var(--light-color);
+        display: flex;
+        gap: 10px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .file-list a:hover {
+        background: var(--accent-darker-color);
+        color: var(--lighter-color);
+        box-shadow: 0px 0px 10px var(--lightest-color);
+    }
+
+    .right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 5px;
+    }
+
+    .right .filename {
+        text-align: left;
+    }
+
+    .files {
+        padding: 0 10px;
+        padding-bottom: 10px;
+    }
+
+    .files .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .file-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 10px;
+        color: var(--light-color);
+        border: 1px solid var(--grey-light-color);
+        border-radius: 5px;
+        background-color: var(--dark-color);
+    }
+
+    .file-item i {
+        color: var(--light-color);
+        font-size: 3.5rem;
+    }
+
+    .file-icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+    }
+
+    .right .filename {
+        font-weight: bold;
+        /* max-height: 2em; */
+        -webkit-line-clamp: 2;
+        display: -webkit-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: pre-wrap;
+        word-break: break-word;
+        -webkit-box-orient: vertical;
+    }
+
+    .filter {
+        display: flex;
+        gap: 5px;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .filter-select {
+        border: 1px solid var(--grey-light-color);
+        background: var(--dark-color);
+        color: var(--lighter-color);
+        border-radius: 2px;
+        padding: 2px 3px;
+        outline: none;
+    }
+
+    .filter-select:hover {
+        outline: 1px solid var(--light-color);
+    }
+
+    .filter-select:focus {
+
+    }
+
+    #sort-btn {
+        font-size: 1.2rem;
+        background: var(--dark-color);
+        border: 1px solid var(--grey-light-color);
+        border-radius: 2px;
+        padding: 3px;
+        margin-left: -6px;
+    }
+
+    #sort-btn:hover {
+        outline: 1px solid var(--lighter-color);
+    }
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!--fetch uploads and display them from /files using js-->
+<div class="files">
+    <div class="header">
+        <h2>Uploads</h2>
+        <div class="filter">
+            <i class="bx bx-filter"></i>
+            <p>Sort</p>
+            <select name="sort" class="filter-select">
+                <option value="name">Name</option>
+                <option value="size">Size</option>
+                <option value="date">Date</option>
+            </select>
+            <i class="bx bxs-down-arrow" id="sort-btn"></i>
+
+        </div>
+    </div>
+    <div class="file-list">
+
+    </div>
+</div>
+
+
+{% endblock %}
+{% block scripts %}
+<script>
+    // Function to fetch and display files
+    async function fetchFiles() {
+        try {
+            const response = await fetch('/files');
+            const files = await response.json();
+            const fileContainer = document.querySelector('.file-list');
+            const selectedOption = filterPicker.value; // ie: name, size, date
+            const sortOption = getSortMode(); // ie: up or down
+
+            // Custom sorting function to compare file sizes
+            function compareSizes(a, b) {
+                function sizeToBytes(size) {
+                    const unit = size.match(/[A-Za-z]+/)[0];
+                    const value = parseFloat(size);
+                    const units = {Bytes: 1, KB: 1024, MB: 1024 * 1024, GB: 1024 * 1024 * 1024};
+                    return value * units[unit];
+                }
+
+                const sizeA = sizeToBytes(a.size);
+                const sizeB = sizeToBytes(b.size);
+
+                return sortOption === 'up' ? sizeA - sizeB : sizeB - sizeA;
+            }
+
+            // Custom sorting function to compare dates
+            function compareDates(a, b) {
+                // new format: "2023-10-10 18:44:27"
+                function getDateComponents(dateStr) {
+                    const [date, time] = dateStr.split(' ');
+                    const [year, month, day] = date.split('-');
+                    const [hour, minute, second] = time.split(':');
+                    return {year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: parseInt(hour), minute: parseInt(minute), second: parseInt(second)};
+                }
+
+                const dateA = getDateComponents(a.date);
+                const dateB = getDateComponents(b.date);
+
+                if (dateA.year !== dateB.year) {
+                    return sortOption === 'up' ? dateA.year - dateB.year : dateB.year - dateA.year;
+                } else if (dateA.month !== dateB.month) {
+                    return sortOption === 'up' ? dateA.month - dateB.month : dateB.month - dateA.month;
+                } else if (dateA.day !== dateB.day) {
+                    return sortOption === 'up' ? dateA.day - dateB.day : dateB.day - dateA.day;
+                } else if (dateA.hour !== dateB.hour) {
+                    return sortOption === 'up' ? dateA.hour - dateB.hour : dateB.hour - dateA.hour;
+                } else if (dateA.minute !== dateB.minute) {
+                    return sortOption === 'up' ? dateA.minute - dateB.minute : dateB.minute - dateA.minute;
+                } else if (dateA.second !== dateB.second) {
+                    return sortOption === 'up' ? dateA.second - dateB.second : dateB.second - dateA.second;
+                } else {
+                    return 0;
+                }
+
+            }
+
+            // Sort the files based on the selected option and sort order
+            if (selectedOption === 'date') {
+                files.sort(compareDates);
+            } else if (selectedOption === 'name') {
+                files.sort((a, b) => (sortOption === 'up' ? a.filename.localeCompare(b.filename) : b.filename.localeCompare(a.filename)));
+            } else if (selectedOption === 'size') {
+                files.sort(compareSizes); // Use the compareSizes function from the previous response
+            }
+
+            // Clear the file container before adding sorted items
+            fileContainer.innerHTML = '';
+
+            // Loop through the sorted files and create HTML elements for each
+            files.forEach((file) => {
+                const fileItem = document.createElement('a');
+                fileItem.href = `/view/${file.id}`;
+                fileItem.classList.add('file-item');
+                fileItem.innerHTML = `
+                <i class="bx bx-file"></i>
+                <div class="right">
+                    <span class="filename">${file.filename}</span>
+                    <span class="date">${file.date}</span>
+                    <span class="filesize">${file.size}</span>
+                </div>
+            `;
+                fileContainer.appendChild(fileItem);
+            });
+        } catch (error) {
+            console.error('Error fetching files:', error);
+        }
+    }
+
+    //filter
+    const filterPicker = document.querySelector('.filter-select')
+    const sortPicker = document.getElementById('sort-btn')
+
+    filterPicker.addEventListener('change', function () {
+        fetchFiles()
+    })
+
+    sortPicker.addEventListener('click', () => {
+        fetchFiles()
+        if (sortPicker.matches('.bxs-down-arrow')) {
+            sortPicker.classList.remove('bxs-down-arrow')
+            sortPicker.classList.add('bxs-up-arrow')
+        } else {
+            sortPicker.classList.remove('bxs-up-arrow')
+            sortPicker.classList.add('bxs-down-arrow')
+        }
+    })
+
+    function getSortMode() {
+        var sortMode
+        if (sortPicker.matches('.bxs-down-arrow')) {
+            return sortMode = 'down'
+        } else {
+            return sortMode = 'up'
+        }
+
+    }
+
+
+    // Call the fetchFiles function when the page loads
+    window.addEventListener('load', fetchFiles);
+</script>
+{% endblock %}

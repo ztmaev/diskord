@@ -18,19 +18,15 @@
         }
     }
 
-    .download-content {
-        position: fixed;
-    }
 
     .download-container {
-        position: fixed;
-        top: calc(50% + 40px);
+        position: relative;
+        top: 45%;
         left: 50%;
-        transform: translate(-50%, -80%);
+        transform: translate(-50%, -50%);
         transition: 200ms ease-in-out;
         border: 1px solid var(--grey-light-color);
-        border-radius: 10px;
-        z-index: 10;
+        border-radius: 5px;
         background-color: var(--darker-color);
         width: 500px;
         color: var(--darkest-color);
@@ -43,7 +39,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-radius: 10px 10px 0 0;
+        border-radius: 5px 5px 0 0;
         padding: 5px 10px;
         font-size: 1.1rem;
         border-bottom: 1px solid var(--grey-light-color);
@@ -58,7 +54,9 @@
     }
 
     .g1 .p1 {
-        font-size: 1.2rem;
+        font-size: 2.2rem;
+        padding: 0.5rem 0;
+        margin: 0;
     }
 
     .download-container .header .g1 .p2 {
@@ -90,7 +88,7 @@
     .progress .progress-meter {
         width: 60%;
         background: none;
-        border-radius: 10px;
+        /*border-radius: 10px;*/
         border: none;
         height: 12px;
         display: flex;
@@ -99,37 +97,36 @@
     }
 
     .progress .progress-meter progress {
-        height: 10px;
         width: 100%;
         border: 1px solid var(--grey-light-color);
-        border-radius: 10px;
+        /*border-radius: 10px;*/
     }
 
     .progress .progress-meter progress::-webkit-progress-bar {
         background-color: var(--dark-color);
-        border-radius: 10px;
+        /*border-radius: 5px;*/
 
     }
 
     .progress .progress-meter progress::-webkit-progress-value {
         background-color: var(--accent-color);
-        border-radius: 10px;
+        border-radius: 0 5px 5px 0;
 
     }
 
     .progress-banner {
         background-color: var(--dark-color);
-        height: 60px;
+        height: 6rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 5px;
-        margin-top: 5px;
+        padding: 0;
+        margin: 0;
 
     }
 
     .progress-banner p {
-        font-size: 50px;
+        font-size: 5rem;
         color: var(--light-color);
     }
 
@@ -138,8 +135,7 @@
         align-items: center;
         justify-content: center;
         gap: 20px;
-        height: 30px;
-        margin-top: 5px;
+        font-size: 1.2rem;
     }
 
     .progress-footer {
@@ -148,47 +144,50 @@
         justify-content: flex-start;
     }
 
+    .progress-footer p {
+        padding: 0;
+        margin: 0;
+    }
+
 </style>
 
 
 {% endblock %}
 {% block content %}
-<div class="download-content">
-    <div class="download-container">
-        <div class="header">
-            <div class="g1">
-                <p class="p1">Processing your file</p>
-                <p class="p2">Please don't close this page</p>
-            </div>
-            <div class="g2">
-                <p class="loading-icon"></p>
-            </div>
+<div class="download-container">
+    <div class="header">
+        <div class="g1">
+            <p class="p1">{{ file_info.filename }}</p>
+            <p class="p2">Prepairing your file, please don't close this page</p>
         </div>
-        <div class="download-body">
-            <div class="progress">
-                <p class="progress-meter">
-                    <progress id="progress-bar" max="100" value="56"></progress>
-                </p>
-                <p>Merging files...</p>
-            </div>
-            <div class="progress-banner">
-                <p>56%</p>
-            </div>
-            <div class="info-footer">
-                <p class="filename">Filename</p>
-                <p class="size">4.37gb</p>
-            </div>
-            <div class="progress-footer">
-                <p>Download will start automatically</p>
-            </div>
-
+        <div class="g2">
+            <p class="loading-icon"></p>
         </div>
-        <div class="file-info">
-
+    </div>
+    <div class="download-body">
+        <div class="progress">
+            <p class="progress-meter">
+                <progress id="progress-bar" max="100" value="56"></progress>
+            </p>
+            <p>Merging files...</p>
         </div>
-
+        <div class="progress-banner">
+            <p>56%</p>
+        </div>
+        <div class="info-footer">
+            <p class="filename">{{ file_info.filename }}</p>
+            <p class="size">{{ file_info.filesize }}</p>
+        </div>
+        <div class="progress-footer">
+            <p>Download will start automatically</p>
+        </div>
 
     </div>
+    <div class="file-info">
+
+    </div>
+
+
 </div>
 
 {% endblock %}
