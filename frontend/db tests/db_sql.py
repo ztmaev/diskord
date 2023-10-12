@@ -1,6 +1,6 @@
 import mysql.connector
 
-database_name = "Alpha1"
+database_name = "Alpha2"
 
 
 db_config = {
@@ -108,10 +108,10 @@ if not table_notifications_exists:
             username VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
             user_discord_id BIGINT NOT NULL,
             message VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-            message_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            message_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             is_seen BOOLEAN NOT NULL DEFAULT FALSE,
             date_created VARCHAR(255) NOT NULL,
-            date_seen VARCHAR(255) NOT NULL
+            date_seen VARCHAR(255)
         )
     """)
     print("Created 'notifications' table")
@@ -149,7 +149,7 @@ if not table_subfiles_exists:
             main_file_id INT NOT NULL,
             chunk_file_id INT NOT NULL,
             file_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-            file_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            file_url VARCHAR(350) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             date_created VARCHAR(255) NOT NULL
         )
     """)
@@ -162,8 +162,9 @@ if not table_2fa_exists:
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
             username VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
             discord_id BIGINT NOT NULL,
-            `2fa_code` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-            email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
+            `tfa_code` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            date_created VARCHAR(255) NOT NULL
         )
     """)
     print("Created '2fa' table")

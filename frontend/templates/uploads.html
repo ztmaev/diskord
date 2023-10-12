@@ -4,10 +4,31 @@
 {% endblock %}
 {% block styles %}
 <style>
+    @media (min-width: 625px) {
+        .file-list {
+            gap: 10px;
+        }
+
+        .files {
+            padding: 0 10px;
+        }
+
+    }
+
+    @media (max-width: 625px) {
+        .file-list {
+            gap: 7px;
+        }
+
+        .files {
+            padding: 0 5px;
+        }
+
+    }
+
     .file-list {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 10px;
     }
 
     .file-list a {
@@ -39,7 +60,6 @@
     }
 
     .files {
-        padding: 0 10px;
         padding-bottom: 10px;
     }
 
@@ -182,7 +202,14 @@
                     const [date, time] = dateStr.split(' ');
                     const [year, month, day] = date.split('-');
                     const [hour, minute, second] = time.split(':');
-                    return {year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: parseInt(hour), minute: parseInt(minute), second: parseInt(second)};
+                    return {
+                        year: parseInt(year),
+                        month: parseInt(month),
+                        day: parseInt(day),
+                        hour: parseInt(hour),
+                        minute: parseInt(minute),
+                        second: parseInt(second)
+                    };
                 }
 
                 const dateA = getDateComponents(a.date);

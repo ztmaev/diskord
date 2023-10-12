@@ -1,13 +1,16 @@
+import json
 import os
 import subprocess
+import threading
 import uuid
-import json
-import mysql.connector
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from zenora import APIClient
 
-from config import token, client_secret, redirect_uri, oauth_url
-from files import process_upload_files
+from config import token, client_secret, redirect_uri, oauth_url, admin_ids, get_db
+from files import process_upload_files, convert_file_size, file_download_merge
+from user_notifs import handle_notif, generate_2fa_code, send_verification_email, confirm_verification_code, \
+    unlink_email
 
 client = APIClient(token, client_secret=client_secret)
 app = Flask(__name__)
@@ -17,20 +20,6 @@ app.secret_key = secret
 
 upload_dir = "temp/files/media"
 webhook_file = "flask_webhook_bridge.py"
-
-db_name = 'test.db'
-admin_ids = ["1135978748689256468"]
-
-
-def get_db():
-    db = mysql.connector.connect(
-        host="arc.maev.site",
-        user="maev",
-        passwd="Alph4",
-        port="3306",
-        database="Alpha1"
-    )
-    return db
 
 
 def generate_temp_uuid():
@@ -108,14 +97,14 @@ def save_user(user):
         print("Error saving user:", str(e))
         return False
 
+
 def filelist():
-    print(123)
     db = get_db()
     cursor = db.cursor()
 
     try:
         # Fetch data from the 'files' table with the user's ID
-        cursor.execute("SELECT * FROM files WHERE owner_id = %s", (str(session["user_id"]),))
+        cursor.execute("SELECT * FROM files WHERE owner_id = %s and is_deleted = FALSE", (str(session["user_id"]),))
         files_data = []
         for file in cursor:
             file_data = {
@@ -144,12 +133,37 @@ def index():
 # Account
 @app.route('/account')
 def account():
-    account_info = {
-        "storage_size": "73.48 GB",
-        "files_number": 18730
-    }
-    return render_template("account.html", account_info=account_info)
+    # account_info = {
+    #     "storage_size": "73.48 GB",
+    #     "files_number": 18730
+    # }
 
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    conn = get_db()
+    cursor = conn.cursor()
+    # fetch account info from files table
+    cursor.execute("SELECT COUNT(id) FROM files WHERE owner_id = %s", (str(session["user_id"]),))
+    files_number = cursor.fetchone()
+    if files_number is None or files_number[0] is None:
+        files_number = 0
+    else:
+        files_number = files_number[0]
+    cursor.execute("SELECT SUM(file_size) FROM files WHERE owner_id = %s", (str(session["user_id"]),))
+    storage_size = cursor.fetchone()
+    if storage_size is None or storage_size[0] is None:
+        storage_size = 0
+    else:
+        storage_size = storage_size[0]
+    storage_size = convert_file_size(storage_size)
+    account_info = {
+        "storage_size": storage_size,
+        "files_number": files_number
+    }
+
+    return render_template("account.html", account_info=account_info)
 
 
 @app.route('/login', methods=['POST'])
@@ -186,7 +200,9 @@ def login():
         return jsonify({'message': 'Incorrect username or password.'}), 400
 
     # get user info from db
-    cursor.execute("SELECT discord_id, avatar, await_username_update, await_deletion, deleted FROM users WHERE username = %s", (username.lower(),))
+    cursor.execute(
+        "SELECT discord_id, avatar, await_username_update, await_deletion, deleted FROM users WHERE username = %s",
+        (username.lower(),))
     user_info = cursor.fetchone()
     user_id = user_info[0]
     avatar_url = user_info[1]
@@ -222,11 +238,9 @@ def login():
     return jsonify({'message': 'Logged in successfully.'}), 200
 
 
-
 @app.route('/oauth/callback')
 def oauth():
     code = request.args.get("code")
-    print(code)
     access_token = client.oauth.get_access_token(code, redirect_uri).access_token
 
     bearer_client = APIClient(access_token, bearer=True)
@@ -303,7 +317,6 @@ def oauth():
     else:
         deleted = False
 
-
     # admin_status
     if user_id in admin_ids:
         session["admin"] = True
@@ -339,7 +352,7 @@ def setpassword():
     cursor = conn.cursor()
     cursor.execute("SELECT password FROM users WHERE discord_id = %s", (str(session["user_id"]),))
     password = cursor.fetchone()
-    print(password)
+    # print(password)
     if password is not None and password[0] is not None and password[0].strip() != "":
         return jsonify({'message': 'You already have a password set.'}), 400
 
@@ -413,42 +426,80 @@ def update_username():
     return jsonify({'message': 'Log in again with discord to update your username.'}), 200
 
 
-"""
-
 @app.route('/requestemailcode', methods=['POST'])
 def requestemailcode():
     data = request.get_json()
     email = data.get('newEmail', '')
-    accounts=...
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT emails FROM users WHERE discord_id = %s", (str(session["user_id"]),))
+    emails = cursor.fetchone()
+    if emails is None or emails[0] is None or emails[0].strip() == "":
+        accounts = []
+    else:
+        accounts = emails[0].split(",")
+    cursor.close()
+
     if len(accounts) >= 3:
         return jsonify({'message': 'Maximum number of accounts connected.'}), 400
 
     if email in accounts:
         return jsonify({'message': 'Email already linked to your account.'}), 400
-    else:
-        accounts.append(email)
-        return jsonify({'message': 'Code has been sent to your email.'}), 200
-        # TODO: generate code send it to email and save it to db
 
-    
+    tfacode = generate_2fa_code()
+
+    check = send_verification_email(tfacode, email, session["username"], session["user_id"])
+
+    if check:
+        return jsonify({'message': 'Code has been sent to your email.'}), 200
+
+
+    else:
+        return jsonify({'message': 'Failed to send code to your email.'}), 400
+
+
 @app.route('/linkemail', methods=['POST'])
 def linkemail():
     data = request.get_json()
     verification_code = data.get('tfaCode', '')
-    return jsonify({'message': 'Email linked successfully'}), 200
+
+    check = confirm_verification_code(verification_code, session["user_id"])
+
+    if check:
+        return jsonify({'message': 'Email linked successfully'}), 200
+    else:
+        return jsonify({'message': 'Failed to link email'}), 400
+
     # TODO: error handling, linking, get email and code from db(email_verification)
 
-@app.route('/unlinkemail', methods=['POST'])
-def unlinkemail():
-    return jsonify({'message': 'Email unlinked successfully'}), 200
-    # TODO: error handling, unlinking
 
 @app.route('/linkedaccounts', methods=['POST'])
 def linkedaccounts():
+    # fetch linked accounts from db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT emails FROM users WHERE discord_id = %s", (str(session["user_id"]),))
+    emails = cursor.fetchone()
+    if emails is None or emails[0] is None or emails[0].strip() == "":
+        accounts = []
+    else:
+        accounts = emails[0].split(",")
+    cursor.close()
     return jsonify(accounts), 200
     # TODO: fetch email accounts, format: ['maev@maev.site', 'admin@maev.site']
-    
-"""
+
+
+@app.route('/unlinkemail', methods=['POST'])
+def unlinkemail():
+    data = request.get_json()
+    email = data.get('email', '')
+    check = unlink_email(email, session["user_id"])
+    if check:
+        return jsonify({'message': 'Email unlinked successfully'}), 200
+    else:
+        return jsonify({'message': 'Failed to unlink email'}), 400
+    # TODO: error handling, unlinking
+
 
 @app.route('/delete_account', methods=['POST'])
 def delete_account():
@@ -466,14 +517,14 @@ def delete_account():
     cursor.close()
     session["await_deletion"] = True
 
-    return jsonify({'message': 'Your account will be deleted in 30 days, log in during that period to stop the deletion.'}), 200
+    return jsonify(
+        {'message': 'Your account will be deleted in 30 days, log in during that period to stop the deletion.'}), 200
 
 
 @app.route('/cancel_deletion', methods=['POST'])
 def cancel_deletion():
     if 'username' not in session:
         return jsonify({'message': 'Please log in first.'}), 400
-    # set await_deletion to false in db
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -487,44 +538,143 @@ def cancel_deletion():
     return jsonify({'message': 'Account deletion canceled'}), 200
 
 
-
-
 # Files
 @app.route('/files')
 def files():
-   if 'username' not in session:
-       flash("error_Please log in first.")
-       return redirect(url_for('index'))
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
 
-   files = json.loads(filelist())
+    files = json.loads(filelist())
 
-   return jsonify(files)
+    return jsonify(files)
 
 
-"""
 @app.route('/view/<path:id>')
 def view(id):
-   return render_template("file-view.html", file_info=file_info)
-   # TODO: fetch file info for item using the id
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM files WHERE file_id = %s", (id,))
+    file_info = cursor.fetchone()
+    if file_info is None:
+        flash("error_File not found.")
+        return redirect(url_for('index'))
+    file_index_id = file_info[0]
+
+    # fetch subfiles and their urls
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM subfiles WHERE main_file_id = %s", (file_index_id,))
+    subfiles = []
+    for subfile in cursor:
+        subfile_data = {
+            "id": subfile[0],
+            "chunk_file_id": subfile[2],
+            "file_name": subfile[3],
+            "url": subfile[4],
+            "date_created": subfile[5]
+        }
+        subfiles.append(subfile_data)
+
+    file_info = {
+        "id": file_info[2],
+        "filename": file_info[1],
+        "file_type": file_info[4],
+        "size": file_info[5],
+        "size_simple": file_info[6],
+        "date": file_info[15],
+        "date_updated": file_info[16],
+        "subfiles": subfiles
+    }
+    return render_template("file-view.html", file_info=file_info)
 
 
 @app.route('/update_filename', methods=['POST'])
-def update_filename():   
-   data = request.get_json()
-   filename = data.get('fileName', '')
-   return jsonify({'message': 'Filename updated successfully.'}), 200
-   # TODO: Handle file rename and errors
-   
-"""
+def update_filename():
+    data = request.get_json()
+    filename = data.get('fileName', '')
+    file_id = data.get('fileID', '')
+    if not filename:
+        return jsonify({'message': 'Please enter a filename.'}), 400
+    if not file_id:
+        return jsonify({'message': 'No file ID provided.'}), 400
+    # update filename in db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE files
+        SET file_name = %s
+        WHERE file_id = %s
+    """, (filename, file_id))
+    conn.commit()
+    cursor.close()
+    return jsonify({'message': 'Filename updated successfully.'}), 200
+    # TODO: Handle file rename and errors
+
+
+@app.route("/stats", methods=['POST'])
+def stats():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # get stats from db
+    id = session["user_id"]
+    conn = get_db()
+    cursor = conn.cursor()
+    # fetch file_size and count files from files table where owner_id = id
+    cursor.execute("SELECT SUM(file_size), COUNT(id) FROM files WHERE owner_id = %s", (str(id),))
+    stats = cursor.fetchone()
+
+    if stats is None:
+        file_number = 0
+        file_size = 0
+    else:
+        if stats[0] is None or stats[0] == "":
+            file_size = 0
+        else:
+            file_size = convert_file_size(stats[0])
+        if stats[1] is None or stats[1] == "":
+            file_number = 0
+        else:
+            file_number = stats[1]
+
+    user_stats = {
+        "file_number": file_number,
+        "file_size": file_size
+    }
+
+    return jsonify(user_stats), 200
+
+
+@app.route('/delete_file', methods=['POST'])
+def delete_file():
+    data = request.get_json()
+    fileid = data.get('deleteFileID', '')
+    if not fileid:
+        return jsonify({'message': 'No file ID provided.'}), 400
+    # update filename in db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE files
+        SET is_deleted = TRUE
+        WHERE file_id = %s
+    """, (fileid,))
+    conn.commit()
+    cursor.close()
+    return jsonify({'message': 'File deleted successfully.'}), 200
+
+
 @app.route('/uploads')
 def uploads():
     return render_template('uploads.html')
+
 
 @app.route('/upload', methods=['POST'])
 def upload():
     files_await_upload = []
     uploaded_files = request.files.getlist('files[]')
-        # Check if files were uploaded
+    # Check if files were uploaded
     if not uploaded_files:
         return jsonify({'error': 'No files were uploaded'}), 400
 
@@ -534,53 +684,156 @@ def upload():
             filename = temp_uuid + '_' + file.filename
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             files_await_upload.append(filename)
-    # execute
-    process_upload_files(files_await_upload, session["user_id"])
-    #
-    return jsonify({'message': 'Upload successful'}), 200
 
-"""
-
-@app.route('/upload', methods=['POST'])
-def upload():
-    uploaded_files = request.files.getlist('files[]')
-        # Check if files were uploaded
-    if not uploaded_files:
-        return jsonify({'error': 'No files were uploaded'}), 400
-
-    for file in uploaded_files:
-        if file:
-            filename = file.filename
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    # Use the function reference without invoking it
+    thread = threading.Thread(target=process_upload_files,
+                              args=(files_await_upload, session["user_id"], session["username"]))
+    thread.start()
 
     return jsonify({'message': 'Upload successful'}), 200
-    # TODO: Save the files correctly
-    
-
-@app.route('/download')
-def download():
-    # TODO: Process file and send download
 
 
+@app.route('/download/<path:file_id>', methods=['GET', 'POST'])
+def download(file_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM files WHERE file_id = %s", (file_id,))
+    file_info = cursor.fetchone()
+    if file_info is None:
+        flash("error_File not found.")
+        return redirect(url_for('index'))
+    file_index_id = file_info[0]
 
+    # fetch subfiles and their urls
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM subfiles WHERE main_file_id = %s", (file_index_id,))
+    subfiles = []
+    for subfile in cursor:
+        subfile_data = {
+            "id": subfile[0],
+            "chunk_file_id": subfile[2],
+            "file_name": subfile[3],
+            "url": subfile[4],
+            "date_created": subfile[5]
+        }
+        subfiles.append(subfile_data)
+
+    file_info = {
+        "id": file_info[2],
+        "filename": file_info[1],
+        "file_type": file_info[4],
+        "size": file_info[5],
+        "size_simple": file_info[6],
+        "date": file_info[15],
+        "date_updated": file_info[16],
+        "subfiles": json.dumps(subfiles),
+        "chunks_number": file_info[7]
+    }
+
+    threading.Thread(target=file_download_merge, args=(file_info,)).start()
+
+    # file_download_merge(file_info)
+
+    if request.method == 'GET':
+        return render_template('download.html', file_info=file_info)
+    elif request.method == 'POST':
+        # download the files
+        print("Downloading files...")
+
+
+# download and progress tracking
+@app.route('/download_progress', methods=['POST'])
+def download_progress():
+    # check if stat
+    data = request.get_json()
+    file_id = data.get('fileID', '')
+    if not file_id:
+        return jsonify({'message': 'No file ID provided.'}), 400
+    status_file = f"files/merge_output/{file_id}/status.txt"
+    if os.path.exists(status_file):
+        with open(status_file, 'r') as f:
+            status = f.read()
+        return jsonify({'message': status}), 200
+    else:
+        return jsonify({'message': 'File not found'}), 400
+
+
+@app.route('/download_file/<path:file_id>', methods=['GET'])
+def download_file(file_id):
+    if not file_id:
+        return jsonify({'message': 'No file ID provided.'}), 400
+    # check if file exists
+    # fetch filename from db
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT file_name FROM files WHERE file_id = %s", (file_id,))
+    filename = cursor.fetchone()
+    if filename is None or filename[0] is None or filename[0].strip() == "":
+        flash('File not found')
+        return redirect(url_for('index'))
+    filename = filename[0]
+    # check if file exists
+    if not os.path.exists(f"files/merge_output/{file_id}/{filename}"):
+        print("File not found _file")
+        flash('File not found')
+        return redirect(url_for('index'))
+    # send file
+    return send_from_directory(f"files/merge_output/{file_id}", filename, as_attachment=True)
 
 
 # Notifications
 @app.route('/notifications')
 def get_notifications():
-    # TODO: return a list of notifications for the user
+    # fetch notifications from db
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM notifications WHERE user_discord_id = %s and is_seen = FALSE",
+                   (str(session["user_id"]),))
+    notifications = []
+
+    for notification in cursor:
+        if notification[4] is None or notifications[4].strip() == "":
+            notification_data = {
+                "id": notification[0],
+                "message": notification[3],
+                "is_seen": notification[5],
+                "date_created": notification[6]
+            }
+        else:
+            notification_data = {
+                "id": notification[0],
+                "message": notification[3],
+                "url": notification[4],
+                "is_seen": notification[5],
+                "date_created": notification[6]
+            }
+        notifications.append(notification_data)
+    cursor.close()
+    return jsonify(notifications)
 
 
 @app.route('/removenotif')
 def remove_notification():
     notification_id = request.args.get('id')
-    # TODO: Mark notification as marked using id
+    if not notification_id:
+        return jsonify({'message': 'No notification ID provided.'}), 400
+
+    check = handle_notif(session["user_id"], session["username"], "remove", "", "", notification_id)
+    if check:
+        return jsonify({'message': 'Notification removed successfully.'}), 200
+    else:
+        return jsonify({'message': 'Failed to remove notification.'}), 400
 
 
 @app.route('/clearnotifs')
 def clearnotifs():
-    # TODO: Mark all notifications as seen
+    check = handle_notif(session["user_id"], session["username"], "remove_all", "", "")
+    if check:
+        return jsonify({'message': 'Notifications cleared successfully.'}), 200
+    else:
+        return jsonify({'message': 'Failed to clear notifications.'}), 400
 
+    """
 # Others
 @app.route('/offline')
 def offline():
@@ -620,4 +873,4 @@ def self_recovery():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8800, host="0.0.0.0")
+    app.run(debug=True, port=5000, host="0.0.0.0")

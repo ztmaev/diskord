@@ -141,7 +141,7 @@ function passwordToggle() {
 }
 
 
-function formSubmission() {
+function formSubmission(event) {
     event.preventDefault()
     const username = document.querySelector('#username').value;
     const password = document.querySelector('#password').value;
@@ -149,7 +149,7 @@ function formSubmission() {
         showModalNotif('please enter your username and password or use discord login.');
         return;
     }
-    if (password[7] === undefined) {
+    if (password.length < 8) {
         showModalNotif("Password should be at least 8 characters.")
     }
     fetch('/login', {
@@ -166,7 +166,7 @@ function formSubmission() {
                 });
                 setTimeout(function () {
                     // Redirect to homepage
-                    window.location.href = '/';
+                    window.location.href = '/login';
                 }, 1000);
 
             } else {
@@ -483,7 +483,15 @@ function fetchFilesAndDisplay() {
 // Function to add a single file to the existing container
 function addFileToContainer(file) {
     searchUrl = document.createElement('a');
-    searchUrl.href = 'view/' + file.id;
+    // searchUrl.href = 'view/' + file.id;
+    const currentURL = window.location.href;
+    if (currentURL.includes('/view/')) {
+        // If the current URL already contains '/view/', simply append the file.id
+        searchUrl.href = '/view/' + file.id;
+    } else {
+        // If the current URL doesn't contain '/view/', add '/view/' and then append the file.id
+        searchUrl.href = 'view/' + file.id;
+    }
     searchUrl.classList.add('search-urls');
 
     searchItem = document.createElement('div');
@@ -534,7 +542,7 @@ function displayFiles(files) {
 
 const body = document.querySelector('*')
 body.addEventListener('scroll', () => {
-alert('scrolling')
+    alert('scrolling')
 })
 
 // if ('serviceWorker' in navigator) {

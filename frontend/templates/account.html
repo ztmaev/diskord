@@ -144,10 +144,11 @@
         cursor: pointer;
     }
 
-    .account-delete-cancel:hover{
+    .account-delete-cancel:hover {
         background: var(--accent-color);
     }
-    .account-delete-confirm:hover{
+
+    .account-delete-confirm:hover {
         outline: 1px solid var(--lighter-color);
     }
 
@@ -201,7 +202,7 @@
     .username-update-container,
     .synced-account-container,
     .tfa-container,
-    .extra-links{
+    .extra-links {
         padding: 0 5px;
     }
 
@@ -209,7 +210,7 @@
     .account-delete-container-inner,
     .synced-account-container-inner,
     .tfa-container-inner,
-    .extra-links-inner{
+    .extra-links-inner {
         position: relative;
         background: var(--dark-color);
         border-radius: 5px;
@@ -220,7 +221,7 @@
     .account-delete-container-inner .header,
     .synced-account-container-inner .header,
     .tfa-container-inner .header,
-    .extra-links-inner .header{
+    .extra-links-inner .header {
         padding: 5px 10px;
         border-bottom: 1px solid var(--darker-color);
         font-weight: 600;
@@ -229,7 +230,7 @@
     .username-update-container-inner .body,
     .account-delete-container-inner .body,
     .synced-account-container-inner .body,
-    .tfa-container-inner .body{
+    .tfa-container-inner .body {
         padding: 5px 10px;
         display: flex;
         flex-direction: column;
@@ -239,34 +240,36 @@
     .body p {
         margin: 0;
     }
-    .extra-links-inner{
+
+    .extra-links-inner {
         margin-bottom: 5px;
     }
 
-    .extra-links-inner .body{
+    .extra-links-inner .body {
         padding: 5px 7px;
         display: flex;
         flex-direction: row;
         justify-content: space-between;
         gap: 10px;
     }
-     .extra-links-inner .body a{
-         text-decoration: none;
-         color: var(--lighter-color);
-         background: var(--accent-darker-color);
-         display: flex;
-         flex-direction: row;
-         align-items: center;
-         gap: 10px;
-         padding: 5px 10px;
-         border-radius: 2px;
-     }
 
-     .extra-links-inner .body a:hover{
-         background: var(--accent-color);
-         font-weight: 600;
-         transition: all 0.1s ease-in-out;
-     }
+    .extra-links-inner .body a {
+        text-decoration: none;
+        color: var(--lighter-color);
+        background: var(--accent-darker-color);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        padding: 5px 10px;
+        border-radius: 2px;
+    }
+
+    .extra-links-inner .body a:hover {
+        background: var(--accent-color);
+        font-weight: 600;
+        transition: all 0.1s ease-in-out;
+    }
 
     .body-container button {
         cursor: pointer;
@@ -372,6 +375,7 @@
     #newpass,
     #changepass,
     #email-btn,
+    #email-btn-2,
     .submit-btns,
     .email-2fa-submit {
         border-radius: 0 5px 5px 0;
@@ -386,12 +390,12 @@
 <div class="account-dashboard">
     <div class="account-dashboard-inner">
         <div class="storage">
-            <i class="bx bx-disk"></i>
-            <p>{{account_info.storage_size}}</p>
+            <i class="bx bx-disc"></i>
+            <p id="stats-size">0 bytes</p>
         </div>
         <div class="files">
             <i class="bx bx-file"></i>
-            <p>{{account_info.files_number}} Files</p>
+            <p id="stats-file-number">0 Files</p>
         </div>
 
     </div>
@@ -407,13 +411,13 @@
             <p>Add a password to login to your account with a username and password.</p>
             <p>Your discord username is your login username</p>
             <form onsubmit="setPass(event)" class="tfa-form">
-                <input type="password" id="set-password" required placeholder="New Password" required>
+                <input type="password" id="set-password" required placeholder="New Password" required autocomplete="new-password">
                 <button id="newpass" class="submit-btns">Submit</button>
             </form>
             {% else %}
             <p>Change your linked account password</p>
             <form onsubmit="updatePass(event)" class="tfa-form">
-                <input type="password" id="update-password" required placeholder="New Password" required>
+                <input type="password" id="update-password" required placeholder="New Password" required autocomplete="new-password">
                 <button id="changepass" class="submit-btns">Submit</button>
             </form>
             {% endif %}
@@ -452,8 +456,8 @@
                 <p class="email-confirm-text">Enter the verification code sent to:
                 <p id="email-to-link"></p></p>
                 <form onsubmit="submit2faCode(event)" class="tfa-form">
-                    <input type="text" id="verificaton-code" placeholder="Enter code" required>
-                    <button class="email-2fa-submit" id="email-btn">Submit</button>
+                    <input type="text" id="verification-code" placeholder="Enter code" required>
+                    <button class="email-2fa-submit" id="email-btn-2">Submit</button>
                 </form>
 
             </div>
@@ -544,6 +548,37 @@
         hideDelConfirmBox()
         hideEmailConfirm()
     })
+
+    //account dashboard
+    const statsSize = document.getElementById('stats-size')
+    const statsFileNumber = document.getElementById('stats-file-number')
+
+    //fetch account stats from /stats
+    fetch('/stats', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            if(data.file_size <=0 ){
+                statsSize.innerText = '0 bytes'
+            }
+            else{
+                statsSize.innerText = data.file_size
+            }
+            if (data.file_number <= 0) {
+                statsFileNumber.innerText = '0 Files'
+            }
+            else {
+                statsFileNumber.innerText = data.file_number + ' Files'
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
 
     // Account Deletion
     const accountDeleteBtn = document.getElementById('account-delete-btn')
@@ -839,14 +874,13 @@
     //2fa code
     function submit2faCode(event) {
         event.preventDefault()
-        const tfaCode = document.getElementById('verificaton-code')
-        code = tfaCode.value
+        const tfaCode = document.getElementById('verification-code').value
         fetch('/linkemail', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({code}),
+            body: JSON.stringify({tfaCode}),
         })
             .then(response => {
                 if (response.status === 200) {
@@ -903,6 +937,7 @@
             // console.log(emailData)
             const account = document.createElement('div')
             account.className = 'account'
+
             const email = document.createElement('p')
             email.innerText = emailData
             const button = document.createElement('button')
@@ -913,12 +948,40 @@
 
             accountsContainer.appendChild(account)
 
+            //  activate unlink buttons
+            button.addEventListener('click', () => {
+                unlinkEmail(emailData)
+            })
+
         })
     }
 
-
     //unlink
-    // remove email from list and send unlink request
+    function unlinkEmail(email) {
+        console.log(email)
+        fetch('/unlinkemail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({email}),
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                        updateAccounts()
+                    });
+                } else {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
 
 
     updateAccounts()

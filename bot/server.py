@@ -73,6 +73,19 @@ async def diskord(websocket):
             logger(f"Error: {e}")
             await websocket.send("Error")
 
+    elif query_ask == "get_upload_info":
+        # read json and get each subfile's info, format {filename: "gshjs", file_url: "https://..."}
+        file_id = query.split("_%_")[1]
+        try:
+            with open(f"db_dir/{file_id}.json") as f:
+                file_info = json.load(f)
+            # send file info
+            await websocket.send(json.dumps(file_info))
+        except Exception as e:
+            logger(f"Error: {e}")
+            await websocket.send("Error")
+
+
 
     else:
         await websocket.send("Invalid query or format")

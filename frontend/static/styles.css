@@ -837,7 +837,10 @@
     }
 
     #session-name {
-        display: block;
+        display: none;
+    }
+    .profile-group img {
+        margin-right: -5px;
     }
 
     .modal {
@@ -1030,13 +1033,15 @@ body {
 }
 
 .user-notifs {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     z-index: 10;
     position: fixed;
     top: 55px;
     right: 5px;
-    height: 180px;
-    width: 250px;
+    height: 300px;
+    width: 300px;
     border: 1px solid var(--grey-light-color);
     border-radius: 5px;
     background-color: var(--darker-color);
@@ -1067,6 +1072,12 @@ body {
     border-bottom: 1px solid var(--grey-light-color);
 }
 
+.user-notifs .notifs-header p{
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
 .user-notifs .notifs-header .clear-btn {
     display: flex;
     flex-direction: row;
@@ -1087,11 +1098,11 @@ body {
 }
 
 .user-notifs .notifs-list {
-    padding: 5px;
+    padding: 0 5px;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    height: 145px;
+    height: 255px;
     overflow-y: scroll;
     color: var(--light-color);
     background: var(--darker-color);
@@ -1122,22 +1133,23 @@ body {
     margin: 3px;
     text-decoration: none;
     color: var(--light-color);
+    word-break: break-all;
 }
 
 /*delete` color*/
 .user-notifs .notifs-list .bx-items.hovered {
-    transition: all 0.1s ease-in-out;
+    transition: all 0.2s ease-in-out;
     background: var(--warning-color);
 }
 
 .user-notifs .notifs-list p i {
     cursor: pointer;
     font-size: 1.3rem;
-    height: 23px;
+    height: 100%;
     width: 23px;
     display: flex;
     margin: -5px;
-    /* padding: 0px; */
+    padding: 10px;
     align-items: center;
     justify-content: center;
 }
@@ -1158,7 +1170,8 @@ body {
 .profile-group img {
     width: 39px;
     height: 39px;
-    border-radius: 50%;
+    /*border-radius: 50%;*/
+    border-radius: 5px;
     border: 1px solid var(--accent-color);
     cursor: pointer;
 }
@@ -1177,6 +1190,7 @@ body {
     font-weight: 500;
     color: var(--light-color);
     cursor: pointer;
+    text-transform: capitalize;
 }
 
 .profile-group p:hover {

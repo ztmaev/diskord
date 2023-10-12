@@ -29,13 +29,13 @@
         border-radius: 5px;
         background-color: var(--darker-color);
         width: 500px;
-        color: var(--darkest-color);
+        color: var(--light-color);
         padding: 0;
     }
 
     .download-container .header {
         background: var(--dark-color);
-        color: var(--lighter-color);
+        color: var(--light-color);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -54,23 +54,29 @@
     }
 
     .g1 .p1 {
-        font-size: 2.2rem;
+        font-size: 1.5rem;
         padding: 0.5rem 0;
         margin: 0;
     }
 
     .download-container .header .g1 .p2 {
         padding: 0;
-        margin: 5px 0;
+        margin: 0;
         font-size: 1rem;
     }
 
     .download-container .header .g2 {
         width: 40px;
         height: 40px;
-        background-color: var(--purple-dim-color);
+        /*background-color: var(--purple-dim-color);*/
         margin: 10px;
         border-radius: 50%;
+    }
+
+    .download-container .header .g2 i{
+        font-size: 3rem;
+        padding: 0;
+        margin: 0;
     }
 
     .download-body {
@@ -86,9 +92,9 @@
     }
 
     .progress .progress-meter {
-        width: 60%;
+        width: 50%;
         background: none;
-        /*border-radius: 10px;*/
+        border-radius: 10px;
         border: none;
         height: 12px;
         display: flex;
@@ -99,18 +105,18 @@
     .progress .progress-meter progress {
         width: 100%;
         border: 1px solid var(--grey-light-color);
-        /*border-radius: 10px;*/
+        border-radius: 10px;
     }
 
     .progress .progress-meter progress::-webkit-progress-bar {
         background-color: var(--dark-color);
-        /*border-radius: 5px;*/
+        border-radius: 10px;
 
     }
 
     .progress .progress-meter progress::-webkit-progress-value {
         background-color: var(--accent-color);
-        border-radius: 0 5px 5px 0;
+        border-radius: 10px;
 
     }
 
@@ -135,13 +141,13 @@
         align-items: center;
         justify-content: center;
         gap: 20px;
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
 
     .progress-footer {
         padding: 0 5px;
         display: flex;
-        justify-content: flex-start;
+        justify-content: center;
     }
 
     .progress-footer p {
@@ -158,33 +164,33 @@
     <div class="header">
         <div class="g1">
             <p class="p1">{{ file_info.filename }}</p>
-            <p class="p2">Prepairing your file, please don't close this page</p>
+            <p class="p2" id="info-text">Prepairing your file, please don't close this page</p>
         </div>
         <div class="g2">
-            <p class="loading-icon"></p>
+            <i class="bx bx-file"></i>
         </div>
     </div>
     <div class="download-body">
         <div class="progress">
             <p class="progress-meter">
-                <progress id="progress-bar" max="100" value="56"></progress>
+                <progress id="progress-bar" max="100" value="0"></progress>
             </p>
-            <p>Merging files...</p>
+            <p id="progress-activity">Starting Download...</p>
         </div>
         <div class="progress-banner">
-            <p>56%</p>
+            <p id="progress-percent">0%</p>
         </div>
         <div class="info-footer">
-            <p class="filename">{{ file_info.filename }}</p>
-            <p class="size">{{ file_info.filesize }}</p>
+            <p class="size">FileSize: {{ file_info.size_simple }}</p>
+            <p class="filename">Chunks: {{ file_info.chunks_number }}</p>
         </div>
         <div class="progress-footer">
-            <p>Download will start automatically</p>
+            <p id="info-footer">Download will start automatically</p>
         </div>
 
     </div>
     <div class="file-info">
-
+        <p id="file_json" style="display: none"> {{file_info.subfiles}}</p>
     </div>
 
 
@@ -193,6 +199,112 @@
 {% endblock %}
 {% block scripts %}
 <script>
+    // download tracking
+    let progress_bar = document.getElementById('progress-bar');
+    let progress_activity = document.getElementById('progress-activity');
+    let progress_percent = document.getElementById('progress-percent');
+    let infoText = document.getElementById('info-text');
+    let infoFooter = document.getElementById('info-footer');
+
+    const json_resp = document.getElementById('file_json').innerHTML;
+    const subfiles = JSON.parse(json_resp);
+
+    const fileID = "{{ file_info.id }}";
+
+    // updater
+    function updateProgress(stage, stage_percent, stage_activity) {
+        progress_activity.innerHTML = stage_activity;
+        // calculate overall percentage according to stage, stage 1 is 0-90%, stage 2 is 90-100% and stage 3 is 100%
+        let overall_percent = 0;
+        if (stage == 1) {
+            // For stage 1, the overall percentage is in the range of 0-90%
+            overallPercent = (stage_percent / 100) * 90;
+            progress_bar.value = overallPercent;
+            progress_percent.innerHTML = overallPercent + '%';
+        } else if (stage == 2) {
+            // For stage 2, the overall percentage is in the range of 90-100%
+            overallPercent = 90 + (stage_percent / 100) * 10;
+            progress_bar.value = overallPercent;
+            progress_percent.innerHTML = overallPercent + '%';
+        } else if (stage == 3) {
+            // For stage 3, the overall percentage is 100%
+            overallPercent = 100;
+            progress_bar.value = overallPercent;
+            progress_percent.innerHTML = overallPercent + '%';
+        }
+
+    }
+
+    // Download file
+    function downloadFile(url, fileName) {
+        infoText.style.display = 'none';
+        infoFooter.innerHTML = 'Downloading, please don\'t close this page.';
+
+        // Create an anchor element
+        const anchor = document.createElement('a');
+
+        anchor.style.display = 'none';
+
+        // Set the href attribute to the direct URL of the file
+        anchor.href = url;
+
+        // Set the download attribute to specify the default file name
+        anchor.download = fileName;
+
+        // Trigger a click event on the anchor element
+        anchor.click();
+    }
+
+
+    // continously check for download status
+    function fetchProgress() {
+        fetch('/download_progress', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                fileID
+            })
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        // console.log(data.message);
+                        // eg: 1_50_Downloading subfiles [1/2]
+                        const stage = data.message.split('_')[0];
+                        const stage_percent = data.message.split('_')[1];
+                        const stage_activity = data.message.split('_')[2];
+
+                        // Update progress bar
+                        updateProgress(stage, stage_percent, stage_activity);
+
+                        // Check if the message matches the desired format
+                        if (data.message.startsWith('3_100_')) {
+                            // console.log('Download completed!');
+                            // Download completed, download file
+
+                            downloadFile('/download_file/' + fileID, "{{ file_info.filename }}");
+
+                        } else {
+                            // If not completed, fetch progress again
+                            fetchProgress();
+                        }
+                    });
+                } else {
+                    response.json().then(data => {
+                        // console.log(data.message);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    // Start fetching progress
+    fetchProgress();
+
 
 </script>
 

@@ -21,7 +21,7 @@
     .file-info-container .header {
         padding: 10px 15px;
         color: var(--light-color);
-        font-size: 2rem;
+        font-size: 1.5rem;
         background: var(--dark-color);
         border-bottom: 1px solid var(--grey-light-color);
         border-radius: 5px 5px 0 0;
@@ -204,20 +204,24 @@
             <h3>File info</h3>
             <div class="info">
                 <p class="filename"><strong>Filename:</strong> {{file_info.filename}}</p>
-                <p class="filesize"><strong>Filesize:</strong> {{file_info.filesize}}</p>
-                <p class="date"><strong>Upload Date:</strong> {{file_info.date_uploaded}}</p>
+                <p class="filesize"><strong>Filesize:</strong> {{file_info.size_simple}}</p>
+                <p class="date"><strong>Upload Date:</strong> {{file_info.date}}</p>
+                {% if file_info.date == file_info.date_updated %}
+                {% else %}
+                <p class="date-updated"><strong>Date Updated:</strong> {{file_info.date_updated}}</p>
+                {% endif %}
             </div>
         </div>
         <div class="links">
             <div class="download">
-                <a href="{{url_for('download')}}"><i class="bx bxs-download"></i>Download</a>
+                <a href="{{url_for('download', file_id=file_info.id)}}"><i class="bx bxs-download"></i>Download</a>
             </div>
             <div class="json">
                 <a href=""><i class="bx bx-code-alt"></i>Json</a>
                 <p class="copy-popup">
                     copied
                 </p>
-                <p class="hidden-json">{{file_info.json}}</p>
+                <p class="hidden-json">{{file_info}}</p>
             </div>
             <div class="edit">
                 <a onclick="showHidePopup()">
@@ -227,8 +231,10 @@
                 <div class="edit-popup">
                     <h3>Change filename</h3>
                     <form onsubmit="renameFile(event)">
+                        <input type="text" name="file_id" id="file_id" style="display: none" value="{{file_info.id}}"
+                               required>
                         <input type="text" name="filename" placeholder="Filename" value="{{file_info.filename}}"
-                               class="new-filename">
+                               class="new-filename" required>
                         <div class="group-buttons">
                             <p onclick="hidePopup()">Cancel</p>
                             <button>Change name</button>
@@ -237,7 +243,8 @@
                 </div>
             </div>
             <div class="delete">
-                <a href="" id="delete-btn">
+                <a onclick="deleteBtnCall(event)" value="{{ file_info.id }}"
+                   id="delete-btn">
                     <i class="bx bx-trash"></i>
                     <p>Delete</p>
                 </a>
@@ -301,13 +308,16 @@
     function renameFile(event) {
         event.preventDefault()
         const fileName = document.querySelector('.new-filename').value
+        const fileID = document.querySelector('#file_id').value
 
         fetch('/update_filename', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({fileName}),
+            body: JSON.stringify({
+                fileID, fileName
+            })
         })
             .then(response => {
                 if (response.status === 200) {
@@ -333,6 +343,43 @@
     function updateName(newfilename) {
         oldName.innerHTML = "<strong>Filename: </strong>" + newfilename
     }
+
+
+    //delete file
+    const deleteFileID = document.querySelector('#delete-btn').getAttribute('value')
+
+    function deleteBtnCall(event) {
+        event.preventDefault()
+        const confirmDelete = confirm('Are you sure you want to delete this file?')
+        if (confirmDelete) {
+            // delete file
+            fetch('/delete_file', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    deleteFileID
+                })
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        addPopNotif('file deleted successfully')
+                        setTimeout(function () {
+                            window.location.href = "{{url_for('index')}}";
+                        }, 2000);
+                    } else {
+                        response.json().then(data => {
+                            addPopNotif(data.message)
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    }
+
 </script>
 
 {% endblock %}

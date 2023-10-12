@@ -2,6 +2,7 @@ import asyncio
 import json
 from urllib import parse
 
+import mysql.connector
 import websockets
 
 uri = "ws://arc.maev.site:8765"
@@ -43,3 +44,17 @@ client_id = 1141000843072647290
 client_secret = "QWVGp6-duEfKk51-cX_fal2Z_EL1GDez"
 redirect_uri = "http://localhost:5000/oauth/callback"
 oauth_url = f"https://discord.com/api/oauth2/authorize?client_id=1141000843072647290&redirect_uri={parse.quote(redirect_uri)}&response_type=code&scope=identify"
+
+admin_ids = ["1135978748689256468"]
+
+
+def get_db():
+    db = mysql.connector.connect(
+        host="arc.maev.site",
+        user="maev",
+        passwd="Alph4",
+        port="3306",
+        database="Alpha2",
+        charset="utf8mb4",
+    )
+    return db

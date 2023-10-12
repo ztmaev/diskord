@@ -2,20 +2,22 @@ import asyncio
 import json
 import math
 import os
+import shutil
 from datetime import datetime
 
 import aiohttp
 import discord
-import mysql.connector
 import pytz
+import requests
 import websockets
 from discord import Webhook
 
-from config import webhook_url, webhook_name, webhook_avatar_url
+from config import webhook_url, webhook_name, webhook_avatar_url, get_db
+from user_notifs import handle_notif
 
 uploads_dir = 'files/media'
 split_output_dir = f"files/split_output"
-chunk_size_mb = 5
+chunk_size_mb = 20
 
 
 def current_time():
@@ -24,19 +26,8 @@ def current_time():
     return current_time
 
 
-def get_db():
-    db = mysql.connector.connect(
-        host="arc.maev.site",
-        user="maev",
-        passwd="Alph4",
-        port="3306",
-        database="Alpha1",
-        charset="utf8mb4",
-    )
-    return db
-
-
 def convert_file_size(size_bytes):
+    size_bytes = int(size_bytes)
     if size_bytes == 0:
         return "0B"
     size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
@@ -77,12 +68,12 @@ def split_file(file, chunk_size_mb):
         return None
 
 
-def process_upload_url(url, session_id):
+def process_upload_url(url, session_id, username):
     # TODO: url download
     pass
 
 
-def process_upload_files(files, session_id):
+def process_upload_files(files, session_id, username):
     try:
         for file in files:
             original_filename = file[19:]
@@ -151,7 +142,7 @@ def process_upload_files(files, session_id):
             file_type_icon_url = "https://xhost.maev.site/icons/allin.png"
             file_info = {"file_name": file, "file_type": file_type, "size": filesize, "chunks_number": chunks_number,
                          "chunk_size": chunk_size_mb, "owner_id": owner_id, "file_unique_id": file_unique_id,
-                         "files": file_list, "filetype_icon_url": file_type_icon_url}
+                         "files": file_list, "filetype_icon_url": file_type_icon_url, "username": username}
             upload_files(file_info)
 
 
@@ -179,6 +170,29 @@ async def fetch_thread_info(query):
                 return False
     except Exception as e:
         return False
+
+
+async def fetch_subfiles(file_id):
+    # fetch subfiles with file_id
+    uri = "ws://arc.maev.site:8765"
+    query = f"get_upload_info_%_{file_id}"
+    while True:
+        try:
+            async with websockets.connect(uri) as websocket:
+                await websocket.send(query)
+
+                websocket_feedback = await websocket.recv()
+                # files
+                files = json.loads(websocket_feedback)['files'][0]['file_url']
+                print(files)
+                if websocket_feedback:
+                    subfiles_info = json.loads(websocket_feedback)
+                    return subfiles_info
+                else:
+                    pass
+
+        except Exception as e:
+            pass
 
 
 def get_thread_info(thread_name):
@@ -299,6 +313,7 @@ def upload_files(file_info):
             "file_thumbnail_url": file_thumbnail_url,
             "files": file_info['files'],
             "owner_id": file_info['owner_id'],
+            "username": file_info['username'],
         }
 
         # edit the previous message (create thread)
@@ -316,6 +331,12 @@ def upload_files(file_info):
         # delete files
         for file in file_info_full['files']:
             os.remove(f"files/split_output/{file[:18]}/{file}")
+
+        # delete the dir
+        shutil.rmtree(f"files/split_output/{file[:18]}")
+
+        # delete original file
+        os.remove(f"files/media/{file_info_full['file_name']}")
 
         # send end message
         asyncio.run(send_end_message(file_info_full['thread_id']))
@@ -340,10 +361,131 @@ def upload_files(file_info):
         ))
         db.commit()
 
+        # update subfiles urls
+        update_subfiles_urls(file_info_full)
+
+        # send notification
+        handle_notif(file_info_full['owner_id'], file_info_full["username"], "add",
+                     f"File uploaded: {file_info_full['file_name']}")
+
         return True
 
-# TODO: Upload queue + webhook integration
 
-def update_file():
-    pass
+# TODO: Upload queue
 
+def update_subfiles_urls(file_info_full):
+    file_id = file_info_full['file_id']
+    # fetch subfiles
+    subfiles_info = asyncio.run(fetch_subfiles(file_id))
+    # update subfiles
+    for subfile in subfiles_info['files']:
+        subfile_name = subfile['file_name']
+        subfile_url = subfile['file_url']
+        subfile_id = subfile_name.split('_')[-1].split('.')[0]
+
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("""
+            UPDATE subfiles SET
+                file_url = %s
+            WHERE chunk_file_id = %s
+        """, (
+            subfile_url,
+            subfile_id,
+        ))
+        db.commit()
+
+
+def download_file(url, output_folder, file_name):
+    # Create the output folder if it doesn't exist
+    os.makedirs(output_folder, exist_ok=True)
+
+    # Combine the output folder and file name to create the full path
+    file_path = f"{output_folder}/{file_name}"
+
+    # download and save file
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for bad status codes
+
+        # Save the content of the response to the file
+        with open(file_path, 'wb') as file:
+            file.write(response.content)
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading {file_name}: {e}")
+
+
+def merge_files(filename, subfiles, file_dir, subfiles_dir):
+    # Sort subfiles based on their IDs to ensure correct order.
+    subfiles.sort(key=lambda x: x['chunk_file_id'])
+
+    # Create the merged file in the specified file_dir.
+    merged_file_path = os.path.join(file_dir, filename)
+
+    total_files = len(subfiles)
+
+    with open(merged_file_path, 'wb') as outfile:
+        mergefile_index = 0
+        for subfile in subfiles:
+            subfile_name = subfile['file_name']
+            subfile_path = os.path.join(subfiles_dir, subfile_name)
+
+            # Read the contents of each subfile and write them to the merged file.
+            with open(subfile_path, 'rb') as subfile_content:
+                outfile.write(subfile_content.read())
+
+            # update status
+            mergefile_index += 1
+
+            percent = round((mergefile_index / total_files))
+
+            update_status(f"{file_dir}/status.txt", f"2_{percent}_Merging subfiles[{mergefile_index}/{total_files}")
+
+        # cleanup
+        shutil.rmtree(subfiles_dir)
+
+    update_status(f"{file_dir}/status.txt", f"3_100_Merge complete")
+
+
+# download_merge
+def file_download_merge(file_info):
+    filename = file_info['filename']
+    file_id = file_info['id']
+    subfiles = json.loads(file_info['subfiles'])
+
+    file_dir = f"files/merge_output/{file_id}"
+    subfiles_dir = f"{file_dir}/subfiles"
+
+    # create folders
+    os.makedirs(file_dir, exist_ok=True)
+    os.makedirs(subfiles_dir, exist_ok=True)
+    # status script
+    subfile_path = f"{file_dir}/status.txt"
+    with open(subfile_path, 'w') as f:
+        f.write(f"0_0_Fetching subfiles[0/{len(subfiles)}]")
+
+    subfile_index = 0
+
+    total_files = len(subfiles)
+
+    for file in subfiles:
+        file_name = file['file_name']
+        file_url = file['url']
+        # download file
+        download_file(file_url, subfiles_dir, file_name)
+        # update status
+        subfile_index += 1
+        # full number percent
+        percent = round((subfile_index / total_files) * 100)
+        update_status(subfile_path, f"1_{percent}_Fetching subfiles[{subfile_index}/{total_files}]")
+
+    # merge files into one using their ids
+    update_status(subfile_path, f"2_0_Merging subfiles[0/{total_files}]")
+    merge_files(filename, subfiles, file_dir, subfiles_dir)
+
+
+def update_status(file_path, message):
+    with open(file_path, 'w') as f:
+        f.write(message)
