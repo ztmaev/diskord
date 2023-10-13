@@ -73,9 +73,74 @@ def process_upload_url(url, session_id, username):
     pass
 
 
+def fetch_queue():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT * FROM upload_queue where is_uploaded = 0
+    """)
+    queue = cursor.fetchall()
+
+    queue_items = []
+    for item in queue:
+        queue_items.append(item[3])
+
+    print(queue_items)
+    return queue_items
+
+
+
+
+#TODO implement queue mechanism
+
+
 def process_upload_files(files, session_id, username):
     try:
         for file in files:
+
+            # table name = upload_queue
+            # id,
+            # username,
+            # discord_id,
+            # file_id,
+            # file_name,
+            # is_uploaded,
+            # date_created,
+            # date_uploaded,
+
+            # add file to queue
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("""
+                INSERT INTO upload_queue (
+                    username,
+                    discord_id,
+                    file_id,
+                    file_name,
+                    is_uploaded,
+                    date_created
+                ) VALUES (
+                    %s, %s, %s, %s, %s, NOW()
+                )
+            """, (
+                username,
+                session_id,
+                file[:18],
+                file[19:],
+                False,
+            ))
+            db.commit()
+
+            # queue
+            queue = fetch_queue()
+            while True:
+                if queue:
+                    if queue[0] == file[:18]:
+                        break
+                    else:
+                        queue = fetch_queue()
+
+            # process file
             original_filename = file[19:]
             files_directory = file[:18]
             file_type = original_filename.split('.')[-1]
@@ -184,7 +249,7 @@ async def fetch_subfiles(file_id):
                 websocket_feedback = await websocket.recv()
                 # files
                 files = json.loads(websocket_feedback)['files'][0]['file_url']
-                print(files)
+                # print(files)
                 if websocket_feedback:
                     subfiles_info = json.loads(websocket_feedback)
                     return subfiles_info
@@ -364,9 +429,28 @@ def upload_files(file_info):
         # update subfiles urls
         update_subfiles_urls(file_info_full)
 
+        filename = file_info_full['file_name'][19:]
+
+
         # send notification
         handle_notif(file_info_full['owner_id'], file_info_full["username"], "add",
-                     f"File uploaded: {file_info_full['file_name']}")
+                     f"File uploaded: {filename}", url=f"/view/{file_id}")
+
+        # update queue
+        # print ("Updating queue")
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("""
+            UPDATE upload_queue SET
+                is_uploaded = %s,
+                date_uploaded = NOW()
+            WHERE file_id = %s
+        """, (
+            True,
+            file_id,
+        ))
+        db.commit()
+
 
         return True
 
@@ -489,3 +573,6 @@ def file_download_merge(file_info):
 def update_status(file_path, message):
     with open(file_path, 'w') as f:
         f.write(message)
+
+
+# TODO: Upload queue

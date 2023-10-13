@@ -1,11 +1,11 @@
 import mysql.connector
 
-database_name = "Alpha2"
+database_name = "Alpha3"
 
 
 db_config = {
     "host": "arc.maev.site",  # Update with your MySQL server host
-    "user": "maev",  # Update with your MySQL username
+    "user": "root",  # Update with your MySQL username
     "password": "Alph4",  # Update with your MySQL password
     "port": "3306"
 }
@@ -39,6 +39,8 @@ table_notifications_exists = False
 table_discord_info_exists = False
 table_2fa_exists = False
 table_subfiles_exists = False
+table_upload_queue_exists = False
+
 
 for table in cursor:
     if table[0] == "users":
@@ -59,6 +61,9 @@ for table in cursor:
     if table[0] == "2fa":
         table_2fa_exists = True
         print(f"Table '2fa' exists")
+    if table[0] == "upload_queue":
+        table_upload_queue_exists = True
+        print(f"Table 'upload_queue' exists")
 
 # Users
 if not table_users_exists:
@@ -168,6 +173,22 @@ if not table_2fa_exists:
         )
     """)
     print("Created '2fa' table")
+
+# Upload Queue
+if not table_upload_queue_exists:
+    cursor.execute("""
+        CREATE TABLE upload_queue (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            discord_id BIGINT NOT NULL,
+            file_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            file_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            is_uploaded BOOLEAN NOT NULL DEFAULT FALSE,
+            date_created VARCHAR(255) NOT NULL,
+            date_uploaded VARCHAR(255)
+        )
+    """)
+    print("Created 'upload_queue' table")
 
 
 # Close the cursor and connection

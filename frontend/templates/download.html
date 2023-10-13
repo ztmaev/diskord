@@ -92,7 +92,7 @@
     }
 
     .progress .progress-meter {
-        width: 50%;
+        width: 100%;
         background: none;
         border-radius: 10px;
         border: none;
@@ -231,6 +231,7 @@
             overallPercent = 100;
             progress_bar.value = overallPercent;
             progress_percent.innerHTML = overallPercent + '%';
+            progress_activity.style.display = 'none';
         }
 
     }

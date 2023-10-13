@@ -166,7 +166,7 @@ function formSubmission(event) {
                 });
                 setTimeout(function () {
                     // Redirect to homepage
-                    window.location.href = '/login';
+                    window.location.href = '/';
                 }, 1000);
 
             } else {
@@ -371,7 +371,7 @@ function addNotificationToContainer(notification) {
     if (notification.url) {
         const notifText = document.createElement('a');
         notifText.href = notification.url;
-        notifText.target = "_blank"
+        // notifText.target = "_blank"
         notifText.textContent = notification.message;
 
         notificationElement.appendChild(notifText);

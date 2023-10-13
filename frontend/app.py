@@ -687,8 +687,9 @@ def upload():
 
     # Use the function reference without invoking it
     thread = threading.Thread(target=process_upload_files,
-                              args=(files_await_upload, session["user_id"], session["username"]))
+                             args=(files_await_upload, session["user_id"], session["username"]))
     thread.start()
+    # process_upload_files(files_await_upload, session["user_id"], session["username"])
 
     return jsonify({'message': 'Upload successful'}), 200
 
@@ -792,7 +793,7 @@ def get_notifications():
     notifications = []
 
     for notification in cursor:
-        if notification[4] is None or notifications[4].strip() == "":
+        if notification[4] is None:
             notification_data = {
                 "id": notification[0],
                 "message": notification[3],
@@ -873,4 +874,4 @@ def self_recovery():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000, host="0.0.0.0")
+    app.run(debug=True, port=4321, host="0.0.0.0")

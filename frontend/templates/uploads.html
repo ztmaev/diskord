@@ -153,10 +153,10 @@
         <div class="filter">
             <i class="bx bx-filter"></i>
             <p>Sort</p>
-            <select name="sort" class="filter-select">
+            <select name="sort" class="filter-select" >
                 <option value="name">Name</option>
                 <option value="size">Size</option>
-                <option value="date">Date</option>
+                <option value="date" selected>Date</option>
             </select>
             <i class="bx bxs-down-arrow" id="sort-btn"></i>
 
@@ -171,6 +171,8 @@
 {% endblock %}
 {% block scripts %}
 <script>
+    //select date as default
+
     // Function to fetch and display files
     async function fetchFiles() {
         try {
