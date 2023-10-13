@@ -1100,8 +1100,7 @@ body {
 .user-notifs .notifs-list {
     padding: 0 5px;
     display: flex;
-    flex-direction: column-reverse;
-    justify-content: flex-end;
+    flex-direction: column;
     gap: 2px;
     height: 255px;
     overflow-y: scroll;

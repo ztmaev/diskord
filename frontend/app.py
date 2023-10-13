@@ -687,7 +687,7 @@ def upload():
 
     # Use the function reference without invoking it
     thread = threading.Thread(target=process_upload_files,
-                             args=(files_await_upload, session["user_id"], session["username"]))
+                              args=(files_await_upload, session["user_id"], session["username"]))
     thread.start()
     # process_upload_files(files_await_upload, session["user_id"], session["username"])
 
@@ -810,6 +810,8 @@ def get_notifications():
             }
         notifications.append(notification_data)
     cursor.close()
+    notifications = notifications[::-1]
+
     return jsonify(notifications)
 
 

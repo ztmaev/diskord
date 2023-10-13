@@ -5,17 +5,24 @@
 {% block styles %}
 <style>
     @media (min-width: 625px) {
+        .files .header{
+            width: calc(100% - 60px);
+        }
         .file-list {
             gap: 10px;
         }
 
         .files {
-            padding: 0 10px;
+            padding: 0 5px;
         }
 
     }
 
     @media (max-width: 625px) {
+
+        .files .header{
+            width: 100%;
+        }
         .file-list {
             gap: 7px;
         }
@@ -27,8 +34,9 @@
     }
 
     .file-list {
+        margin-top: 50px;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     }
 
     .file-list a {
@@ -66,7 +74,18 @@
     .files .header {
         display: flex;
         flex-direction: row;
+        position: fixed;
+        background: var(--dark-color);
+        border-bottom: 1px solid var(--grey-light-color);
+        margin: 0px -7px;
         justify-content: space-between;
+        padding: 0 8px;
+        align-items: center;
+    }
+    .files .header h2 {
+        margin: 0;
+        padding: 0;
+        font-size: 1.3rem;
     }
 
     .file-item {
@@ -153,7 +172,7 @@
         <div class="filter">
             <i class="bx bx-filter"></i>
             <p>Sort</p>
-            <select name="sort" class="filter-select" >
+            <select name="sort" class="filter-select">
                 <option value="name">Name</option>
                 <option value="size">Size</option>
                 <option value="date" selected>Date</option>
