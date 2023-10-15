@@ -87,6 +87,16 @@ def save_user(user):
                 user["username"], user["discriminator"], str(user["user_id"]), user["avatar_url"], user["bot"],
                 user["locale"], user["email"], user["bio"], user["has_mfa"], user["verified"]))
 
+            user_id = user["user_id"]
+            username = user["username"]
+            notif_action = "add"
+            notif_type = "account"
+            notif_url = "/account"
+            message = f"Welcome to discord {username}"
+
+            # add user to notif
+            handle_notif(user_id, username, notif_action, message, notif_type, notif_url)
+
         # Commit the changes to the database
         conn.commit()
         cursor.close()
@@ -798,7 +808,9 @@ def get_notifications():
                 "id": notification[0],
                 "message": notification[3],
                 "is_seen": notification[5],
-                "date_created": notification[6]
+                "type": notification[6],
+                "date_created": notification[7]
+
             }
         else:
             notification_data = {
@@ -806,7 +818,8 @@ def get_notifications():
                 "message": notification[3],
                 "url": notification[4],
                 "is_seen": notification[5],
-                "date_created": notification[6]
+                "type": notification[6],
+                "date_created": notification[7]
             }
         notifications.append(notification_data)
     cursor.close()
@@ -821,7 +834,7 @@ def remove_notification():
     if not notification_id:
         return jsonify({'message': 'No notification ID provided.'}), 400
 
-    check = handle_notif(session["user_id"], session["username"], "remove", "", "", notification_id)
+    check = handle_notif(session["user_id"], session["username"], "remove", "", "", notif_id=notification_id)
     if check:
         return jsonify({'message': 'Notification removed successfully.'}), 200
     else:

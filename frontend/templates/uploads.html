@@ -5,9 +5,10 @@
 {% block styles %}
 <style>
     @media (min-width: 625px) {
-        .files .header{
+        .files .header {
             width: calc(100% - 60px);
         }
+
         .file-list {
             gap: 10px;
         }
@@ -16,13 +17,18 @@
             padding: 0 5px;
         }
 
+        .files .header {
+            width: calc(100vw - 60px);
+        }
+
     }
 
     @media (max-width: 625px) {
 
-        .files .header{
+        .files .header {
             width: 100%;
         }
+
         .file-list {
             gap: 7px;
         }
@@ -31,10 +37,14 @@
             padding: 0 5px;
         }
 
+        .files .header {
+            width: 100%;
+        }
+
     }
 
     .file-list {
-        margin-top: 50px;
+        margin-top: 10px;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     }
@@ -74,7 +84,7 @@
     .files .header {
         display: flex;
         flex-direction: row;
-        position: fixed;
+        /*position: fixed;*/
         background: var(--dark-color);
         border-bottom: 1px solid var(--grey-light-color);
         margin: 0px -7px;
@@ -82,6 +92,7 @@
         padding: 0 8px;
         align-items: center;
     }
+
     .files .header h2 {
         margin: 0;
         padding: 0;
@@ -159,10 +170,22 @@
         outline: 1px solid var(--lighter-color);
     }
 
+    .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 50vh;
+        width: 100%;
+    }
+
+    .loading-container img {
+        width: 50px;
+        height: 50px;
+    }
+
 
 </style>
 {% endblock %}
-
 {% block content %}
 
 <!--fetch uploads and display them from /files using js-->
@@ -194,10 +217,19 @@
 
     // Function to fetch and display files
     async function fetchFiles() {
+        const fileContainer = document.querySelector('.file-list');
+        const mainFilesContainer = document.querySelector('.files')
+        //loading animation
+        loadingContainer = document.createElement('div')
+        loadingContainer.classList.add('loading-container')
+        const loadingImage = document.createElement('img');
+        loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+        loadingContainer.appendChild(loadingImage)
+        mainFilesContainer.appendChild(loadingContainer)
+
         try {
             const response = await fetch('/files');
             const files = await response.json();
-            const fileContainer = document.querySelector('.file-list');
             const selectedOption = filterPicker.value; // ie: name, size, date
             const sortOption = getSortMode(); // ie: up or down
 
@@ -265,6 +297,7 @@
 
             // Clear the file container before adding sorted items
             fileContainer.innerHTML = '';
+            mainFilesContainer.removeChild(loadingContainer)
 
             // Loop through the sorted files and create HTML elements for each
             files.forEach((file) => {

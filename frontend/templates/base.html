@@ -79,7 +79,7 @@
             </div>
 
         </div>
-        {% if session %}
+        {% if "username" in session %}
         <div class="profile-group" onclick="showProfileOptions()">
             <img src="{{session['avatar_url']}}" alt="" id="session-pp">
             <p id="session-name">{{ session['username']}}</p>

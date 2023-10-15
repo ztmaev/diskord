@@ -271,7 +271,7 @@ searchInput.addEventListener("input", function (event) {
 
 //Notifs
 function hoverDel() {
-    const icons = document.querySelectorAll('.bx');
+    const icons = document.querySelectorAll('.bxs-trash');
 
 
     icons.forEach(icon => {
@@ -345,11 +345,30 @@ function fetchNotificationsAndDisplay() {
     const notificationsContainer = document.getElementById('user-notifs-popup');
     notificationsContainer.querySelector('.notifs-list').innerHTML = '';
 
+    // loading animation
+    const loadingElement = document.createElement('div');
+    loadingElement.className = 'loading';
+    const loadingImage = document.createElement('img');
+    loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+
+    loadingElement.appendChild(loadingImage);
+    notificationsContainer.querySelector('.notifs-list').appendChild(loadingElement);
+
+
 
     fetch('/notifications')
         .then(response => response.json())
         .then(data => {
+            // Remove the loading animation
+            notificationsContainer.querySelector('.notifs-list').removeChild(loadingElement);
             // Handle the received notifications data
+            if (data.length === 0) {
+                const noNotifs = document.createElement('p');
+                noNotifs.className = 'no-notifs';
+                noNotifs.textContent = 'No notifications';
+                notificationsContainer.querySelector('.notifs-list').appendChild(noNotifs);
+            }
+
             displayNotifications(data);
             hoverDel()
 
@@ -367,6 +386,24 @@ function addNotificationToContainer(notification) {
     // Create a new notification element
     const notificationElement = document.createElement('p');
     notificationElement.className = 'bx-items';
+
+    const notifTypeIcon = document.createElement('i');
+    if (notification.type === 'file') {
+        notifTypeIcon.className = 'bx bxs-file';
+    }
+    if (notification.type === 'account') {
+        notifTypeIcon.className = 'bx bxs-user';
+    }
+    if (notification.type === 'system') {
+        notifTypeIcon.className = 'bx bxs-info-circle';
+    }
+    if (notification.type === 'info') {
+        notifTypeIcon.className = 'bx bxs-info-cog';
+    }
+    if (notification.type === 'file') {
+        notifTypeIcon.className = 'bx bxs-file';
+    }
+    notificationElement.appendChild(notifTypeIcon);
 
     if (notification.url) {
         const notifText = document.createElement('a');
@@ -468,10 +505,28 @@ const searchItemsContainer = document.querySelector('.body-contents');
 function fetchFilesAndDisplay() {
     // clear the existing container
     searchItemsContainer.innerHTML = '';
+    // loading animation
+    const loadingElement = document.createElement('div');
+    loadingElement.className = 'loading';
+    const loadingImage = document.createElement('img');
+    loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+
+    loadingElement.appendChild(loadingImage);
+    searchItemsContainer.appendChild(loadingElement);
+
 
     fetch('/files')
         .then(response => response.json())
         .then(data => {
+            // Remove the loading animation
+            searchItemsContainer.removeChild(loadingElement);
+
+            if (data.length === 0) {
+                const noFiles = document.createElement('p');
+                noFiles.className = 'no-notifs';
+                noFiles.textContent = 'No files';
+                searchItemsContainer.appendChild(noFiles);
+            }
             // Handle the received files data
             displayFiles(data);
         })

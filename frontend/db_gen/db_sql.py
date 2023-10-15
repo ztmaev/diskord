@@ -1,6 +1,6 @@
 import mysql.connector
 
-database_name = "Alpha3"
+database_name = "Alpha4"
 
 
 db_config = {
@@ -115,6 +115,7 @@ if not table_notifications_exists:
             message VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
             message_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             is_seen BOOLEAN NOT NULL DEFAULT FALSE,
+            type VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
             date_created VARCHAR(255) NOT NULL,
             date_seen VARCHAR(255)
         )

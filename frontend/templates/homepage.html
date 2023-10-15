@@ -7,7 +7,8 @@
     .upload-container {
         display: flex;
         flex-direction: column;
-        margin-top: 2.5rem;
+        margin-top: 0.5rem;
+        padding: 5px;
     }
 
     .body-group {
@@ -46,12 +47,11 @@
 
 {% endblock %}
 {% block content %}
-
 <div class="upload-container">
+<!--    <div class="url-form">-->
+<!--        {% include "homepage-urlform.html" %}-->
+<!--    </div>-->
     <div class="upload-form">
-        {% include "homepage-urlform.html" %}
-    </div>
-    <div class="url-form">
         {% include "homepage-upload-form.html" %}
     </div>
 </div>

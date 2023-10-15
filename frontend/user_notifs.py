@@ -5,13 +5,13 @@ import requests
 from config import get_db
 
 
-def handle_notif(user_id, username, notif_action, notif_message, url=None, notif_id=None):
+def handle_notif(user_id, username, notif_action, notif_message, type, url=None, notif_id=None):
     if notif_action == "add":
         db = get_db()
         cursor = db.cursor()
         cursor.execute(
-            "INSERT INTO notifications (user_discord_id, username, message, message_url, date_created) VALUES (%s, %s, %s, %s, NOW())",
-            (user_id, username, notif_message, url),
+            "INSERT INTO notifications (user_discord_id, username, message, message_url, type, date_created) VALUES (%s, %s, %s, %s, %s, NOW())",
+            (user_id, username, notif_message, url, type)
         )
         db.commit()
         db.close()
@@ -31,6 +31,7 @@ def handle_notif(user_id, username, notif_action, notif_message, url=None, notif
             db.close()
             return True
         except Exception as e:
+            print(e)
             return False
     elif notif_action == "remove_all":
         try:
@@ -170,6 +171,19 @@ def confirm_verification_code(tfa_code, user_id):
                 """, (user_id,))
                 db.commit()
                 db.close()
+
+                # fetch username
+                db = get_db()
+                cursor = db.cursor()
+                cursor.execute("""
+                SELECT username FROM users WHERE discord_id = %s
+                """, (user_id,))
+                result = cursor.fetchone()
+                username = result[0]
+
+                # add notif
+                handle_notif(user_id, username, "add", f"Successfully linked {email_to_add}", "account")
+
                 return True
             else:
                 return False
@@ -199,6 +213,18 @@ def unlink_email(email, user_id):
         """, (emails, user_id))
         db.commit()
         db.close()
+
+        # add notif
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("""
+        SELECT username FROM users WHERE discord_id = %s
+        """, (user_id,))
+        result = cursor.fetchone()
+        username = result[0]
+        handle_notif(user_id, username, "add", f"Successfully unlinked {email}", "account")
+
+
         return True
     except Exception as e:
         print(e)

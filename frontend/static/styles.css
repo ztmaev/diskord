@@ -1108,6 +1108,37 @@ body {
     background: var(--darker-color);
 }
 
+.loading{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+.loading img{
+    margin-top: -30px;
+    width: 50px;
+    height: 50px;
+}
+
+
+
+.no-notifs{
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--light-color);
+}
+
+.user-notifs .notifs-list a{
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+.user-notifs .notifs-list a:hover{
+    cursor: pointer;
+}
+
 .user-notifs .notifs-list .bx-items {
     font-size: 0.9rem;
     transition: all 0.1s ease-in-out;
@@ -1118,10 +1149,28 @@ body {
     cursor: default;
     display: flex;
     flex-direction: row;
-    gap: 10px;
+    gap: 5px;
     align-content: center;
     align-items: center;
     justify-content: space-between;
+}
+.user-notifs .notifs-list .bx-items i:first-child{
+    font-size: 2rem;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1px solid var(--grey-light-color);
+    border-radius: 5px;
+    margin: 0;
+    padding: 3px;
+    pointer-events: none;
+}
+.user-notifs .notifs-list .bx-items i:last-child{
+    font-size: 1.5rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    /*border: 1px solid var(--grey-light-color);*/
+    border-radius: 5px;
+    margin: 0;
 }
 
 .user-notifs .notifs-list .bx-items.hidden {
@@ -1132,13 +1181,17 @@ body {
 .bx-items a {
     margin: 3px;
     text-decoration: none;
-    color: var(--light-color);
-    word-break: break-all;
+    color: inherit;
+    word-break: break-word;
+    text-align: left;
+    width: 100%;
 }
 
 /*delete` color*/
-.user-notifs .notifs-list .bx-items.hovered {
+.user-notifs .notifs-list .bx-items.hovered,
+.user-notifs .notifs-list .bx-items.hovered:hover {
     transition: all 0.2s ease-in-out;
+    color: var(--lighter-color);
     background: var(--warning-color);
 }
 
@@ -1146,7 +1199,7 @@ body {
     cursor: pointer;
     font-size: 1.3rem;
     height: 100%;
-    width: 23px;
+    width: 25px;
     display: flex;
     margin: -5px;
     padding: 10px;
@@ -1154,7 +1207,8 @@ body {
     justify-content: center;
 }
 
-.user-notifs .notifs-list p:hover {
+.user-notifs .notifs-list .bx-items:hover
+{
     color: var(--lighter-color);
     background-color: var(--accent-darker-color);
 }

@@ -434,7 +434,7 @@ def upload_files(file_info):
 
         # send notification
         handle_notif(file_info_full['owner_id'], file_info_full["username"], "add",
-                     f"File uploaded: {filename}", url=f"/view/{file_id}")
+                     f"File uploaded: {filename}", url=f"/view/{file_id}", type="file")
 
         # update queue
         # print ("Updating queue")
