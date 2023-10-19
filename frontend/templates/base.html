@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='boxicons-2.1.4/css/boxicons.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
+    <link rel="shortcut icon" href="{{ url_for('static', filename='media/logo.png') }}" type="image/x-icon">
+
     {% block title %}
     <title>Untitled Page</title>
     {% endblock %}
@@ -153,7 +155,8 @@
     </div>
     <div class="help-section">
         <p>Recover files/Get help recovering files. </p>
-        <a href="{{url_for('get_help')}}">help <i class='bx bxs-help-circle'></i></a><a href="{{url_for('self_recovery')}}">SelfRecovery <i class='bx bxs-wrench'></i></a>
+        <a href="{{url_for('get_help')}}">help <i class='bx bxs-help-circle'></i></a><a
+            href="{{url_for('self_recovery')}}">SelfRecovery <i class='bx bxs-wrench'></i></a>
     </div>
 </div>
 <div class="search-container" id="search-container">
@@ -180,14 +183,17 @@
 </div>
 <div class="bottom-bar">
     <div class="bottom-bar-inner">
-        <div class="{{ 'active' if request.endpoint == 'index'}}"><a href="{{url_for('index')}}" ><i class="bx bxs-home"></i></a></div>
+        <div class="{{ 'active' if request.endpoint == 'index'}}"><a href="{{url_for('index')}}"><i
+                class="bx bxs-home"></i></a></div>
         {% if 'username' in session %}
-        <div class="{{ 'active' if request.endpoint == 'uploads'}}"><a href="{{url_for('uploads')}}"><i class="bx bxs-cloud-upload"></i></a></div>
+        <div class="{{ 'active' if request.endpoint == 'uploads'}}"><a href="{{url_for('uploads')}}"><i
+                class="bx bxs-cloud-upload"></i></a></div>
         <div class=""><i class="bx bx-search" id="search-trigger-2"></i></div>
         <div class=""><i class="bx bxs-bell" id="notif-trigger-2"></i></div>
-        <div class="{{ 'active' if request.endpoint == 'account'}}"><a href="{{url_for('account')}}"><i class="bx bxs-user"></i></a></div>
+        <div class="{{ 'active' if request.endpoint == 'account'}}"><a href="{{url_for('account')}}"><i
+                class="bx bxs-user"></i></a></div>
         {% else %}
-        <div onclick="loginPrompt('view your uploads.')" ><i class="bx bxs-cloud-upload"></i></div>
+        <div onclick="loginPrompt('view your uploads.')"><i class="bx bxs-cloud-upload"></i></div>
         <div onclick="loginPrompt('search your files.')"><i class="bx bx-search"></i></div>
         <div onclick="loginPrompt('view notifications.')"><i class="bx bxs-bell"></i></div>
         <div onclick="loginPrompt('view your account page.')"><i class="bx bxs-user"></i></div>

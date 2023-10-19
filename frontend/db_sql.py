@@ -18,18 +18,18 @@ cursor = conn.cursor()
 cursor.execute("SHOW DATABASES")
 database_exists = False
 for database in cursor:
-    if database[0] == database_name:
+    if database[0] == db_name:
         database_exists = True
-        print(f"Database '{database_name}' exists")
+        print(f"Database '{db_name}' exists")
         break
 
 if not database_exists:
     # Create the 'test' database
-    cursor.execute(f"CREATE DATABASE {database_name}")
-    print(f"Created {database_name}")
+    cursor.execute(f"CREATE DATABASE {db_name}")
+    print(f"Created {db_name}")
 
 # Switch to the 'test' database
-cursor.execute(f"USE {database_name}")
+cursor.execute(f"USE {db_name}")
 
 # Check tables.
 cursor.execute("SHOW TABLES")

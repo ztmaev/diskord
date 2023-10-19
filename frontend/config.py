@@ -7,6 +7,9 @@ import websockets
 
 uri = "ws://arc.maev.site:8765"
 config_password = "password"
+db_name = "Alpha7"
+db_host = "arc.maev.site"
+# db_host = "127.0.0.1"
 
 
 async def get_config():
@@ -42,9 +45,9 @@ token = config["token"]
 
 client_id = 1141000843072647290
 client_secret = "QWVGp6-duEfKk51-cX_fal2Z_EL1GDez"
-redirect_uri = "http://localhost:4321/oauth/callback"
+# redirect_uri = "http://localhost:4321/oauth/callback"
 # redirect_uri = "http://arc.maev.site:4321/oauth/callback"
-# redirect_uri = "https://diskord.maev.site/oauth/callback"
+redirect_uri = "https://diskord.maev.site/oauth/callback"
 oauth_url = f"https://discord.com/api/oauth2/authorize?client_id=1141000843072647290&redirect_uri={parse.quote(redirect_uri)}&response_type=code&scope=identify"
 
 admin_ids = ["1135978748689256468"]
@@ -52,11 +55,11 @@ admin_ids = ["1135978748689256468"]
 
 def get_db():
     db = mysql.connector.connect(
-        host="arc.maev.site",
+        host=db_host,
         user="maev",
         passwd="Alph4",
         port="3306",
-        database="Alpha4",
+        database=db_name,
         charset="utf8mb4",
     )
     return db

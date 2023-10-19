@@ -1,24 +1,31 @@
+import datetime
 import json
 import os
 import subprocess
 import threading
+import time
 import uuid
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, make_response
+from werkzeug.utils import secure_filename
 from zenora import APIClient
 
 from config import token, client_secret, redirect_uri, oauth_url, admin_ids, get_db
-from files import process_upload_files, convert_file_size, file_download_merge
+from files import process_upload_files, convert_file_size, file_download_merge, check_dirs
 from user_notifs import handle_notif, generate_2fa_code, send_verification_email, confirm_verification_code, \
     unlink_email
 
 client = APIClient(token, client_secret=client_secret)
 app = Flask(__name__)
+
+uploads_dir = 'files/media'
 app.config['UPLOAD_FOLDER'] = 'files/media'
 secret = "maevisgod"
 app.secret_key = secret
+check_dirs()
 
-upload_dir = "temp/files/media"
+
+upload_dir = "files/media"
 webhook_file = "flask_webhook_bridge.py"
 
 
@@ -658,6 +665,8 @@ def stats():
 
 @app.route('/delete_file', methods=['POST'])
 def delete_file():
+    if 'username' not in session:
+        return jsonify({'message': 'Please log in first.'}), 400
     data = request.get_json()
     fileid = data.get('deleteFileID', '')
     if not fileid:
@@ -677,11 +686,60 @@ def delete_file():
 
 @app.route('/uploads')
 def uploads():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
     return render_template('uploads.html')
+
+@app.route('/upload_alternate', methods=['POST'])
+def upload_alternate():
+    if "username" not in session:
+        return 'Please log in to start uploading.', 400
+    file = request.files['file']
+    save_path = os.path.join('uploads', secure_filename(file.filename))
+    current_chunk = int(request.form['dzchunkindex'])
+    if os.path.exists(save_path) and current_chunk == 0:
+        return make_response(('File already exists', 400))
+    try:
+        with open(save_path, 'ab') as f:
+            f.seek(int(request.form['dzchunkbyteoffset']))
+            f.write(file.stream.read())
+    except OSError:
+        print('Could not write to file')
+        return make_response(("Not sure why,"
+                              " but we couldn't write the file to disk", 500))
+    total_chunks = int(request.form['dztotalchunkcount'])
+    if current_chunk + 1 == total_chunks:
+        if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
+            print(f"File {file.filename} was completed, "
+                      f"but has a size mismatch."
+                      f"Was {os.path.getsize(save_path)} but we"
+                      f" expected {request.form['dztotalfilesize']} ")
+            return make_response(('Size mismatch', 500))
+        else:
+            # print(f'File {file.filename} has been uploaded successfully')
+            temp_uuid = generate_temp_uuid()
+            filename = temp_uuid + '_' + file.filename
+            # rename file
+            os.rename(save_path, os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            # Use the function reference without invoking it
+            thread = threading.Thread(target=process_upload_files,
+                                        args=([filename], session["user_id"], session["username"]))
+            thread.start()
+
+            pass
+    else:
+        # print(f'Chunk {current_chunk + 1} of {total_chunks} 'f'for file {file.filename} complete')
+        pass
+    return make_response(("Chunk upload successful", 200))
 
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    if "username" not in session:
+        return jsonify({'message': 'Please log in to start uploading.'}), 400
+
     files_await_upload = []
     uploaded_files = request.files.getlist('files[]')
     # Check if files were uploaded
@@ -706,6 +764,9 @@ def upload():
 
 @app.route('/download/<path:file_id>', methods=['GET', 'POST'])
 def download(file_id):
+    if "username" not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM files WHERE file_id = %s", (file_id,))
@@ -766,11 +827,20 @@ def download_progress():
             status = f.read()
         return jsonify({'message': status}), 200
     else:
-        return jsonify({'message': 'File not found'}), 400
+        time.sleep(3)
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                status = f.read()
+            return jsonify({'message': status}), 200
+        else:
+            return jsonify({'message': 'File not found.'}), 400
+
 
 
 @app.route('/download_file/<path:file_id>', methods=['GET'])
 def download_file(file_id):
+    if "username" not in session:
+        return jsonify({'message': 'Please log in to start downloading.'}), 400
     if not file_id:
         return jsonify({'message': 'No file ID provided.'}), 400
     # check if file exists
@@ -795,6 +865,16 @@ def download_file(file_id):
 # Notifications
 @app.route('/notifications')
 def get_notifications():
+    if 'username' not in session:
+        notifications = [{
+            "id": 0,
+            "message": "Please log in to view your notifications.",
+            "is_seen": False,
+            "type": "system",
+            "date_created": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }]
+        return jsonify(notifications)
+
     # fetch notifications from db
     db = get_db()
     cursor = db.cursor()
@@ -830,6 +910,8 @@ def get_notifications():
 
 @app.route('/removenotif')
 def remove_notification():
+    if 'username' not in session:
+        return jsonify({'message': 'Please log in first.'}), 400
     notification_id = request.args.get('id')
     if not notification_id:
         return jsonify({'message': 'No notification ID provided.'}), 400
@@ -843,24 +925,13 @@ def remove_notification():
 
 @app.route('/clearnotifs')
 def clearnotifs():
+    if 'username' not in session:
+        return jsonify({'message': 'Please log in first.'}), 400
     check = handle_notif(session["user_id"], session["username"], "remove_all", "", "")
     if check:
         return jsonify({'message': 'Notifications cleared successfully.'}), 200
     else:
         return jsonify({'message': 'Failed to clear notifications.'}), 400
-
-    """
-# Others
-@app.route('/offline')
-def offline():
-
-@app.route('/service-worker.js')
-def service_worker():
-    return send_file('static/service-worker.js')
-    # TODO : service worker checking and sending
-
-"""
-
 
 @app.route('/invitebot')
 def invitebot():
@@ -887,6 +958,7 @@ def self_recovery():
     return render_template('info-pages/account-file-recovery.html')
     # TODO: self recovery logic
 
+# TODO: offline route/ service worker
 
 if __name__ == "__main__":
     app.run(debug=True, port=4321, host="0.0.0.0")

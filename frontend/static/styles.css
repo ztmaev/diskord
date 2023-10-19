@@ -512,6 +512,7 @@
     text-decoration: none;
     color: var(--light-color);
     margin: 2px;
+    word-break: break-word;
 }
 
 .search-item.hidden {

@@ -42,6 +42,10 @@
         }
 
     }
+    .block-1{
+        padding: 5px;
+        margin-top: 5px;
+    }
 
     .file-list {
         margin-top: 10px;
@@ -63,6 +67,9 @@
         background: var(--accent-darker-color);
         color: var(--lighter-color);
         box-shadow: 0px 0px 10px var(--lightest-color);
+        transform: scale(1.04);
+        margin-bottom: -3px;
+        transition: 0.1s ease-in-out;
     }
 
     .right {
@@ -86,6 +93,7 @@
         flex-direction: row;
         /*position: fixed;*/
         background: var(--dark-color);
+        border-top: 1px solid var(--grey-light-color);
         border-bottom: 1px solid var(--grey-light-color);
         margin: 0px -7px;
         justify-content: space-between;
@@ -187,7 +195,9 @@
 </style>
 {% endblock %}
 {% block content %}
-
+<div class="block-1">
+    {% include "homepage-upload-form-alternate.html" %}
+</div>
 <!--fetch uploads and display them from /files using js-->
 <div class="files">
     <div class="header">

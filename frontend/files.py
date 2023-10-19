@@ -3,6 +3,7 @@ import json
 import math
 import os
 import shutil
+import time
 from datetime import datetime
 
 import aiohttp
@@ -427,6 +428,8 @@ def upload_files(file_info):
         db.commit()
 
         # update subfiles urls
+        time.sleep(3)
+
         update_subfiles_urls(file_info_full)
 
         filename = file_info_full['file_name'][19:]
@@ -455,7 +458,6 @@ def upload_files(file_info):
         return True
 
 
-# TODO: Upload queue
 
 def update_subfiles_urls(file_info_full):
     file_id = file_info_full['file_id']
@@ -549,7 +551,6 @@ def file_download_merge(file_info):
     subfile_path = f"{file_dir}/status.txt"
     with open(subfile_path, 'w') as f:
         f.write(f"0_0_Fetching subfiles[0/{len(subfiles)}]")
-
     subfile_index = 0
 
     total_files = len(subfiles)
@@ -574,5 +575,10 @@ def update_status(file_path, message):
     with open(file_path, 'w') as f:
         f.write(message)
 
-
-# TODO: Upload queue
+def check_dirs():
+    # create folders
+    os.makedirs("files", exist_ok=True)
+    os.makedirs(uploads_dir, exist_ok=True)
+    os.makedirs(split_output_dir, exist_ok=True)
+    os.makedirs("files/metadata", exist_ok=True)
+    os.makedirs("files/merge_output", exist_ok=True)

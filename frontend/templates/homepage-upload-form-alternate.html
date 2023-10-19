@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons-2.1.4/css/boxicons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')}}"/>
+    <style>
+        .form-container-outer {
+            max-width: 500px;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            border-radius: 5px 5px;
+            box-shadow: 0px 0px 5px var(--darker-color);
+        }
+
+        .dropzone {
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            border: 2px dashed var(--accent-color);
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-evenly;
+        }
+
+        .dropzone:hover {
+            background: var(--darker-color);
+        }
+
+        .dropzone .dz-message {
+            font-size: 1.1rem;
+            text-align: center;
+            margin: 0;
+            width: 100%;
+            position: relative;
+        }
+
+        .dropzone .dz-message i {
+            font-size: 5rem;
+            margin-top: 15px;
+            color: var(--light-color);
+        }
+
+        .dropzone .dz-message i:hover {
+            color: var(--accent-color);
+
+        }
+
+        .dropzone .dz-preview {
+            margin: 0;
+            background: var(--darker-color);
+            border-radius: 10px;
+            padding: 3px;
+        }
+
+        .dropzone .dz-preview.dz-file-preview .dz-image {
+            background: var(--grey-light-color);
+        }
+
+        .dropzone .dz-preview .dz-details .dz-filename span, .dropzone .dz-preview .dz-details .dz-size span {
+            color: var(--darker-color);
+            background: var(--light-color);
+        }
+
+
+        .dropzone .dz-preview.dz-image-preview {
+            background: var(--darker-color);
+        }
+
+        .dropzone .dz-preview.dz-file-preview .dz-image,
+        .dropzone .dz-preview .dz-image {
+            border-radius: 10px;
+        }
+
+
+        .container-heading {
+            text-align: center;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+    </style>
+</head>
+<body>
+<div class="form-container-outer">
+    <h1 class="container-heading">Select files to upload</h1>
+    <form action="/upload_alternate"
+          class="dropzone"
+          id="upload-with-chunking">
+    </form>
+</div>
+
+<script>
+    Dropzone.options.uploadWithChunking = {
+        chunking: true,
+        forceChunking: true,
+        chunkSize: 20000000,
+        parallelChunkUploads: false,
+        retryChunks: true,
+        retryChunksLimit: 3,
+        maxFilesize: 2000,
+        dictDefaultMessage: "Drop files here to upload<br><i class='bx bxs-cloud-upload'></i>"
+    };
+</script>
+</body>
+</html>

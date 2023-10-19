@@ -6,7 +6,7 @@
 <style>
     .file-info-container {
         position: relative;
-        top: 40%;
+        top: 55%;
         left: 50%;
         transform: translate(-50%, -50%);
         transition: 200ms ease-in-out;
@@ -18,7 +18,7 @@
         color: var(--light-color);
     }
 
-    .file-info-container .header {
+    .file-info-container .header{
         padding: 10px 15px;
         color: var(--light-color);
         font-size: 1.5rem;
@@ -28,6 +28,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+    }
+    .file-info-container .header p{
+        margin: 0;
     }
 
     .file-info-container .body {
@@ -99,7 +102,7 @@
     }
 
     .edit .edit-popup {
-        transform: translate(-55%, 5%);
+        transform: translate(-55%, -150%);
         position: absolute;
         background: var(--dark-color);
         border: 1px solid var(--grey-light-color);
@@ -115,7 +118,7 @@
 
     .edit .edit-popup.active {
         display: flex;
-        transform: translate(-55%, 5%);
+        transform: translate(-55%, -150%);
     }
 
     .edit-popup form {
@@ -197,7 +200,7 @@
 <div class="file-info-container">
     <div class="inner">
         <div class="header">
-            {{file_info.filename}}
+            <p>{{file_info.filename}}</p>
             <i class="bx bxs-file"></i>
         </div>
         <div class="body">
@@ -276,8 +279,7 @@
 
     function copyToClipboard() {
         const jsonText = document.querySelector('.hidden-json').innerText
-        console.log(jsonText)
-
+        // console.log(jsonText)
         const textArea = document.createElement("textarea");
         textArea.value = jsonText;
         document.body.appendChild(textArea);
@@ -339,9 +341,11 @@
 
     //change name
     const oldName = document.querySelector('.info .filename')
+    const oldNameTitle = document.querySelector('.header p')
 
     function updateName(newfilename) {
         oldName.innerHTML = "<strong>Filename: </strong>" + newfilename
+        oldNameTitle.innerHTML = newfilename
     }
 
 
