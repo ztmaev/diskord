@@ -45,9 +45,9 @@ token = config["token"]
 
 client_id = 1141000843072647290
 client_secret = "QWVGp6-duEfKk51-cX_fal2Z_EL1GDez"
-# redirect_uri = "http://localhost:4321/oauth/callback"
+redirect_uri = "http://localhost:4321/oauth/callback"
 # redirect_uri = "http://arc.maev.site:4321/oauth/callback"
-redirect_uri = "https://diskord.maev.site/oauth/callback"
+# redirect_uri = "https://diskord.maev.site/oauth/callback"
 oauth_url = f"https://discord.com/api/oauth2/authorize?client_id=1141000843072647290&redirect_uri={parse.quote(redirect_uri)}&response_type=code&scope=identify"
 
 admin_ids = ["1135978748689256468"]

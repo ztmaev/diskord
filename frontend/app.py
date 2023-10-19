@@ -696,7 +696,7 @@ def upload_alternate():
     if "username" not in session:
         return 'Please log in to start uploading.', 400
     file = request.files['file']
-    save_path = os.path.join('uploads', secure_filename(file.filename))
+    save_path = os.path.join(upload_dir, secure_filename(file.filename))
     current_chunk = int(request.form['dzchunkindex'])
     if os.path.exists(save_path) and current_chunk == 0:
         return make_response(('File already exists', 400))
@@ -704,7 +704,7 @@ def upload_alternate():
         with open(save_path, 'ab') as f:
             f.seek(int(request.form['dzchunkbyteoffset']))
             f.write(file.stream.read())
-    except OSError:
+    except Exception as e:
         print('Could not write to file')
         return make_response(("Not sure why,"
                               " but we couldn't write the file to disk", 500))
@@ -728,7 +728,7 @@ def upload_alternate():
                                         args=([filename], session["user_id"], session["username"]))
             thread.start()
 
-            pass
+            return make_response(('Uploaded all chunks', 200))
     else:
         # print(f'Chunk {current_chunk + 1} of {total_chunks} 'f'for file {file.filename} complete')
         pass
