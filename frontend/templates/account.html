@@ -222,7 +222,7 @@
     .synced-account-container-inner .header,
     .tfa-container-inner .header,
     .extra-links-inner .header {
-        padding: 5px 10px;
+        padding: 10px;
         border-bottom: 1px solid var(--darker-color);
         font-weight: 600;
     }
@@ -231,7 +231,7 @@
     .account-delete-container-inner .body,
     .synced-account-container-inner .body,
     .tfa-container-inner .body {
-        padding: 5px 10px;
+        padding: 10px;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -381,6 +381,56 @@
         border-radius: 0 5px 5px 0;
     }
 
+    .header-info {
+        border-bottom: 1px solid var(--darker-color);
+        gap: 10px;
+        padding: 10px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-info p {
+        margin: 0;
+    }
+
+    .header-info .tfa-button.on {
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 400;
+        text-decoration: none;
+        margin: 0;
+        padding: 5px 10px;
+        background: var(--accent-darker-color);
+    }
+
+    .header-info .tfa-button.on:hover {
+        background: var(--accent-color);
+        transition: all 0.1s ease-in-out;
+    }
+
+    .header-info .tfa-button.off {
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 400;
+        text-decoration: none;
+        margin: 0;
+        padding: 5px 10px;
+        background: var(--warning-color);
+    }
+
+    .header-info .tfa-button.off:hover {
+        outline: 1px solid;
+        transition: all 0.1s ease-in-out;
+    }
+
+    .header-info p:last-child {
+        color: var(--lighter-color);
+        border-radius: 5px;
+        padding: 5px 10px;
+    }
+
 </style>
 {% endblock %}
 {% block content %}
@@ -411,13 +461,15 @@
             <p>Add a password to login to your account with a username and password.</p>
             <p>Your discord username is your login username</p>
             <form onsubmit="setPass(event)" class="tfa-form">
-                <input type="password" id="set-password" required placeholder="New Password" required autocomplete="new-password">
+                <input type="password" id="set-password" required placeholder="New Password" required
+                       autocomplete="new-password">
                 <button id="newpass" class="submit-btns">Submit</button>
             </form>
             {% else %}
             <p>Change your linked account password</p>
             <form onsubmit="updatePass(event)" class="tfa-form">
-                <input type="password" id="update-password" required placeholder="New Password" required autocomplete="new-password">
+                <input type="password" id="update-password" required placeholder="New Password" required
+                       autocomplete="new-password">
                 <button id="changepass" class="submit-btns">Submit</button>
             </form>
             {% endif %}
@@ -446,6 +498,21 @@
         <div class="header">
             <p class="heading">Two Factor Authentication(2FA)</p>
         </div>
+        {% if account_info['tfa_enabled'] %}
+        <div class="header-info">
+            <p class="tfa-text">2FA is currently enabled.</p>
+            <p class="tfa-button off" onclick="tfaBranch()">Disable 2FA</p>
+        </div>
+        {% else %}
+        <div class="header-info">
+            <p class="tfa-text">2FA is currently disabled.</p>
+            {% if account_info['emails'] != '0' %}
+            <p class="tfa-button on" onclick="tfaBtnNoEmail()">Enable 2FA</p>
+            {% else %}
+            <p class="tfa-button on" onclick="tfaBranch()">Enable 2FA</p>
+            {% endif %}
+        </div>
+        {% endif %}
         <div class="body">
             <p>Add an email to secure your account</p>
             <form onsubmit="emailForm(event)" class="tfa-form">
@@ -562,22 +629,96 @@
     })
         .then(response => response.json())
         .then(data => {
-            if(data.file_size <=0 ){
+            if (data.file_size <= 0) {
                 statsSize.innerText = '0 bytes'
-            }
-            else{
+            } else {
                 statsSize.innerText = data.file_size
             }
             if (data.file_number <= 0) {
                 statsFileNumber.innerText = '0 Files'
-            }
-            else {
+            } else {
                 statsFileNumber.innerText = data.file_number + ' Files'
             }
         })
         .catch(error => {
             console.error('Error:', error);
         });
+
+    // 2fa
+    const tfaText = document.querySelector('.tfa-text')
+    const tfaBtn = document.querySelector('.tfa-button')
+
+
+    function tfaBranch(){
+        if (tfaBtn.classList.contains('off')){
+            tfaBtnDisable()
+        }else{
+            tfaBtnEnable()
+        }
+    }
+
+    function tfaBtnEnable(){
+        // make fetch request to /enable2fa
+        fetch('/enable2fa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                        tfaText.innerText = '2FA is currently enabled.'
+                        tfaBtn.innerText = 'Disable 2FA'
+                        tfaBtn.classList.remove('on')
+                        tfaBtn.classList.add('off')
+
+                    });
+                } else {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+    }
+    function tfaBtnNoEmail(){
+        addPopNotif('Please add an email to enable 2fa')
+    }
+
+    function tfaBtnDisable(){
+        // make fetch request to /disable2fa
+        fetch('/disable2fa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                        tfaText.innerText = '2FA is currently disabled.'
+                        tfaBtn.innerText = 'Enable 2FA'
+                        tfaBtn.classList.remove('off')
+                        tfaBtn.classList.add('on')
+
+                    });
+                } else {
+                    response.json().then(data => {
+                        addPopNotif(data.message)
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+    }
 
 
     // Account Deletion
@@ -932,6 +1073,13 @@
     }
 
     function displayAccounts(data) {
+        if (data.length === 0) {
+            const noAccounts = document.createElement('p')
+            noAccounts.innerText = 'No linked emails'
+            accountsContainer.appendChild(noAccounts)
+            return
+        }
+
         // create a div with p and button
         data.forEach(emailData => {
             // console.log(emailData)

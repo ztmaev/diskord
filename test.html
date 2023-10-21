@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>File Downloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    #progress {
+      width: 100%;
+      border: 1px solid #ccc;
+      background: #f3f3f3;
+      margin: 20px 0;
+    }
+
+    #bar {
+      width: 0;
+      height: 30px;
+      background: #4caf50;
+      text-align: center;
+      line-height: 30px;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>File Downloader</h1>
+  <div id="progress">
+    <div id="bar">0%</div>
+  </div>
+  <button id="downloadButton">Download File</button>
+
+  <script>
+    const downloadButton = document.getElementById("downloadButton");
+    const progressBar = document.getElementById("bar");
+
+    downloadButton.addEventListener("click", () => {
+      const fileUrl = "http://localhost:8800/Beekeeper-Studio-Ultimate-3.9.20.appimage"; // Replace with the URL of the file you want to download
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", fileUrl, true);
+      xhr.responseType = "blob";
+
+      xhr.addEventListener("progress", (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = (event.loaded / event.total) * 100;
+          progressBar.style.width = percentComplete + "%";
+          progressBar.textContent = percentComplete.toFixed(2) + "%";
+        }
+      });
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          const blob = xhr.response;
+          const a = document.createElement("a");
+          const url = window.URL.createObjectURL(blob);
+          a.href = url;
+          a.download = "downloaded-file"; // Rename the downloaded file as needed
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          progressBar.style.width = "0%";
+          progressBar.textContent = "0%";
+        }
+      };
+
+      xhr.send();
+    });
+  </script>
+</body>
+</html>
+

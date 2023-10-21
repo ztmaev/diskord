@@ -1,0 +1,142 @@
+Index: app.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app.py b/app.py
+--- a/app.py	
++++ b/app.py	(date 1697791426137)
+@@ -7,7 +7,8 @@
+ import time
+ import uuid
+ 
+-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, make_response
++from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, \
++    make_response
+ from werkzeug.utils import secure_filename
+ from zenora import APIClient
+ 
+@@ -25,7 +26,6 @@
+ app.secret_key = secret
+ check_dirs()
+ 
+-
+ upload_dir = "files/media"
+ webhook_file = "flask_webhook_bridge.py"
+ 
+@@ -568,8 +568,11 @@
+     return jsonify(files)
+ 
+ 
+-@app.route('/view/<path:id>')
++@app.route('/view/<path:id>', methods=['GET'])
+ def view(id):
++    if 'username' not in session:
++        flash("error_Please log in first.")
++        return redirect(url_for('index'))
+     db = get_db()
+     cursor = db.cursor()
+     cursor.execute("SELECT * FROM files WHERE file_id = %s", (id,))
+@@ -692,6 +695,7 @@
+         return redirect(url_for('index'))
+     return render_template('uploads.html')
+ 
++
+ @app.route('/upload_alternate', methods=['POST'])
+ def upload_alternate():
+     if "username" not in session:
+@@ -713,9 +717,9 @@
+     if current_chunk + 1 == total_chunks:
+         if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
+             print(f"File {file.filename} was completed, "
+-                      f"but has a size mismatch."
+-                      f"Was {os.path.getsize(save_path)} but we"
+-                      f" expected {request.form['dztotalfilesize']} ")
++                  f"but has a size mismatch."
++                  f"Was {os.path.getsize(save_path)} but we"
++                  f" expected {request.form['dztotalfilesize']} ")
+             return make_response(('Size mismatch', 500))
+         else:
+             # print(f'File {file.filename} has been uploaded successfully')
+@@ -726,7 +730,7 @@
+ 
+             # Use the function reference without invoking it
+             thread = threading.Thread(target=process_upload_files,
+-                                        args=([filename], session["user_id"], session["username"]))
++                                      args=([filename], session["user_id"], session["username"]))
+             thread.start()
+ 
+             return make_response(('Uploaded all chunks', 200))
+@@ -837,30 +841,40 @@
+             return jsonify({'message': 'File not found.'}), 400
+ 
+ 
+-
+ @app.route('/download_file/<path:file_id>', methods=['GET'])
+ def download_file(file_id):
+     if "username" not in session:
+         return jsonify({'message': 'Please log in to start downloading.'}), 400
+     if not file_id:
+         return jsonify({'message': 'No file ID provided.'}), 400
+-    # check if file exists
+-    # fetch filename from db
++
++    # Fetch filename from the database
+     db = get_db()
+     cursor = db.cursor()
+     cursor.execute("SELECT file_name FROM files WHERE file_id = %s", (file_id,))
+     filename = cursor.fetchone()
++
+     if filename is None or filename[0] is None or filename[0].strip() == "":
+         flash('File not found')
+         return redirect(url_for('index'))
++
+     filename = filename[0]
+-    # check if file exists
+-    if not os.path.exists(f"files/merge_output/{file_id}/{filename}"):
+-        print("File not found _file")
++
++    # Construct the file path
++    file_path = os.path.join("files/merge_output", str(file_id), filename)
++
++    if not os.path.exists(file_path):
+         flash('File not found')
+         return redirect(url_for('index'))
+-    # send file
+-    return send_from_directory(f"files/merge_output/{file_id}", filename, as_attachment=True)
++
++    try:
++        # Send the file as an attachment
++        return send_from_directory(os.path.dirname(file_path), os.path.basename(file_path), as_attachment=True)
++    except Exception as e:
++        # Handle any other potential errors, such as I/O errors
++        app.logger.error(f"Error while serving the file: {str(e)}")
++        return jsonify({'message': 'An error occurred while serving the file.'}), 500
++
+ 
+ @app.route('/download_file_complete', methods=['POST'])
+ def download_file_complete():
+@@ -888,7 +902,6 @@
+     return jsonify({'message': 'File deleted successfully.'}), 200
+ 
+ 
+-
+ # Notifications
+ @app.route('/notifications')
+ def get_notifications():
+@@ -960,6 +973,7 @@
+     else:
+         return jsonify({'message': 'Failed to clear notifications.'}), 400
+ 
++
+ @app.route('/invitebot')
+ def invitebot():
+     link = ""
+@@ -985,6 +999,7 @@
+     return render_template('info-pages/account-file-recovery.html')
+     # TODO: self recovery logic
+ 
++
+ # TODO: offline route/ service worker
+ 
+ if __name__ == "__main__":

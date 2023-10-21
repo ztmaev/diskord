@@ -57,6 +57,7 @@
         font-size: 1.5rem;
         padding: 0.5rem 0;
         margin: 0;
+        word-break: break-word;
     }
 
     .download-container .header .g1 .p2 {
@@ -75,7 +76,7 @@
         justify-content: center;
     }
 
-    .download-container .header .g2 i{
+    .download-container .header .g2 i {
         font-size: 2.5rem;
         padding: 0;
         margin: 0;
@@ -213,7 +214,7 @@
 
     const fileID = "{{ file_info.id }}";
 
-    function toFullNumber(number){
+    function toFullNumber(number) {
         return Math.round(number);
 
     }
@@ -243,27 +244,6 @@
 
     }
 
-    // Download file
-    function downloadFile(url, fileName) {
-        //TODO: file download in js
-        infoText.style.display = 'none';
-        infoFooter.innerHTML = 'Downloading, please don\'t close this page.';
-
-        // Create an anchor element
-        const anchor = document.createElement('a');
-
-        anchor.style.display = 'none';
-
-        // Set the href attribute to the direct URL of the file
-        anchor.href = url;
-
-        // Set the download attribute to specify the default file name
-        anchor.download = fileName;
-
-        // Trigger a click event on the anchor element
-        anchor.click();
-    }
-
 
     // continously check for download status
     function fetchProgress() {
@@ -281,6 +261,7 @@
                     response.json().then(data => {
                         // console.log(data.message);
                         // eg: 1_50_Downloading subfiles [1/2]
+                        console.log(data.message)
                         const stage = data.message.split('_')[0];
                         const stage_percent = data.message.split('_')[1];
                         const stage_activity = data.message.split('_')[2];
@@ -291,10 +272,7 @@
                         // Check if the message matches the desired format
                         if (data.message.startsWith('3_100_')) {
                             // console.log('Download completed!');
-                            // Download completed, download file
-
                             downloadFile('/download_file/' + fileID, "{{ file_info.filename }}");
-
                         } else {
                             // If not completed, fetch progress again
                             fetchProgress();
@@ -313,6 +291,63 @@
 
     // Start fetching progress
     fetchProgress();
+
+    function downloadFile(url, fileName) {
+        infoText.style.display = 'none';
+        infoFooter.innerHTML = 'Downloading, please don\'t close this page.';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "blob";
+
+        xhr.addEventListener("progress", (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                progress_bar.value = percentComplete;
+                progress_percent.innerHTML = toFullNumber(percentComplete) + '%';
+            }
+        });
+
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                const blob = xhr.response;
+                const a = document.createElement("a");
+                const url = window.URL.createObjectURL(blob);
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                infoFooter.innerHTML = 'Download completed!';
+                // make post request to delete file
+                fetch('/download_file_complete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fileID
+                    })
+                })
+                    .then(response => {
+                        if (response.status === 200) {
+                            response.json().then(data => {
+                                console.log(data.message);
+                            });
+                        } else {
+                            response.json().then(data => {
+                                console.log(data.message);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+        };
+
+        xhr.send();
+    }
 
 
 </script>

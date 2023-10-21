@@ -1,13 +1,14 @@
 import datetime
 import json
 import os
+import shutil
 import subprocess
 import threading
 import time
 import uuid
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, make_response
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, send_file
 from zenora import APIClient
 
 from config import token, client_secret, redirect_uri, oauth_url, admin_ids, get_db
@@ -22,6 +23,7 @@ uploads_dir = 'files/media'
 app.config['UPLOAD_FOLDER'] = 'files/media'
 secret = "maevisgod"
 app.secret_key = secret
+app.permanent_session_lifetime = datetime.timedelta(minutes=120)
 check_dirs()
 
 
@@ -175,10 +177,31 @@ def account():
     else:
         storage_size = storage_size[0]
     storage_size = convert_file_size(storage_size)
+
+    # check if user has 2fa and number of emails linked
+    cursor.execute("SELECT emails FROM users WHERE discord_id = %s", (str(session["user_id"]),))
+    emails = cursor.fetchone()
+    if emails is None or emails[0] is None or emails[0].strip() == "":
+        emails = 0
+    else:
+        emails = len(emails[0].split(","))
+    cursor.execute("SELECT has_2fa FROM users WHERE discord_id = %s", (str(session["user_id"]),))
+    has_2fa = cursor.fetchone()
+    if has_2fa is None or has_2fa[0] is None:
+        tfa_enabled = False
+    elif has_2fa[0] == 1 or has_2fa[0] == "1":
+        tfa_enabled = True
+    else:
+        tfa_enabled = False
+
     account_info = {
         "storage_size": storage_size,
-        "files_number": files_number
+        "files_number": files_number,
+        "tfa_enabled": tfa_enabled,
+        "emails": emails
     }
+
+    print(account_info)
 
     return render_template("account.html", account_info=account_info)
 
@@ -517,6 +540,33 @@ def unlinkemail():
         return jsonify({'message': 'Failed to unlink email'}), 400
     # TODO: error handling, unlinking
 
+@app.route('/enable2fa', methods=['POST'])
+def enable2fa():
+    # update has_2fa to true in db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE users
+        SET has_2fa = TRUE
+        WHERE discord_id = %s
+    """, (str(session["user_id"]),))
+    conn.commit()
+    cursor.close()
+    return jsonify({'message': '2FA enabled successfully.'}), 200
+
+@app.route('/disable2fa', methods=['POST'])
+def disable2fa():
+    # update has_2fa to false in db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE users
+        SET has_2fa = FALSE
+        WHERE discord_id = %s
+    """, (str(session["user_id"]),))
+    conn.commit()
+    cursor.close()
+    return jsonify({'message': '2FA disabled successfully.'}), 200
 
 @app.route('/delete_account', methods=['POST'])
 def delete_account():
@@ -567,8 +617,11 @@ def files():
     return jsonify(files)
 
 
-@app.route('/view/<path:id>')
+@app.route('/view/<path:id>', methods=['GET'])
 def view(id):
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM files WHERE file_id = %s", (id,))
@@ -836,30 +889,66 @@ def download_progress():
             return jsonify({'message': 'File not found.'}), 400
 
 
-
 @app.route('/download_file/<path:file_id>', methods=['GET'])
 def download_file(file_id):
     if "username" not in session:
         return jsonify({'message': 'Please log in to start downloading.'}), 400
     if not file_id:
+        return 'No file ID provided.', 400
+
+    # Fetch filename from the database
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT file_name FROM files WHERE file_id = %s", (file_id,))
+    filename = cursor.fetchone()
+
+    if filename is None or filename[0] is None or filename[0].strip() == "":
+        return 'File not found', 404
+
+    filename = filename[0]
+
+    # Construct the file path
+    file_path = os.path.join("files/merge_output", str(file_id), filename)
+
+    if not os.path.exists(file_path):
+        return 'File not found', 404
+
+    try:
+        # Send the file as an attachment
+        # return send_from_directory(os.path.dirname(file_path), os.path.basename(file_path), as_attachment=True)
+        return send_file(file_path, environ=request.environ, as_attachment=True)
+    except Exception as e:
+
+        # Handle any other potential errors, such as I/O errors
+        app.logger.error(f"Error while serving the file: {str(e)}")
+        return jsonify({'message': 'An error occurred while serving the file.'}), 500
+
+
+@app.route('/download_file_complete', methods=['POST'])
+def download_file_complete():
+    data = request.get_json()
+    file_id = data.get('fileID', '')
+    if "username" not in session:
+        return jsonify({'message': 'Please log in to start downloading.'}), 400
+    if not file_id:
         return jsonify({'message': 'No file ID provided.'}), 400
-    # check if file exists
+    # check if file exists in merge_output
     # fetch filename from db
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT file_name FROM files WHERE file_id = %s", (file_id,))
     filename = cursor.fetchone()
     if filename is None or filename[0] is None or filename[0].strip() == "":
-        flash('File not found')
-        return redirect(url_for('index'))
+        return jsonify({'message': 'File not found.'}), 400
     filename = filename[0]
     # check if file exists
     if not os.path.exists(f"files/merge_output/{file_id}/{filename}"):
-        print("File not found _file")
-        flash('File not found')
-        return redirect(url_for('index'))
-    # send file
-    return send_from_directory(f"files/merge_output/{file_id}", filename, as_attachment=True)
+        print("File not found")
+        return jsonify({'message': 'File not found.'}), 400
+    # delete file and dir
+    shutil.rmtree(f"files/merge_output/{file_id}")
+    return jsonify({'message': 'File deleted successfully.'}), 200
+
 
 
 # Notifications

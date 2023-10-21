@@ -90,9 +90,7 @@ def fetch_queue():
     return queue_items
 
 
-
-
-#TODO implement queue mechanism
+# TODO implement queue mechanism
 
 
 def process_upload_files(files, session_id, username):
@@ -434,7 +432,6 @@ def upload_files(file_info):
 
         filename = file_info_full['file_name'][19:]
 
-
         # send notification
         handle_notif(file_info_full['owner_id'], file_info_full["username"], "add",
                      f"File uploaded: {filename}", url=f"/view/{file_id}", type="file")
@@ -454,13 +451,22 @@ def upload_files(file_info):
         ))
         db.commit()
 
-
         return True
-
 
 
 def update_subfiles_urls(file_info_full):
     file_id = file_info_full['file_id']
+    # get id from db
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT * FROM files WHERE file_id = %s
+    """, (
+        file_id,
+    ))
+    file_info = cursor.fetchone()
+    file_id_db = file_info[0]
+
     # fetch subfiles
     subfiles_info = asyncio.run(fetch_subfiles(file_id))
     # update subfiles
@@ -474,9 +480,10 @@ def update_subfiles_urls(file_info_full):
         cursor.execute("""
             UPDATE subfiles SET
                 file_url = %s
-            WHERE chunk_file_id = %s
+            WHERE main_file_id = %s AND chunk_file_id = %s
         """, (
             subfile_url,
+            file_id_db,
             subfile_id,
         ))
         db.commit()
@@ -511,9 +518,9 @@ def merge_files(filename, subfiles, file_dir, subfiles_dir):
     merged_file_path = os.path.join(file_dir, filename)
 
     total_files = len(subfiles)
+    mergefile_index = 0
 
     with open(merged_file_path, 'wb') as outfile:
-        mergefile_index = 0
         for subfile in subfiles:
             subfile_name = subfile['file_name']
             subfile_path = os.path.join(subfiles_dir, subfile_name)
@@ -522,58 +529,61 @@ def merge_files(filename, subfiles, file_dir, subfiles_dir):
             with open(subfile_path, 'rb') as subfile_content:
                 outfile.write(subfile_content.read())
 
-            # update status
+            # Update status for merging (fixed range: 90-100%)
             mergefile_index += 1
-
-            percent = round((mergefile_index / total_files))
-
+            percent = 90 + int((mergefile_index / total_files) * 10)
             update_status(f"{file_dir}/status.txt", f"2_{percent}_Merging subfiles[{mergefile_index}/{total_files}")
 
-        # cleanup
-        shutil.rmtree(subfiles_dir)
+    # Cleanup
+    shutil.rmtree(subfiles_dir)
 
-    update_status(f"{file_dir}/status.txt", f"3_100_Merge complete")
+    # Update status for merge completion
+    update_status(f"{file_dir}/status.txt", "3_100_Merge complete")
 
 
-# download_merge
+# Download and merge process
 def file_download_merge(file_info):
+    # print(file_info)
     filename = file_info['filename']
     file_id = file_info['id']
     subfiles = json.loads(file_info['subfiles'])
+    # print(subfiles)
 
     file_dir = f"files/merge_output/{file_id}"
     subfiles_dir = f"{file_dir}/subfiles"
 
-    # create folders
+    # Create folders
     os.makedirs(file_dir, exist_ok=True)
     os.makedirs(subfiles_dir, exist_ok=True)
-    # status script
+
+    # Initialize status file
     subfile_path = f"{file_dir}/status.txt"
     with open(subfile_path, 'w') as f:
         f.write(f"0_0_Fetching subfiles[0/{len(subfiles)}]")
     subfile_index = 0
-
     total_files = len(subfiles)
 
     for file in subfiles:
         file_name = file['file_name']
         file_url = file['url']
-        # download file
+
+        # Download file
         download_file(file_url, subfiles_dir, file_name)
-        # update status
+
+        # Update status for download
         subfile_index += 1
-        # full number percent
-        percent = round((subfile_index / total_files) * 100)
+        percent = int((subfile_index / total_files) * 100)
         update_status(subfile_path, f"1_{percent}_Fetching subfiles[{subfile_index}/{total_files}]")
 
-    # merge files into one using their ids
-    update_status(subfile_path, f"2_0_Merging subfiles[0/{total_files}]")
+    # Merge files into one using their ids
+    update_status(subfile_path, f"2_90_Merging subfiles[0/{total_files}]")
     merge_files(filename, subfiles, file_dir, subfiles_dir)
 
 
 def update_status(file_path, message):
     with open(file_path, 'w') as f:
         f.write(message)
+
 
 def check_dirs():
     # create folders

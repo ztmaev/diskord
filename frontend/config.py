@@ -7,7 +7,7 @@ import websockets
 
 uri = "ws://arc.maev.site:8765"
 config_password = "password"
-db_name = "Alpha7"
+db_name = "Alpha9"
 db_host = "arc.maev.site"
 # db_host = "127.0.0.1"
 

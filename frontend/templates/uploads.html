@@ -19,6 +19,7 @@
 
         .files .header {
             width: calc(100vw - 60px);
+            margin: 0px -7px;
         }
 
     }
@@ -38,11 +39,13 @@
         }
 
         .files .header {
-            width: 100%;
+            width: calc(100% + 10px);
+            margin: 0 -5px;
         }
 
     }
-    .block-1{
+
+    .block-1 {
         padding: 5px;
         margin-top: 5px;
     }
@@ -61,15 +64,17 @@
         flex-direction: row;
         align-items: center;
         justify-content: flex-start;
+
     }
 
     .file-list a:hover {
         background: var(--accent-darker-color);
         color: var(--lighter-color);
         box-shadow: 0px 0px 10px var(--lightest-color);
-        transform: scale(1.04);
-        margin-bottom: -3px;
-        transition: 0.1s ease-in-out;
+        transform: scale(1.03);
+        transition: 0.1s ease-in;
+        width: 100%;
+        margin: 0 auto;
     }
 
     .right {
@@ -95,7 +100,6 @@
         background: var(--dark-color);
         border-top: 1px solid var(--grey-light-color);
         border-bottom: 1px solid var(--grey-light-color);
-        margin: 0px -7px;
         justify-content: space-between;
         padding: 0 8px;
         align-items: center;

@@ -76,6 +76,7 @@ if not table_users_exists:
             avatar VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             emails VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             await_username_update BOOLEAN NOT NULL DEFAULT FALSE,
+            has_2fa BOOLEAN NOT NULL DEFAULT FALSE,
             await_deletion BOOLEAN NOT NULL DEFAULT FALSE,
             deleted BOOLEAN NOT NULL DEFAULT FALSE,
             date_created VARCHAR(255) NOT NULL,
@@ -141,6 +142,7 @@ if not table_files_exists:
             thread_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
             permalink VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            direct_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             date_created VARCHAR(255) NOT NULL,
             date_updated VARCHAR(255) NOT NULL
         )
