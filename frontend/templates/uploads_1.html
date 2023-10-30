@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}
+<title>Uploads | alternate</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/uploads.css') }}">
+{% endblock %}
+{% block styles %}
+
+{% endblock %}
+{% block content %}
+<div class="container-full">
+    <div class="container-full-inner">
+        <div class="container-header-section">
+            <div class="container-header-section-inner">
+
+            </div>
+
+        </div>
+        <div class="container-body-section">
+            <div class="container-body-section-inner">
+                <div class="body-section-files">
+                    <div class="body-section-files-inner">
+                        <div class="files-subgroups" id="files-recent">
+                            <div class="files-header">
+                                <p>Recent</p>
+                            </div>
+                            <div class="files-body">
+                                <div class="recents-list">
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="files-subgroups" id="files-folders">
+                            <div class="files-header">
+                                <p>Folders</p>
+
+                            </div>
+                            <div class="files-body">
+                                <div class="folders-list">
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="files-subgroups" id="files-files">
+                            <div class="files-header">
+                                <p>Files</p>
+                                <div class="file-sorter">
+                                    <div class="sort-type">
+                                        <i class="bx bx-sort-down"></i>
+                                    </div>
+                                    <select name="sorter" id="sorter-files" class="sort-selector">
+                                        <option value="hide">Sort</option>
+                                        <option value="name">Name</option>
+                                        <option value="date">Date</option>
+                                        <option value="size">Size</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="files-body">
+                                <div class="files-list">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="body-section-details">
+                    <div class="file-details">
+                        <div class="header">
+                            <p>Details</p>
+                        </div>
+                        <div class="details-body">
+                            <div class="details-body-inner">
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="account-stats">
+                        <div class="header">
+                            <p>Account stats</p>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/uploads_scripts.js') }}"></script>
+{% endblock %}

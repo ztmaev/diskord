@@ -21,9 +21,9 @@
     --accent-darker-color: #00643c;
     --lighter-color: #fff;
     --light-color: #ccc;
-    --form-color: #e1e1e1;
+    --form-color: #ede9e924;
     --warning-color: #b90000;
-    --grey-light-color: #737373;
+    --grey-light-color: rgb(115, 115, 115);
 }
 
 * {
@@ -70,14 +70,14 @@
 }
 
 .sidebar {
-    margin-top: 2px;
+    margin-top: -1px;
     width: 300px;
     max-width: calc(100% - 20px);
     background: var(--dark-color);
     border-right: 1px solid var(--grey-light-color);
     border-top: 1px solid var(--grey-light-color);
     border-bottom: 1px solid var(--grey-light-color);
-    border-radius: 0 5px 0 0;
+    border-radius: 0;
     flex-direction: column;
     transition: width 0.2s ease-in-out;
 }
@@ -104,8 +104,8 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
-    padding-bottom: 55px;
     overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .body-container min {
@@ -142,7 +142,8 @@
     justify-content: space-between;
     height: 100%;
 }
-.sidebar-items a{
+
+.sidebar-items a {
     cursor: pointer;
 }
 
@@ -173,6 +174,8 @@
 .sidebar-items .group-down a.min {
     padding: 10px;
     transition: all 0.2s ease-in-out;
+    font-size: 1.5rem;
+
 }
 
 .sidebar-items .group-up a:hover,
@@ -184,6 +187,8 @@
 .sidebar-items .group-up a p,
 .sidebar-items .group-down a p {
     margin: 0;
+    white-space: nowrap;
+    font-size: 1.4rem;
 }
 
 .sidebar-items .group-up div a p.hidden,
@@ -195,7 +200,8 @@
 #login-btn-2 {
     cursor: pointer;
 }
-#logout-btn:hover{
+
+#logout-btn:hover {
     background: var(--warning-color);
     color: var(--lighter-color);
 }
@@ -329,18 +335,25 @@
     position: fixed;
     background-color: var(--darker-color);
     font-size: 1.1rem;
-    top: -10%;
+    top: -15%;
     left: 50%;
     transform: translate(-50%, -40%);
     height: 35px;
     width: 80%;
     border: 1px solid var(--grey-light-color);
     border-radius: 20px;
-    padding: 5px;
+    padding: 20px;
     align-items: center;
     justify-content: center;
     align-content: center;
     flex-wrap: nowrap;
+}
+
+.modal-notifs p {
+    margin: 0;
+    padding: 0;
+    color: var(--light-color);
+    text-align: center;
 }
 
 .modal-notifs.active {
@@ -373,6 +386,7 @@
 }
 
 .modal-body {
+    display: none;
     padding: 10px 15px;
     font-size: 1.1rem;
     color: var(--light-color);
@@ -473,7 +487,8 @@
     /* gap: 10px; */
     overflow-y: scroll;
 }
-.search-container .body-contents a{
+
+.search-container .body-contents a {
 }
 
 .search-item {
@@ -582,10 +597,6 @@
     text-shadow: 0px 0px 5px var(--darkest-color);
 }
 
-.login-section {
-    padding: 10px 15px;
-    border-bottom: 1px solid var(--grey-light-color);
-}
 
 .invite-section {
     margin-top: -10px;
@@ -619,15 +630,93 @@
     display: flex;
     flex-wrap: nowrap;
     gap: 5px;
-    margin-top: -10px;
+    /*margin-top: -10px;*/
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--grey-light-color);
+}
+
+.form-overlay {
+    display: none;
+}
+
+.form-overlay i {
+    font-size: 1.5rem;
+}
+
+.form-overlay.active {
+    display: flex;
+    width: 80%;
+    background: var(--dark-color);
+    border-radius: 5px;
+    height: 4.2rem;
 }
 
 .login-form {
+    display: none;
+}
+
+.login-form.active {
     width: 80%;
+    /*display: flex;*/
     display: flex;
     gap: 5px;
     flex-wrap: nowrap;
     justify-content: space-between;
+}
+
+/*2FA*/
+.tfa-login-form {
+    display: none;
+}
+
+.tfa-login-form.active {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: var(--dark-color);
+    padding: 10px;
+    outline: 1px solid var(--grey-light-color);
+    border-radius: 5px;
+}
+
+.tfa-login-form-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.tfa-login-form .group {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tfa-login-form .group input {
+    padding: 5px 10px;
+    width: calc(100% - 80px);
+    border-radius: 5px 0 0 5px;
+    border: 1px solid transparent;
+}
+
+.tfa-login-form .group button {
+    width: 80px;
+    height: 100%;
+    border-radius: 0 5px 5px 0;
+    border: 1px solid transparent;
+    background: var(--accent-darker-color);
+    color: var(--lighter-color);
+    font-weight: 500;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.tfa-login-form .group button:hover {
+    background: var(--accent-color);
 }
 
 .login-form .form-fields {
@@ -653,15 +742,14 @@
 
 .login-form .form-fields input {
     outline: none;
-    height: 1.9rem;
     border: 1px solid var(--grey-light-color);
     border-radius: 5px 0 0 5px;
-    padding: 5px;
+    padding: 5px 10px;
     width: 70%;
-    background: var(--dark-color);
+    background: var(--form-color);
     display: flex;
-    color: var(--darkest-color);
-    font-size: 1.1rem;
+    color: var(--lighter-color);
+    font-size: 1.2rem;
 }
 
 .login-form .form-fields .password-group #password {
@@ -701,8 +789,7 @@
     visibility: hidden;
     cursor: pointer;
     position: absolute;
-    top: 0.2rem;
-    right: 0.2rem;
+    right: 10px;
     background: none;
     width: 1.5rem;
     max-width: 1.5rem;
@@ -711,11 +798,12 @@
     align-items: center;
     display: flex;
     justify-content: center;
-    align-items: center;
 }
 
 .password-group .show-password.active {
     visibility: visible;
+    height: 100%;
+    font-size: 2rem;
 }
 
 .login-form .form-submit-btn button:hover {
@@ -754,6 +842,18 @@
     margin-top: 0.2rem;
     font-size: 3.2rem;
     transition: all 0.1s ease-in;
+}
+
+.invite-section div:first-child {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.invite-section div:last-child {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
 }
 
 .invite-section p {
@@ -840,6 +940,7 @@
     #session-name {
         display: none;
     }
+
     .profile-group img {
         margin-right: -5px;
     }
@@ -878,15 +979,12 @@
         display: flex;
     }
 
-
     .modal {
         width: calc(100vw - 10px);
         max-width: calc(100vw - 10px);
     }
 
-
 }
-
 
 /*Navbar*/
 body {
@@ -1073,7 +1171,7 @@ body {
     border-bottom: 1px solid var(--grey-light-color);
 }
 
-.user-notifs .notifs-header p{
+.user-notifs .notifs-header p {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 600;
@@ -1109,34 +1207,34 @@ body {
     background: var(--darker-color);
 }
 
-.loading{
+.loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: 90%;
     width: 100%;
 }
-.loading img{
-    margin-top: -30px;
-    width: 50px;
-    height: 50px;
+
+.loading i {
+    font-size: 2rem;
+    color: var(--light-color);
 }
 
 
-
-.no-notifs{
+.no-notifs {
     width: 100%;
     text-align: center;
     margin-top: 20px;
     color: var(--light-color);
 }
 
-.user-notifs .notifs-list a{
+.user-notifs .notifs-list a {
     cursor: pointer;
     text-decoration: none;
     color: inherit;
 }
-.user-notifs .notifs-list a:hover{
+
+.user-notifs .notifs-list a:hover {
     cursor: pointer;
 }
 
@@ -1155,7 +1253,8 @@ body {
     align-items: center;
     justify-content: space-between;
 }
-.user-notifs .notifs-list .bx-items i:first-child{
+
+.user-notifs .notifs-list .bx-items i:first-child {
     font-size: 2rem;
     width: 2.6rem;
     height: 2.6rem;
@@ -1165,7 +1264,8 @@ body {
     padding: 3px;
     pointer-events: none;
 }
-.user-notifs .notifs-list .bx-items i:last-child{
+
+.user-notifs .notifs-list .bx-items i:last-child {
     font-size: 1.5rem;
     width: 1.6rem;
     height: 1.6rem;
@@ -1208,8 +1308,7 @@ body {
     justify-content: center;
 }
 
-.user-notifs .notifs-list .bx-items:hover
-{
+.user-notifs .notifs-list .bx-items:hover {
     color: var(--lighter-color);
     background-color: var(--accent-darker-color);
 }
@@ -1354,3 +1453,4 @@ body {
     background-color: var(--warning-color);
     color: var(--lighter-color);
 }
+

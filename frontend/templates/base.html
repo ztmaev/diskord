@@ -115,7 +115,7 @@
         your account details on discord using <a href="" class="bot-url">our bot.</a>
     </div>
     <div class="login-section">
-        <form onsubmit="formSubmission(event)" class="login-form">
+        <form onsubmit="formSubmission(event)" class="login-form active">
             <div class="form-fields">
                 <div>
                     <label for="username">Username</label>
@@ -136,25 +136,40 @@
             </div>
 
         </form>
+        <div class="form-overlay">
+            <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+        </div>
+        <form onsubmit="tfaFormSubmission(event)" class="tfa-login-form" id="tfa-form">
+            <div class="tfa-login-form-inner">
+                <label for="tfa-code">Enter your 2fa code</label>
+                <div class="group">
+                    <input type="text" id="tfa-code" name="2fa-code" placeholder="2FA Code" required>
+                    <div class="form-submit-btn">
+                        <button>Log in</button>
+                    </div>
+                </div>
+            </div>
+        </form>
         <div class="discord-login">
             <a href="{{ oauth_url }}"><i class='bx bxl-discord-alt'></i></a>
         </div>
-
-
     </div>
+
     <div class="invite-section">
         <div class="bot-invite">
-            <p>Invite our bot to your server.</p>
+            <p>Invite our bot</p>
             <a href="{{url_for('invitebot')}}">Invite <i class='bx bxl-discord-alt'></i></a>
         </div>
         <div class="community-server">
-            <p>Join the community server.</p>
+            <p>Join the community</p>
             <a href="{{url_for('join_community')}}">Join <i class='bx bxl-discord-alt'></i></a>
         </div>
 
     </div>
     <div class="help-section">
-        <p>Recover files/Get help recovering files. </p>
+        <p>Recover files/Get help recovering files </p>
         <a href="{{url_for('get_help')}}">help <i class='bx bxs-help-circle'></i></a><a
             href="{{url_for('self_recovery')}}">SelfRecovery <i class='bx bxs-wrench'></i></a>
     </div>
@@ -187,13 +202,13 @@
                 class="bx bxs-home"></i></a></div>
         {% if 'username' in session %}
         <div class="{{ 'active' if request.endpoint == 'uploads'}}"><a href="{{url_for('uploads')}}"><i
-                class="bx bxs-cloud-upload"></i></a></div>
+                class="bx bxs-hdd"></i></a></div>
         <div class=""><i class="bx bx-search" id="search-trigger-2"></i></div>
         <div class=""><i class="bx bxs-bell" id="notif-trigger-2"></i></div>
         <div class="{{ 'active' if request.endpoint == 'account'}}"><a href="{{url_for('account')}}"><i
                 class="bx bxs-user"></i></a></div>
         {% else %}
-        <div onclick="loginPrompt('view your uploads.')"><i class="bx bxs-cloud-upload"></i></div>
+        <div onclick="loginPrompt('view your uploads.')"><i class="bx bxs-hdd"></i></div>
         <div onclick="loginPrompt('search your files.')"><i class="bx bx-search"></i></div>
         <div onclick="loginPrompt('view notifications.')"><i class="bx bxs-bell"></i></div>
         <div onclick="loginPrompt('view your account page.')"><i class="bx bxs-user"></i></div>
@@ -222,7 +237,7 @@
                     {% if 'username' in session %}
                     <div>
                         <a class="min" href="{{url_for('uploads')}}">
-                            <i class="bx bx-cloud-upload"></i>
+                            <i class="bx bxs-hdd"></i>
                             <p class="hidden">Uploads</p>
                         </a>
                     </div>
@@ -230,7 +245,7 @@
                     <div>
                         <div onclick="loginPrompt('view your uploads.')">
                             <a class="min">
-                                <i class="bx bx-cloud-upload"></i>
+                                <i class="bx bxs-hdd"></i>
                                 <p class="hidden">Uploads</p>
                             </a>
                         </div>

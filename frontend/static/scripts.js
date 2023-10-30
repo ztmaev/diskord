@@ -152,6 +152,10 @@ function formSubmission(event) {
     if (password.length < 8) {
         showModalNotif("Password should be at least 8 characters.")
     }
+
+    normalForm.classList.remove("active")
+    formOverlay.classList.add("active")
+
     fetch('/login', {
         method: 'POST',
         headers: {
@@ -160,6 +164,8 @@ function formSubmission(event) {
         body: JSON.stringify({username, password}),
     })
         .then(response => {
+            formOverlay.classList.remove("active")
+            normalForm.classList.add("active")
             if (response.status === 200) {
                 response.json().then(data => {
                     showModalNotif(data.message)
@@ -168,6 +174,13 @@ function formSubmission(event) {
                     // Redirect to homepage
                     window.location.href = '/';
                 }, 1000);
+            } else if (response.status === 201) {
+                response.json().then(data => {
+                    showModalNotif(data.message)
+                    console.log("show 2fa modal")
+                    showTfaModal()
+                    // TODO: show 2fa modal
+                });
 
             } else {
                 // Handle other status codes or error responses here
@@ -179,6 +192,65 @@ function formSubmission(event) {
         .catch(error => {
             console.error('Error:', error);
         });
+
+
+}
+
+const normalForm = document.querySelector(".login-form")
+const tfaForm = document.getElementById("tfa-form")
+const formOverlay = document.querySelector(".form-overlay")
+
+function showTfaModal() {
+    normalForm.classList.remove("active")
+    tfaForm.classList.add("active")
+
+}
+
+function hideTfaModal() {
+    normalForm.classList.add("active")
+    tfaForm.classList.remove("active")
+}
+
+function tfaFormSubmission(event) {
+    event.preventDefault()
+    const tfaCode = document.querySelector('#tfa-code').value;
+    const username = document.querySelector('#username').value;
+    const password = document.querySelector('#password').value;
+    // console.log(tfaCode, username, password)
+    if (!tfaCode || !username || !password) {
+        showModalNotif('please enter your username, password and 2fa code.');
+        return;
+    }
+
+tfaForm.classList.remove("active")
+    formOverlay.classList.add("active")
+
+    fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({username, password, tfaCode}),
+    })
+        .then(response => {
+            formOverlay.classList.remove("active")
+            tfaForm.classList.add("active")
+            if (response.status === 200) {
+                response.json().then(data => {
+                    showModalNotif(data.message)
+                });
+                setTimeout(function () {
+                    // Redirect to homepage
+                    window.location.href = '/';
+                }, 1000);
+            } else {
+                // Handle other status codes or error responses here
+                response.json().then(data => {
+                    showModalNotif(data.message)
+                });
+            }
+
+        })
 
 
 }
@@ -348,12 +420,16 @@ function fetchNotificationsAndDisplay() {
     // loading animation
     const loadingElement = document.createElement('div');
     loadingElement.className = 'loading';
-    const loadingImage = document.createElement('img');
-    loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+    // const loadingImage = document.createElement('img');
+    // loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+    //
+    // loadingElement.appendChild(loadingImage);
+    loadingElement.innerHTML = `
+                <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>`
 
-    loadingElement.appendChild(loadingImage);
     notificationsContainer.querySelector('.notifs-list').appendChild(loadingElement);
-
 
 
     fetch('/notifications')
@@ -508,10 +584,15 @@ function fetchFilesAndDisplay() {
     // loading animation
     const loadingElement = document.createElement('div');
     loadingElement.className = 'loading';
-    const loadingImage = document.createElement('img');
-    loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+    // const loadingImage = document.createElement('img');
+    // loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+    //
+    // loadingElement.appendChild(loadingImage);
+    loadingElement.innerHTML = `
+                <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>`
 
-    loadingElement.appendChild(loadingImage);
     searchItemsContainer.appendChild(loadingElement);
 
 

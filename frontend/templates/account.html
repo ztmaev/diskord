@@ -72,6 +72,11 @@
     }
 
 
+    .body-container {
+        gap: 10px;
+    }
+
+
     .account-dashboard {
         /*display: none;*/
         margin: 5px auto;
@@ -101,6 +106,13 @@
         align-items: center;
         justify-content: center;
         padding: 10px;
+        cursor: pointer;
+    }
+
+    .account-dashboard .storage:hover,
+    .account-dashboard .files:hover {
+        background: var(--accent-darker-color);
+        color: var(--lighter-color);
     }
 
     .account-dashboard .storage p,
@@ -110,7 +122,21 @@
     }
 
     /*Main*/
+    .update-username .body {
+        border-bottom: 1px solid var(--darker-color);
+    }
 
+    #update-username {
+        width: 150px;
+        text-align: center;
+    }
+
+    #username-update-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 5px 10px;
+    }
 
     /*Account Deletion*/
     .heading {
@@ -129,19 +155,21 @@
     .account-delete-confirm {
         color: var(--lighter-color);
         background: var(--warning-color);
-        width: fit-content;
         padding: 5px 10px;
-        border-radius: 0.2rem;
+        border-radius: 5px;
         cursor: pointer;
+        width: 110px;
+        text-align: center;
     }
 
     .account-delete-cancel {
         color: var(--lighter-color);
         background: var(--accent-darker-color);
-        width: fit-content;
         padding: 5px 10px;
-        border-radius: 0.2rem;
+        border-radius: 5px;
         cursor: pointer;
+        width: 110px;
+        text-align: center;
     }
 
     .account-delete-cancel:hover {
@@ -149,7 +177,9 @@
     }
 
     .account-delete-confirm:hover {
-        outline: 1px solid var(--lighter-color);
+        /*outline: 1px solid var(--lighter-color);*/
+        opacity: 0.8;
+        transition: all 0.1s ease-in-out;
     }
 
     .deletion-confirm-container,
@@ -262,7 +292,7 @@
         align-items: center;
         gap: 10px;
         padding: 5px 10px;
-        border-radius: 2px;
+        border-radius: 5px;
     }
 
     .extra-links-inner .body a:hover {
@@ -278,7 +308,8 @@
         background: var(--accent-darker-color);
         border: 1px solid transparent;
         padding: 5px 10px;
-        border-radius: 2px;
+        border-radius: 5px;
+        min-width: 110px;
     }
 
     .body-container button:hover {
@@ -290,11 +321,11 @@
 
     .body-container input {
         font-size: 1.1rem;
-        height: 2rem;
         outline: none;
         border: 1px solid var(--grey-light-color);
         border-radius: 3px 0 0 3px;
-        padding: 0.1rem 0.5rem;
+        padding: 0.5rem 0.8rem;
+        color: var(--lighter-color);
         background: var(--form-color);
     }
 
@@ -302,12 +333,15 @@
         opacity: 0.8;
     }
 
+    .accounts-list {
+        min-height: 2rem;
+    }
+
     .accounts-list .account {
         display: flex;
         align-items: center;
         flex-direction: row;
         gap: 3rem;
-        padding: 2px;
         justify-content: space-between;
     }
 
@@ -401,8 +435,10 @@
         font-weight: 400;
         text-decoration: none;
         margin: 0;
-        padding: 5px 10px;
+        padding: 6px 10px;
         background: var(--accent-darker-color);
+        width: 110px;
+        text-align: center;
     }
 
     .header-info .tfa-button.on:hover {
@@ -416,12 +452,15 @@
         font-weight: 400;
         text-decoration: none;
         margin: 0;
-        padding: 5px 10px;
+        padding: 6px 10px;
         background: var(--warning-color);
+        width: 110px;
+        text-align: center;
     }
 
     .header-info .tfa-button.off:hover {
-        outline: 1px solid;
+        /*outline: 1px solid;*/
+        opacity: 0.8;
         transition: all 0.1s ease-in-out;
     }
 
@@ -485,9 +524,12 @@
             <div class="body">
                 <p>This action requires you to log in again with discord. You will be logged out
                     automatically</p>
-                <p>Current username: Maev</p>
-                <button id="update-username">Update Username</button>
             </div>
+            <div id="username-update-group">
+                <p>Current username: Maev</p>
+                <button id="update-username">Update username</button>
+            </div>
+
         </div>
     </div>
 </div>
@@ -506,10 +548,10 @@
         {% else %}
         <div class="header-info">
             <p class="tfa-text">2FA is currently disabled.</p>
-            {% if account_info['emails'] != '0' %}
-            <p class="tfa-button on" onclick="tfaBtnNoEmail()">Enable 2FA</p>
-            {% else %}
+            {% if account_info['emails'] > 0 %}
             <p class="tfa-button on" onclick="tfaBranch()">Enable 2FA</p>
+            {% else %}
+            <p class="tfa-button on" onclick="tfaBtnNoEmail()">Enable 2FA</p>
             {% endif %}
         </div>
         {% endif %}
@@ -620,6 +662,7 @@
     const statsSize = document.getElementById('stats-size')
     const statsFileNumber = document.getElementById('stats-file-number')
 
+
     //fetch account stats from /stats
     fetch('/stats', {
         method: 'POST',
@@ -649,15 +692,18 @@
     const tfaBtn = document.querySelector('.tfa-button')
 
 
-    function tfaBranch(){
-        if (tfaBtn.classList.contains('off')){
+    function tfaBranch() {
+        if (tfaBtn.classList.contains('off')) {
             tfaBtnDisable()
-        }else{
+        } else {
             tfaBtnEnable()
         }
     }
 
-    function tfaBtnEnable(){
+    function tfaBtnEnable() {
+        //loading
+        tfaBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
+
         // make fetch request to /enable2fa
         fetch('/enable2fa', {
             method: 'POST',
@@ -686,11 +732,13 @@
             });
 
     }
-    function tfaBtnNoEmail(){
+
+    function tfaBtnNoEmail() {
         addPopNotif('Please add an email to enable 2fa')
     }
 
-    function tfaBtnDisable(){
+    function tfaBtnDisable() {
+        tfaBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
         // make fetch request to /disable2fa
         fetch('/disable2fa', {
             method: 'POST',
@@ -763,6 +811,8 @@
     }
 
     function accountDelete() {
+        accountDeleteBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
+
         fetch('/delete_account', {
             method: 'POST',
             headers: {
@@ -801,6 +851,9 @@
 
     if (cancelDeletionBtn !== null) {
         cancelDeletionBtn.addEventListener('click', () => {
+
+            cancelDeletionBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
+
             fetch('/cancel_deletion', {
                 method: 'POST',
                 headers: {
@@ -864,6 +917,9 @@
                 addPopNotif("Password should have a maximum of 16 characters.");
                 return;
             }
+
+            setPassBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
+
             fetch('/setpassword', {
                 method: 'POST',
                 headers: {
@@ -874,6 +930,8 @@
                 .then(response => {
                     if (response.status === 200) {
                         addPopNotif('Password changed successfully')
+                        setPassBtn.innerText = 'Submit'
+
                         password.value = ''
                         setTimeout(function () {
                             window.location.href = '/account';
@@ -906,6 +964,7 @@
                 addPopNotif("Password should have a maximum of 16 characters.");
                 return;
             }
+            updatePassBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
             fetch('/updatepassword', {
                 method: 'POST',
                 headers: {
@@ -915,10 +974,12 @@
             })
                 .then(response => {
                     if (response.status === 200) {
+                        updatePassBtn.innerText = 'Submit'
                         addPopNotif('Password changed successfully')
-                        setTimeout(function () {
-                            window.location.href = '/account';
-                        }, 1000);
+                        // setTimeout(function () {
+                        //     window.location.href = '/account';
+                        // }, 1000);
+                        newpassword.value = ''
                     } else {
                         response.json().then(data => {
                             addPopNotif(data.message)
@@ -935,6 +996,8 @@
     const updateUserBtn = document.getElementById('update-username')
 
     updateUserBtn.addEventListener('click', () => {
+        updateUserBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
+
         fetch('/update_username', {
             method: 'POST',
             headers: {
@@ -966,12 +1029,13 @@
 
 
     //add email
-
-
-    //submits
     function emailForm(event) {
         const newEmail = document.getElementById('new-email').value
         const emailPopup = document.getElementById('email-to-link')
+        const emailBtn = document.getElementById('email-btn')
+
+        emailBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
+
         event.preventDefault()
         fetch('/requestemailcode', {
             method: 'POST',
@@ -981,6 +1045,7 @@
             body: JSON.stringify({newEmail}),
         })
             .then(response => {
+                emailBtn.innerText = 'Submit'
                 if (response.status === 200) {
                     response.json().then(data => {
                         addPopNotif(data.message)
@@ -1051,6 +1116,11 @@
 
 
     function updateAccounts() {
+        const loader = document.createElement('div')
+        loader.className = 'loading'
+        loader.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
+        accountsContainer.appendChild(loader)
+
         fetch('/linkedaccounts', {
             method: 'POST',
             headers: {
@@ -1098,6 +1168,7 @@
 
             //  activate unlink buttons
             button.addEventListener('click', () => {
+                button.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>'
                 unlinkEmail(emailData)
             })
 
@@ -1106,7 +1177,6 @@
 
     //unlink
     function unlinkEmail(email) {
-        console.log(email)
         fetch('/unlinkemail', {
             method: 'POST',
             headers: {

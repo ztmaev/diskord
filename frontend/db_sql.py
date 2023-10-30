@@ -40,6 +40,8 @@ table_discord_info_exists = False
 table_2fa_exists = False
 table_subfiles_exists = False
 table_upload_queue_exists = False
+table_2fa_login_exists = False
+table_file_dirs_exists = False
 
 
 for table in cursor:
@@ -64,6 +66,12 @@ for table in cursor:
     if table[0] == "upload_queue":
         table_upload_queue_exists = True
         print(f"Table 'upload_queue' exists")
+    if table[0] == "2fa_login":
+        table_2fa_login_exists = True
+        print(f"Table '2fa_login' exists")
+    if table[0] == "file_dirs":
+        table_file_dirs_exists = True
+        print(f"Table 'file_dirs' exists")
 
 # Users
 if not table_users_exists:
@@ -140,6 +148,7 @@ if not table_files_exists:
             owner_id BIGINT,
             thread_id BIGINT,
             thread_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            dir_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
             permalink VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
             direct_url VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -148,6 +157,22 @@ if not table_files_exists:
         )
     """)
     print("Created 'files' table")
+
+# File Dirs
+if not table_file_dirs_exists:
+    cursor.execute("""
+        CREATE TABLE file_dirs (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            dir_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            dir_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            is_root BOOLEAN NOT NULL DEFAULT FALSE,
+            parent_dir_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            owner_id BIGINT,
+            date_created VARCHAR(255) NOT NULL,
+            date_updated VARCHAR(255) NOT NULL
+        )
+    """)
+    print("Created 'file_dirs' table")
 
 # Subfiles
 if not table_subfiles_exists:
@@ -176,6 +201,19 @@ if not table_2fa_exists:
         )
     """)
     print("Created '2fa' table")
+
+# 2FA Login
+if not table_2fa_login_exists:
+    cursor.execute("""
+        CREATE TABLE `2fa_login` (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            discord_id BIGINT NOT NULL,
+            `tfa_code` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            date_created VARCHAR(255) NOT NULL
+        )
+    """)
+    print("Created '2fa_login' table")
 
 # Upload Queue
 if not table_upload_queue_exists:

@@ -72,15 +72,38 @@ def email_template(tfa_code):
         </head>
         <body>
             <div style="text-align: center; font-family: monospace, sans-serif; background-color: #202225; color: #ccc; padding: 20px;border: 1px solid #737373; border-radius: 5px">
-                <h1>Two Factor Authentication</h1>
+                <h1 style="color: #ccc;">Two Factor Authentication</h1>
                 <p style="color: #ccc;">Use the following code to link this email to your account:</p>
                 <div style="background-color: #2f3136; padding: 20px; border: 1px solid #737373; border-radius: 5px;">
                     <h2 style="color: #;">Your 2FA Code:</h2>
                     <h3 style="color: #00b972; font-size: 32px;">{tfa_code}</h3>
                 </div>
                 <p style="color: #ccc;">This code will expire 1 hour, please use it promptly.</p>
-                <p>If you didn't request this code, please disregard this email.</p>
-                <p>&copy; 2023 Diskord</p>
+                <p style="color: #ccc; ">If you didn't request this code, please disregard this email.</p>
+                <p style="color: #ccc; ">&copy; 2023 Diskord</p>
+            </div>
+        </body>
+        </html>
+    """
+
+def login_email_template(tfa_code):
+    return f"""
+                <!DOCTYPE html>
+        <html>
+        <head>
+            <title>2fa Code</title>
+        </head>
+        <body>
+            <div style="text-align: center; font-family: monospace, sans-serif; background-color: #202225; color: #ccc; padding: 20px;border: 1px solid #737373; border-radius: 5px">
+                <h1 style="color: #ccc;">Two Factor Authentication</h1>
+                <p style="color: #ccc;">Use the following code to verify the login:</p>
+                <div style="background-color: #2f3136; padding: 20px; border: 1px solid #737373; border-radius: 5px;">
+                    <h2 style="color: #;">Your 2FA Code:</h2>
+                    <h3 style="color: #00b972; font-size: 32px;">{tfa_code}</h3>
+                </div>
+                <p style="color: #ccc;">This code will expire 1 hour, please use it promptly.</p>
+                <p style="color: #ccc; ">If you didn't request this code, please disregard this email.</p>
+                <p style="color: #ccc; ">&copy; 2023 Diskord</p>
             </div>
         </body>
         </html>
@@ -111,6 +134,29 @@ def send_verification_email(tfa_code, email, username, user_id):
     except Exception as e:
         return False
 
+def send_tfa_email(tfa_code, email, username, user_id):
+        url = "https://freemail.maev.site"
+        payload = {
+            "api_key": "guest",
+            "sender_name": "Diskord",
+            "subject": "Login Verification Code",
+            "message": login_email_template(tfa_code),
+            "message_type": "html",
+            "footer": "",
+            "receiver_email": email
+        }
+        headers = {"Content-Type": "application/json"}
+
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            if response.status_code == 200:
+                check = save_2fa_info(username, user_id, tfa_code, email)
+                if check:
+                    return True
+            else:
+                return False
+        except Exception as e:
+            return False
 
 def save_2fa_info(username, user_id, tfa_code, email):
     try:

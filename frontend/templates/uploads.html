@@ -5,17 +5,10 @@
 {% block styles %}
 <style>
     @media (min-width: 625px) {
-        .files .header {
-            width: calc(100% - 60px);
-        }
-
         .file-list {
             gap: 10px;
         }
 
-        .files {
-            padding: 0 5px;
-        }
 
         .files .header {
             width: calc(100vw - 60px);
@@ -25,22 +18,8 @@
     }
 
     @media (max-width: 625px) {
-
-        .files .header {
-            width: 100%;
-        }
-
         .file-list {
             gap: 7px;
-        }
-
-        .files {
-            padding: 0 5px;
-        }
-
-        .files .header {
-            width: calc(100% + 10px);
-            margin: 0 -5px;
         }
 
     }
@@ -50,10 +29,68 @@
         margin-top: 5px;
     }
 
+    .block-2 {
+        padding: 5px;
+    }
+
+    .block-2, .files {
+        margin-top: 5px;
+    }
+
+    .block-2 .header {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background: var(--dark-color);
+        border: 1px solid #73737321;
+        padding: 0 10px;
+        border-radius: 5px 5px 0 0;
+        box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .block-2 .header p, .block-2 .header h2 {
+        margin: 10px 0;
+        padding: 0;
+    }
+
+    .block-2 .header h2 {
+        font-size: 1.3rem;
+    }
+
+    .block-2 .body {
+        padding: 5px;
+        border: 1px solid #73737321;
+        border-radius: 0 0 5px 5px;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+        min-height: 113px;
+        display: flex;
+        align-items: center;
+    }
+
     .file-list {
-        margin-top: 10px;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        padding: 10px 8px;
+        border: 1px solid #73737321;
+        border-radius: 0 0 5px 5px;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+        min-height: 113px;
+    }
+
+    .file-list.loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 7rem;
+        width: 100%;
+    }
+
+    .file-list.empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
     }
 
     .file-list a {
@@ -64,17 +101,20 @@
         flex-direction: row;
         align-items: center;
         justify-content: flex-start;
+        border: 1px solid transparent;
+        border-radius: 8px;
 
     }
 
     .file-list a:hover {
         background: var(--accent-darker-color);
         color: var(--lighter-color);
-        box-shadow: 0px 0px 10px var(--lightest-color);
-        transform: scale(1.03);
-        transition: 0.1s ease-in;
+        /*box-shadow: 0px 0px 10px var(--lightest-color);*/
+        transform: scale(1.005);
+        transition: 0.1s ease-out;
         width: 100%;
         margin: 0 auto;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
 
     .right {
@@ -87,22 +127,26 @@
 
     .right .filename {
         text-align: left;
+
     }
 
     .files {
-        padding-bottom: 10px;
+        padding: 5px;
     }
 
     .files .header {
+        margin: 0;
         display: flex;
         flex-direction: row;
+        width: 100%;
         /*position: fixed;*/
         background: var(--dark-color);
-        border-top: 1px solid var(--grey-light-color);
-        border-bottom: 1px solid var(--grey-light-color);
+        border: 1px solid #73737321;
+        border-radius: 5px 5px 0 0;
         justify-content: space-between;
         padding: 0 8px;
         align-items: center;
+        box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.5);
     }
 
     .files .header h2 {
@@ -156,51 +200,77 @@
         border: 1px solid var(--grey-light-color);
         background: var(--dark-color);
         color: var(--lighter-color);
-        border-radius: 2px;
-        padding: 2px 3px;
+        border-radius: 5px 0 0 5px;
+        padding: 5px 10px;
         outline: none;
     }
 
     .filter-select:hover {
-        outline: 1px solid var(--light-color);
+        border: 1px solid var(--light-color);
     }
 
     .filter-select:focus {
 
     }
 
+    .sort-group {
+        gap: 0;
+        display: flex;
+        flex-direction: row;
+    }
+
     #sort-btn {
         font-size: 1.2rem;
         background: var(--dark-color);
         border: 1px solid var(--grey-light-color);
-        border-radius: 2px;
-        padding: 3px;
-        margin-left: -6px;
+        border-radius: 0 5px 5px 0;
+        padding: 6px;
+        cursor: pointer;
     }
 
     #sort-btn:hover {
-        outline: 1px solid var(--lighter-color);
+        border: 1px solid var(--lighter-color);
     }
 
     .loading-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 50vh;
+        height: 7rem;
         width: 100%;
     }
 
-    .loading-container img {
-        width: 50px;
-        height: 50px;
+    .loading p {
+        font-size: 1.2rem;
+        color: var(--light-color);
+        width: 100%;
+        text-align: center;
     }
 
 
+    /*    385*/
 </style>
 {% endblock %}
 {% block content %}
 <div class="block-1">
     {% include "homepage-upload-form-alternate.html" %}
+</div>
+<div class="block-2">
+    <div class="header">
+        <h2>Folders</h2>
+        <div class="filter">
+            <i class="bx bx-filter"></i>
+            <p>Sort</p>
+            <select name="sort-dirs" class="filter-select">
+                <option value="dir-name" selected>Name</option>
+                <option value="dir-date">Date</option>
+            </select>
+            <i class="bx bxs-down-arrow" id="sort-btn-dirs"></i>
+        </div>
+    </div>
+    <div class="body">
+        {% include "upload-dirs.html" %}
+    </div>
 </div>
 <!--fetch uploads and display them from /files using js-->
 <div class="files">
@@ -209,12 +279,14 @@
         <div class="filter">
             <i class="bx bx-filter"></i>
             <p>Sort</p>
-            <select name="sort" class="filter-select">
-                <option value="name">Name</option>
-                <option value="size">Size</option>
-                <option value="date" selected>Date</option>
-            </select>
-            <i class="bx bxs-down-arrow" id="sort-btn"></i>
+            <div class="sort-group">
+                <select name="sort" class="filter-select">
+                    <option value="name">Name</option>
+                    <option value="size">Size</option>
+                    <option value="date" selected>Date</option>
+                </select>
+                <i class="bx bxs-down-arrow" id="sort-btn"></i>
+            </div>
 
         </div>
     </div>
@@ -233,13 +305,28 @@
     async function fetchFiles() {
         const fileContainer = document.querySelector('.file-list');
         const mainFilesContainer = document.querySelector('.files')
+
+        // if no files found message is displayed, remove it
+        // if (document.querySelector('.file-list').matches('.empty')) {
+        //     fileContainer.innerHTML = '';
+        // }
+
+        fileContainer.innerHTML = '';
+
         //loading animation
         loadingContainer = document.createElement('div')
         loadingContainer.classList.add('loading-container')
-        const loadingImage = document.createElement('img');
-        loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
-        loadingContainer.appendChild(loadingImage)
-        mainFilesContainer.appendChild(loadingContainer)
+        // const loadingImage = document.createElement('img');
+        // loadingImage.src = 'https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif';
+        // loadingContainer.appendChild(loadingImage)
+        loadingContainer.innerHTML = `
+            <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+        `
+
+        fileContainer.classList.add('loading')
+        fileContainer.appendChild(loadingContainer)
 
         try {
             const response = await fetch('/files');
@@ -311,11 +398,23 @@
 
             // Clear the file container before adding sorted items
             fileContainer.innerHTML = '';
-            mainFilesContainer.removeChild(loadingContainer)
+
+            if (files.length === 0) {
+                fileContainer.innerHTML = `
+                    <div class="loading">
+                        <p>No files found</p>
+                    </div>
+                `;
+                fileContainer.classList.add('empty')
+            }
 
             // Loop through the sorted files and create HTML elements for each
+            fileContainer.classList.remove('loading')
+
             files.forEach((file) => {
                 const fileItem = document.createElement('a');
+                fileItem.draggable = true;
+
                 fileItem.href = `/view/${file.id}`;
                 fileItem.classList.add('file-item');
                 fileItem.innerHTML = `
@@ -334,7 +433,7 @@
     }
 
     //filter
-    const filterPicker = document.querySelector('.filter-select')
+    const filterPicker = document.querySelector('.files .filter-select')
     const sortPicker = document.getElementById('sort-btn')
 
     filterPicker.addEventListener('change', function () {

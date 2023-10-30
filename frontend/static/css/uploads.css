@@ -1,0 +1,461 @@
+.container-full {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--darker-color);
+}
+
+.container-full-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 10px 0;
+    gap: 10px;
+    overflow: hidden;
+}
+
+.container-header-section {
+    width: 100%;
+    padding: 0 10px;
+}
+
+.container-header-section-inner {
+    width: 100%;
+    height: 60px;
+    background-color: var(--dark-color);
+    border-radius: 10px;
+}
+
+.container-body-section {
+    width: 100%;
+    height: calc(100% - 70px);
+
+    padding: 0 10px;
+}
+
+.container-body-section-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    overflow: hidden;
+}
+
+/*FILES PANE*/
+/*RECENTS*/
+.recents-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+    padding: 0 10px;
+}
+
+.recents-list p {
+    margin: 0;
+}
+
+.recents-list .recent-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+    padding: 10px;
+    color: var(--light-color);
+    border: 1px solid var(--accent-darker-color);
+    width: 21rem;
+    overflow: hidden;
+}
+
+.recents-list .recent-item:hover {
+    background-color: var(--accent-darker-color);
+    color: var(--lighter-color);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.recent-item .recent-icon {
+    font-size: 4rem;
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.recent-item .recent-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.recent-item .filename {
+    color: inherit;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+.recent-item .filedate, .recent-item .filesize {
+    color: inherit;
+    font-size: 0.9rem;
+}
+
+.recent-item .recent-options {
+    color: var(--light-color);
+    display: flex;
+    align-items: center;
+}
+
+.recent-item .recent-options i:first-child {
+    color: inherit;
+}
+
+.recent-item .recent-options i {
+    font-size: 1.5rem;
+    color: var(--light-color);
+    padding: 3px;
+    border-radius: 5px;
+}
+
+.recent-item .recent-options i:hover {
+    background: var(--accent-color);
+    color: var(--darker-color);
+}
+
+/*FOLDERS*/
+.dir-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+}
+
+.folders-list {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    min-height: 4rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 0 15px;
+}
+
+.folder-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+    padding: 5px 10px;
+    color: var(--light-color);
+    border: 1px solid var(--accent-darker-color);
+    width: 21rem;
+}
+
+.folder-item .folder-name {
+    width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    color: inherit;
+    font-weight: bold;
+}
+
+.folder-item:hover {
+    background-color: var(--accent-darker-color);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    color: var(--lighter-color);
+}
+
+.folder-item i {
+    font-size: 4rem;
+    color: inherit;
+}
+
+.folder-name {
+    font-size: 1.1rem;
+    color: inherit;
+    text-transform: capitalize;
+}
+
+.folder-options i {
+    font-size: 1.5rem;
+    color: inherit;
+    padding: 3px;
+    border-radius: 5px;
+}
+
+.folder-options i:hover {
+    background: var(--accent-color);
+    color: var(--darker-color);
+}
+
+/*FILES*/
+.body-section-files {
+    width: 100%;
+    height: 100%;
+    background-color: var(--dark-color);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.body-section-files-inner {
+    overflow: scroll;
+    border-radius: 10px;
+}
+
+.files-header {
+    width: 100%;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--light-color);
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.files-header p {
+    margin: 0;
+}
+
+.body-section-files .files-subgroups {
+    width: 100%;
+    background-color: var(--dark-color);
+    border-radius: 10px;
+    margin-top: 10px;
+    min-height: 10rem;
+}
+
+.file-sorter {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+}
+
+.file-sorter .sort-type {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.file-sorter .sort-type:hover {
+    color: var(--accent-color);
+}
+
+.sort-selector {
+    width: 100px;
+    height: 30px;
+    background-color: var(--darker-color);
+    border: none;
+    border-radius: 10px;
+    color: var(--light-color);
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0 5px;
+    outline: none;
+    cursor: pointer;
+}
+
+.sort-selector:hover {
+    background: var(--accent-darker-color);
+}
+
+.sort-selector option[value="hide"] {
+    display: none;
+}
+
+.sort-selector option {
+    background-color: var(--darker-color);
+    color: var(--light-color);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+
+/*DETAILS PANE*/
+
+.body-section-details {
+    width: 500px;
+    height: 100%;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.body-section-details .file-details {
+    width: 100%;
+    height: 100%;
+    background-color: var(--dark-color);
+    border-radius: 10px;
+}
+
+/*ACCOUNT STATS*/
+
+.body-section-details .account-stats {
+    width: 100%;
+    height: 150px;
+    background-color: var(--dark-color);
+    border-radius: 10px;
+}
+
+.header {
+    width: 100%;
+    height: 3.4rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--light-color);
+    padding: 10px 15px;
+    border-bottom: 2px solid var(--darker-color);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header p {
+    margin: 0;
+}
+
+/*files*/
+.files-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+    padding: 0 10px;
+    margin-bottom: 2rem;
+}
+
+.files-list p {
+    margin: 0;
+}
+
+.files-list .file-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+    padding: 10px;
+    color: var(--light-color);
+    border: 1px solid var(--accent-darker-color);
+    width: 21rem;
+    overflow: hidden;
+}
+
+.files-list .file-item:hover {
+    background-color: var(--accent-darker-color);
+    color: var(--lighter-color);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.files-list .file-item .file-icon {
+    font-size: 4rem;
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.files-list .file-item .file-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 5px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.files-list .file-item .filename {
+    color: inherit;
+    font-weight: bold;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+.files-list .file-item .filedate, .files-list .file-item .filesize {
+    color: inherit;
+    font-size: 0.9rem;
+}
+
+.files-list .file-item .file-options {
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.files-list .file-item .file-options i:first-child {
+    color: inherit;
+}
+
+.files-list .file-item .file-options i {
+    font-size: 1.5rem;
+    color: inherit;
+    padding: 3px;
+    border-radius: 5px;
+}
+
+.files-list .file-item .file-options i:hover {
+    background: var(--accent-color);
+    color: var(--darker-color);
+}
+
+/*DETAILS*/
+.recent-item.selected,
+.file-item.selected {
+    background-color: var(--accent-darker-color);
+    color: var(--lighter-color);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.recent-item.selected:hover,
+.file-item.selected:hover {
+    background-color: var(--accent-darker-color);
+    color: var(--lighter-color);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    opacity: 0.9;
+}
+
+.details-body {
+    width: 100%;
+    height: calc(100% - 44px);
+    padding: 0 10px;
+    overflow: hidden;
+}
+
+.details-body-inner {
+    width: 100%;
+    height: 100%;
+    background-color: var(--dark-color);
+    overflow: scroll;
+}

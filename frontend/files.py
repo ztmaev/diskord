@@ -75,19 +75,27 @@ def process_upload_url(url, session_id, username):
 
 
 def fetch_queue():
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("""
-        SELECT * FROM upload_queue where is_uploaded = 0
-    """)
-    queue = cursor.fetchall()
+    max_retries = 10  # You can adjust the number of retries as needed
+    retries = 0
 
-    queue_items = []
-    for item in queue:
-        queue_items.append(item[3])
+    while retries < max_retries:
+        try:
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT * FROM upload_queue where is_uploaded = 0
+            """)
+            queue = cursor.fetchall()
 
-    print(queue_items)
-    return queue_items
+            queue_items = [item[3] for item in queue]
+            print(queue_items)
+            return queue_items
+        except Exception as e:
+            print(f"Error fetching queue: {e}")
+            retries += 1
+            if retries < max_retries:
+                print(f"Retrying in 5 seconds...")
+                time.sleep(5)
 
 
 # TODO implement queue mechanism
@@ -552,6 +560,10 @@ def file_download_merge(file_info):
     file_dir = f"files/merge_output/{file_id}"
     subfiles_dir = f"{file_dir}/subfiles"
 
+    # check if file exists
+    if os.path.isfile(f"{file_dir}/{filename}"):
+        return True
+
     # Create folders
     os.makedirs(file_dir, exist_ok=True)
     os.makedirs(subfiles_dir, exist_ok=True)
@@ -566,6 +578,13 @@ def file_download_merge(file_info):
     for file in subfiles:
         file_name = file['file_name']
         file_url = file['url']
+
+        # check if file exists
+        if os.path.isfile(f"{subfiles_dir}/{file_name}"):
+            subfile_index += 1
+            percent = int((subfile_index / total_files) * 100)
+            update_status(subfile_path, f"1_{percent}_Fetching subfiles[{subfile_index}/{total_files}]")
+            continue
 
         # Download file
         download_file(file_url, subfiles_dir, file_name)

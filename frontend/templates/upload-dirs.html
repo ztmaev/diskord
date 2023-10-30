@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{{ url_for('static', filename='boxicons-2.1.4/css/boxicons.min.css') }}">
+
+    <title>Upload Dirs (module)</title>
+    <style>
+        .loading {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: #ccc;
+        }
+
+        .dir-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+        }
+
+        .folders-list {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            min-height: 4rem;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .folder-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /*gap: 5px;*/
+            border-radius: 10px;
+            padding: 5px 10px;
+            color: var(--light-color);
+        }
+        .folder-item:hover {
+            background-color: var(--dark-color);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            color: var(--accent-color);
+        }
+
+        .folder-item i {
+            font-size: 5rem;
+            color: inherit;
+        }
+
+        .folder-name {
+            font-size: 1.1rem;
+            color: var(--light-color);
+        /*    capitalise*/
+            text-transform: capitalize;
+        }
+    </style>
+</head>
+<body>
+<div class="dir-container">
+    <div class="folders-list">
+
+    </div>
+</div>
+</body>
+<script>
+    const foldersList = document.querySelector('.folders-list');
+
+    const getFolders = async () => {
+        const response = await fetch('/api/folders');
+        const data = await response.json();
+        return data;
+    }
+
+    const renderFolders = async () => {
+        //loading animation
+        foldersList.innerHTML = `
+            <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+        `;
+        const folders = await getFolders();
+        foldersList.innerHTML = '';
+
+        if (folders.length === 0) {
+            foldersList.innerHTML = `
+                <div class="loading">
+                    <p>No folders found</p>
+                </div>
+            `;
+            return;
+        }
+
+        folders.forEach(folder => {
+            const folderItem = document.createElement('div');
+            folderItem.classList.add('folder-item');
+            folderItem.innerHTML = `
+                <div class="folder-icon">
+                    <i class='bx bxs-folder'></i>
+                </div>
+                <div class="folder-name">
+                    ${folder.name}
+                </div>
+            `;
+            foldersList.appendChild(folderItem);
+        });
+    }
+
+    renderFolders();
+
+
+</script>
+</html>

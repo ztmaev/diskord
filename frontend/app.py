@@ -7,14 +7,15 @@ import threading
 import time
 import uuid
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, \
+    make_response
 from werkzeug.utils import secure_filename, send_file
 from zenora import APIClient
 
 from config import token, client_secret, redirect_uri, oauth_url, admin_ids, get_db
 from files import process_upload_files, convert_file_size, file_download_merge, check_dirs
 from user_notifs import handle_notif, generate_2fa_code, send_verification_email, confirm_verification_code, \
-    unlink_email
+    unlink_email, send_tfa_email
 
 client = APIClient(token, client_secret=client_secret)
 app = Flask(__name__)
@@ -25,7 +26,6 @@ secret = "maevisgod"
 app.secret_key = secret
 app.permanent_session_lifetime = datetime.timedelta(minutes=120)
 check_dirs()
-
 
 upload_dir = "files/media"
 webhook_file = "flask_webhook_bridge.py"
@@ -129,11 +129,11 @@ def filelist():
             file_data = {
                 "id": file[2],
                 "filename": file[1],
-                "file_type": file[4],
-                "size": file[6],
-                "size_simple": file[7],
-                "date": file[15],
-                "date_updated": file[16]
+                "file_type": file[3],
+                "size": file[5],
+                "size_simple": file[6],
+                "date": file[17],
+                "date_updated": file[18]
             }
             files_data.append(file_data)
         cursor.close()
@@ -214,6 +214,8 @@ def login():
     data = request.get_json()
     username = data.get('username', '')
     password = data.get('password', '')
+    tfa_code = data.get('tfaCode', '')
+    # print(username, password, tfa_code)
 
     # Server-side validation and authentication logic
     if not username or not password:
@@ -239,43 +241,135 @@ def login():
     if password_db[0] != password:
         return jsonify({'message': 'Incorrect username or password.'}), 400
 
-    # get user info from db
-    cursor.execute(
-        "SELECT discord_id, avatar, await_username_update, await_deletion, deleted FROM users WHERE username = %s",
-        (username.lower(),))
-    user_info = cursor.fetchone()
-    user_id = user_info[0]
-    avatar_url = user_info[1]
-    # create session
-    session["username"] = username.lower()
-    session["user_id"] = user_id
-    session["avatar_url"] = avatar_url
-    session["password"] = True
-
-    # admin_status
-    if user_id in admin_ids:
-        session["admin"] = True
+    # check if user has 2fa enabled
+    cursor.execute("SELECT has_2fa FROM users WHERE username = %s", (username.lower(),))
+    has_2fa = cursor.fetchone()
+    if has_2fa is None or has_2fa[0] is None:
+        tfa_enabled = False
+    elif has_2fa[0] == 1 or has_2fa[0] == "1":
+        tfa_enabled = True
     else:
-        session["admin"] = False
+        tfa_enabled = False
 
-    # check if user is awaiting username update
-    await_username_update = user_info[2]
-    if await_username_update:
-        flash("success_Your account is awaiting username update. Log in with discord to update.")
-    # check if user is awaiting deletion
-    await_deletion = user_info[3]
-    if await_deletion:
-        flash("success_Your account is awaiting deletion. Cancel it on your account's page.")
-        session["await_deletion"] = True
+    if tfa_enabled and (tfa_code is None or tfa_code.strip() == ""):
+        # fetch users info
+        cursor.execute("SELECT emails, discord_id from users WHERE username = %s", (username.lower(),))
+        result = cursor.fetchone()
+        # send email with 2fa code
+        tfa_code = generate_2fa_code()
+        emails = [item.strip() for item in result[0].split(",")]
+        username = username.lower()
+        user_id = result[1]
+        # print(emails, username, user_id, tfa_code)
+        for email in emails:
+            check = send_tfa_email(tfa_code, email, username, user_id)
+            if check:
+                # check if 2fa code already exists in db
+                cursor.execute("SELECT tfa_code FROM 2fa_login WHERE username = %s", (username.lower(),))
+                result = cursor.fetchone()
+                if result is not None and result[0] is not None and result[0].strip() != "":
+                    # update 2fa code in db
+                    cursor.execute("""
+                        UPDATE 2fa_login
+                        SET tfa_code = %s, date_created = NOW()
+                        WHERE username = %s
+                    """, (tfa_code, username.lower()))
+                    conn.commit()
+                else:
+                    # add 2fa code to db
+                    cursor.execute("""
+                        INSERT INTO 2fa_login (username, discord_id, tfa_code, date_created) VALUES (%s, %s, %s, NOW())
+                    """, (username, user_id, tfa_code))
+                    conn.commit()
 
-    # check if user is deleted
-    deleted = user_info[4]
-    if deleted:
-        flash("Your account has been deleted.")
-        session["deleted"] = True
+        return jsonify({'message': 'Please enter the 2FA code sent to your linked email.'}), 201
 
-    flash("success_Logged in successfully as " + username)
-    return jsonify({'message': 'Logged in successfully.'}), 200
+    elif tfa_enabled and tfa_code is not None and tfa_code.strip() != "":
+        # check if 2fa code is correct
+        cursor.execute("SELECT tfa_code FROM 2fa_login WHERE username = %s", (username.lower(),))
+        result = cursor.fetchone()
+        tfa_code_db = result[0]
+        if tfa_code_db != tfa_code:
+            return jsonify({'message': 'Incorrect 2FA code.'}), 400
+        else:
+            # delete 2fa code from db
+            cursor.execute("DELETE FROM 2fa_login WHERE username = %s", (username.lower(),))
+            conn.commit()
+
+            # get user info from db
+            cursor.execute(
+                "SELECT discord_id, avatar, await_username_update, await_deletion, deleted FROM users WHERE username = %s",
+                (username.lower(),))
+            user_info = cursor.fetchone()
+            user_id = user_info[0]
+            avatar_url = user_info[1]
+            # create session
+            session["username"] = username.lower()
+            session["user_id"] = user_id
+            session["avatar_url"] = avatar_url
+            session["password"] = True
+
+            # admin_status
+            if user_id in admin_ids:
+                session["admin"] = True
+            else:
+                session["admin"] = False
+
+            # check if user is awaiting username update
+            await_username_update = user_info[2]
+            if await_username_update:
+                flash("success_Your account is awaiting username update. Log in with discord to update.")
+            # check if user is awaiting deletion
+            await_deletion = user_info[3]
+            if await_deletion:
+                flash("success_Your account is awaiting deletion. Cancel it on your account's page.")
+                session["await_deletion"] = True
+
+            # check if user is deleted
+            deleted = user_info[4]
+            if deleted:
+                flash("Your account has been deleted.")
+                session["deleted"] = True
+
+            flash("success_Logged in successfully as " + username)
+            return jsonify({'message': 'Logged in successfully.'}), 200
+    else:
+        # get user info from db
+        cursor.execute(
+            "SELECT discord_id, avatar, await_username_update, await_deletion, deleted FROM users WHERE username = %s",
+            (username.lower(),))
+        user_info = cursor.fetchone()
+        user_id = user_info[0]
+        avatar_url = user_info[1]
+        # create session
+        session["username"] = username.lower()
+        session["user_id"] = user_id
+        session["avatar_url"] = avatar_url
+        session["password"] = True
+
+        # admin_status
+        if user_id in admin_ids:
+            session["admin"] = True
+        else:
+            session["admin"] = False
+
+        # check if user is awaiting username update
+        await_username_update = user_info[2]
+        if await_username_update:
+            flash("success_Your account is awaiting username update. Log in with discord to update.")
+        # check if user is awaiting deletion
+        await_deletion = user_info[3]
+        if await_deletion:
+            flash("success_Your account is awaiting deletion. Cancel it on your account's page.")
+            session["await_deletion"] = True
+
+        # check if user is deleted
+        deleted = user_info[4]
+        if deleted:
+            flash("Your account has been deleted.")
+
+        flash("success_Logged in successfully as " + username)
+        return jsonify({'message': 'Logged in successfully.'}), 200
 
 
 @app.route('/oauth/callback')
@@ -540,6 +634,7 @@ def unlinkemail():
         return jsonify({'message': 'Failed to unlink email'}), 400
     # TODO: error handling, unlinking
 
+
 @app.route('/enable2fa', methods=['POST'])
 def enable2fa():
     # update has_2fa to true in db
@@ -554,6 +649,7 @@ def enable2fa():
     cursor.close()
     return jsonify({'message': '2FA enabled successfully.'}), 200
 
+
 @app.route('/disable2fa', methods=['POST'])
 def disable2fa():
     # update has_2fa to false in db
@@ -567,6 +663,7 @@ def disable2fa():
     conn.commit()
     cursor.close()
     return jsonify({'message': '2FA disabled successfully.'}), 200
+
 
 @app.route('/delete_account', methods=['POST'])
 def delete_account():
@@ -605,6 +702,62 @@ def cancel_deletion():
     return jsonify({'message': 'Account deletion canceled'}), 200
 
 
+# folders
+@app.route('/api/folders')
+def folders():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # fetch folders from db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE is_root = TRUE AND owner_id = %s", (str(session["user_id"]),))
+    folders = []
+    for folder in cursor:
+        folder_data = {
+            "id": folder[0],
+            "name": folder[1],
+            "dir_id": folder[2],
+            "date_created": folder[6],
+            "date_updated": folder[7]
+        }
+        folders.append(folder_data)
+    cursor.close()
+
+    # print("folders: ", folders)
+    return jsonify(folders), 200
+
+
+@app.route('/api/recents')
+def recents():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # fetch last 10 files from db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND is_deleted = FALSE ORDER BY date_updated DESC LIMIT 10",
+                   (str(session["user_id"]),))
+    files = []
+    for file in cursor:
+        file_data = {
+            "id": file[2],
+            "filename": file[1],
+            "file_type": file[3],
+            "size": file[5],
+            "size_simple": file[6],
+            "date": file[17],
+            "date_updated": file[18]
+        }
+        files.append(file_data)
+    cursor.close()
+
+    # print("files: ", files)
+    return jsonify(files), 200
+
+
 # Files
 @app.route('/files')
 def files():
@@ -614,7 +767,36 @@ def files():
 
     files = json.loads(filelist())
 
+    # print("files: ", files)
+
     return jsonify(files)
+
+
+@app.route('/api/details/file/<path:id>')
+def file_details(id):
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND file_id = %s", (str(session["user_id"]), id))
+    file_info = cursor.fetchone()
+    if file_info is None:
+        return jsonify("error_File not found."), 400
+    file_info = {
+        "id": file_info[2],
+        "filename": file_info[1],
+        "file_type": file_info[3],
+        "description": file_info[9],
+        "size": file_info[5],
+        "size_simple": file_info[6],
+        "date": file_info[17],
+        "date_updated": file_info[18]
+    }
+
+    print(file_info)
+
+    return jsonify(file_info), 200
 
 
 @app.route('/view/<path:id>', methods=['GET'])
@@ -744,6 +926,15 @@ def uploads():
         return redirect(url_for('index'))
     return render_template('uploads.html')
 
+
+@app.route('/uploads_1')
+def uploads_1():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+    return render_template('uploads_1.html')
+
+
 @app.route('/upload_alternate', methods=['POST'])
 def upload_alternate():
     if "username" not in session:
@@ -765,9 +956,9 @@ def upload_alternate():
     if current_chunk + 1 == total_chunks:
         if os.path.getsize(save_path) != int(request.form['dztotalfilesize']):
             print(f"File {file.filename} was completed, "
-                      f"but has a size mismatch."
-                      f"Was {os.path.getsize(save_path)} but we"
-                      f" expected {request.form['dztotalfilesize']} ")
+                  f"but has a size mismatch."
+                  f"Was {os.path.getsize(save_path)} but we"
+                  f" expected {request.form['dztotalfilesize']} ")
             return make_response(('Size mismatch', 500))
         else:
             # print(f'File {file.filename} has been uploaded successfully')
@@ -778,7 +969,7 @@ def upload_alternate():
 
             # Use the function reference without invoking it
             thread = threading.Thread(target=process_upload_files,
-                                        args=([filename], session["user_id"], session["username"]))
+                                      args=([filename], session["user_id"], session["username"]))
             thread.start()
 
             return make_response(('Uploaded all chunks', 200))
@@ -950,7 +1141,6 @@ def download_file_complete():
     return jsonify({'message': 'File deleted successfully.'}), 200
 
 
-
 # Notifications
 @app.route('/notifications')
 def get_notifications():
@@ -1022,6 +1212,7 @@ def clearnotifs():
     else:
         return jsonify({'message': 'Failed to clear notifications.'}), 400
 
+
 @app.route('/invitebot')
 def invitebot():
     link = ""
@@ -1046,6 +1237,7 @@ def get_help():
 def self_recovery():
     return render_template('info-pages/account-file-recovery.html')
     # TODO: self recovery logic
+
 
 # TODO: offline route/ service worker
 
