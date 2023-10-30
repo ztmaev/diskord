@@ -771,6 +771,31 @@ def files():
 
     return jsonify(files)
 
+@app.route('/api/details/folder/<path:id>')
+def folder_details(id):
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), id))
+    folder_info = cursor.fetchone()
+    if folder_info is None:
+        return jsonify("error_Folder not found."), 400
+    folder_info = {
+        "id": folder_info[3],
+        "filename": folder_info[2],
+        "file_type": "dir",
+        "description": folder_info[4],
+        "dir_id": folder_info[1],
+        "date": folder_info[6],
+        "date_updated": folder_info[7]
+    }
+
+    print(folder_info)
+
+    return jsonify(folder_info), 200
+# TODO: fix folder details
 
 @app.route('/api/details/file/<path:id>')
 def file_details(id):
@@ -874,7 +899,7 @@ def stats():
     conn = get_db()
     cursor = conn.cursor()
     # fetch file_size and count files from files table where owner_id = id
-    cursor.execute("SELECT SUM(file_size), COUNT(id) FROM files WHERE owner_id = %s", (str(id),))
+    cursor.execute("SELECT SUM(file_size), COUNT(id) FROM files WHERE owner_id = %s AND is_deleted = FALSE", (id,))
     stats = cursor.fetchone()
 
     if stats is None:
