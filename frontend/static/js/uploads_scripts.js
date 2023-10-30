@@ -51,6 +51,10 @@ const renderRecents = async () => {
             recents.forEach(recent => {
                 const recentItem = document.querySelector(`.recent-item[value="${recent.id}"]`);
                 recentItem.classList.remove('selected');
+                const fileItem = document.querySelector(`.file-item[value="${recent.id}"]`);
+                if (fileItem) {
+                    fileItem.classList.remove('selected');
+                }
             });
             recentItem.classList.toggle('selected');
             showDetails(recent.id, type = 'file');
@@ -228,6 +232,10 @@ const sortFiles = async () => {
             files.forEach(file => {
                 const fileItem = document.querySelector(`.file-item[value="${file.id}"]`);
                 fileItem.classList.remove('selected');
+                const recentItem = document.querySelector(`.recent-item[value="${file.id}"]`);
+                if (recentItem) {
+                    recentItem.classList.remove('selected');
+                }
             });
             fileItem.classList.toggle('selected');
             showDetails(file.id, type = 'file');
@@ -241,16 +249,13 @@ const sortFiles = async () => {
 
 }
 
-//init
-renderFolders();
-renderRecents();
-sortFiles();
-
 
 //DETAILS
 const details = document.querySelector('.details-body-inner');
 
 const showDetails = async (id, type) => {
+    const options = document.querySelector('.details-body-options-inner');
+    options.classList.add("active")
     //loading animation
     details.innerHTML = `
             <div class="loading">
@@ -286,3 +291,79 @@ const showDetails = async (id, type) => {
             </div>
         `;
 }
+
+//STATS
+const stats = document.querySelector('.account-stats-body-inner');
+
+const showStats = async () => {
+    //loading animation
+    stats.innerHTML = `
+            <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+        `;
+
+    //fetch stats via post request
+    fetch('/stats', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+        .then(data => {
+            stats.innerHTML = `
+            <div class="details-item">
+                <p class="details-title">Total files</p>
+                <p class="details-value">${data.file_number} Files</p>
+            </div>
+            <div class="details-item">
+                <p class="details-title">Total size</p>
+                <p class="details-value">${data.file_size}</p>
+            </div>
+            `
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
+}
+
+//OPTIONS
+const fileOptionCopy = document.querySelector('.details-copy');
+const fileOptionMove = document.querySelector('.details-move');
+const fileOptionDownload = document.querySelector('.details-download');
+const fileOptionShare = document.querySelector('.details-share');
+const fileOptionDelete = document.querySelector('.details-delete');
+
+const folderOptionsModal = document.querySelector('.details-options-modal');
+const folderOptionsModalOverlay = document.querySelector('.details-options-modal-overlay');
+const folderOptionModalClose = document.querySelector('.details-options-modal-header .close-btn');
+
+folderOptionsModalOverlay.addEventListener('click', () => {
+    hideOptionsModal()
+}
+);
+
+folderOptionModalClose.addEventListener('click', () => {
+   hideOptionsModal()
+}
+);
+
+function hideOptionsModal() {
+    folderOptionsModalOverlay.classList.remove('active');
+    folderOptionsModal.classList.remove('active');
+}
+
+
+
+
+
+
+
+
+//init
+renderFolders();
+renderRecents();
+sortFiles();
+showStats();
