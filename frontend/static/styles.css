@@ -386,8 +386,8 @@
 }
 
 .modal-body {
-    display: none;
-    padding: 10px 15px;
+    /*display: none;*/
+    padding: 10px 15px 0 15px;
     font-size: 1.1rem;
     color: var(--light-color);
 }

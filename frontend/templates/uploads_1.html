@@ -18,6 +18,47 @@
         <div class="container-body-section">
             <div class="container-body-section-inner">
                 <div class="body-section-files">
+                    <div class="folder-view">
+                        <div class="folder-view-inner">
+                            <div class="folder-view-header">
+                                <div class="folder-view-header-inner">
+                                    <div class="folder-view-header-title">
+                                        <div class="folder-view-header-title-header-snippet">
+                                            <i class="bx bxs-folder-open"></i>
+                                            <p>Uploads</p>
+                                            <i class='bx bxs-chevron-right'></i>
+                                        </div>
+                                        <div class="folder-view-header-title-inner-path-old">
+
+                                        </div>
+                                        <div class="folder-view-header-title-inner-path">
+                                            <p class="folder-view-name"></p>
+                                        </div>
+                                    </div>
+                                    <div class="folder-view-header-close">
+                                        <i class="bx bx-x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="folder-view-body">
+                                <div class="folder-view-body-inner">
+                                    <div class="folder-view-section-folders">
+                                        <p class="folder-view-headings">Folders</p>
+                                        <div class="folder-list">
+
+                                        </div>
+                                    </div>
+                                    <div class="folder-view-section-files">
+                                        <p class="folder-view-headings">Files</p>
+                                        <div class="files-list">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="body-section-files-inner">
                         <div class="files-subgroups" id="files-recent">
                             <div class="files-header">
@@ -106,8 +147,30 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="details-body-inner">
 
+                            <div class="details-body-folder-options">
+                                <div class="details-body-folder-options-inner">
+                                    <div class="folder-details-view">
+                                        <i class="bx bx-folder-open"></i>
+                                    </div>
+                                    <div class="folder-details-move">
+                                        <i class="bx bx-move"></i>
+                                    </div>
+                                    <div class="folder-details-rename">
+                                        <i class="bx bx-rename"></i>
+                                    </div>
+                                    <div class="folder-details-delete">
+                                        <i class="bx bx-trash"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="details-body-inner">
+                                <div class="details-body-empty">
+                                    <i class="bx bx-file-find"></i>
+                                    <p>Select a file or folder to view details</p>
+                                </div>
                             </div>
                         </div>
 
@@ -185,7 +248,7 @@
         <div class="folder-context-menu-items">
             <div class="context-menu-item">
                 <div class="folder-context-view">
-                    <i class="bx bx-folder"></i>
+                    <i class="bx bx-folder-open"></i>
                     <p>View</p>
                 </div>
             </div>
@@ -211,27 +274,66 @@
     </div>
 </div>
 
-<div class="folder-view">
-    <div class="folder-view-inner">
-        <div class="folder-view-header">
-            <div class="folder-view-header-inner">
-                <div class="folder-view-header-title">
-                    <i class="bx bx-folder"></i>
-                    <p class="folder-view-name"></p>
+<div class="general-context-menu">
+    <div class="general-context-menu-inner">
+        <div class="general-context-menu-items">
+            <div class="context-menu-item">
+                <div class="general-context-new-folder">
+                    <i class="bx bx-folder-plus"></i>
+                    <p>New folder</p>
                 </div>
-                <div class="folder-view-header-close">
-                    <i class="bx bx-x"></i>
+            </div>
+            <div class="context-menu-item">
+                <div class="general-context-file-upload">
+                    <i class="bx bx-upload"></i>
+                    <p>File upload</p>
+                </div>
+            </div>
+            <div class="context-menu-item">
+                <div class="general-context-folder-upload">
+                    <i class="bx bxs-folder-plus"></i>
+                    <p>Folder upload</p>
                 </div>
             </div>
         </div>
-        <div class="folder-view-body">
-            <div class="folder-view-body-inner">
-
-            </div>
-        </div>
-
     </div>
 </div>
+
+<!--<div class="folder-view">-->
+<!--    <div class="folder-view-inner">-->
+<!--        <div class="folder-view-header">-->
+<!--            <div class="folder-view-header-inner">-->
+<!--                <div class="folder-view-header-title">-->
+<!--                    <i class="bx bxs-folder-open"></i>-->
+<!--                    <p>Uploads</p>-->
+<!--                    <i class='bx bxs-chevron-right'></i>-->
+<!--                    <div class="folder-view-header-title-inner-path">-->
+<!--                        <p class="folder-view-name"></p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="folder-view-header-close">-->
+<!--                    <i class="bx bx-x"></i>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div class="folder-view-body">-->
+<!--            <div class="folder-view-body-inner">-->
+<!--                <div class="folder-view-section-folders">-->
+<!--                    <p class="folder-view-headings">Folders</p>-->
+<!--                    <div class="folder-list">-->
+
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="folder-view-section-files">-->
+<!--                    <p class="folder-view-headings">Files</p>-->
+<!--                    <div class="files-list">-->
+
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
 
 {% endblock %}
 {% block scripts %}

@@ -728,6 +728,54 @@ def folders():
     # print("folders: ", folders)
     return jsonify(folders), 200
 
+@app.route('/api/folder/<path:id>')
+def folder(id):
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # fetch dirs inside dir
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND parent_dir_id = %s", (str(session["user_id"]), id))
+    folders = []
+    for folder in cursor:
+        folder_data = {
+            "id": folder[0],
+            "name": folder[1],
+            "dir_id": folder[2],
+            "date_created": folder[6],
+            "date_updated": folder[7]
+        }
+        folders.append(folder_data)
+    cursor.close()
+
+    # fetch files inside dir
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND dir_id = %s AND is_deleted = FALSE", (str(session["user_id"]), id))
+    files = []
+    for file in cursor:
+        file_data = {
+            "id": file[2],
+            "filename": file[1],
+            "file_type": file[3],
+            "size": file[5],
+            "size_simple": file[6],
+            "date": file[17],
+            "date_updated": file[18]
+        }
+        files.append(file_data)
+    cursor.close()
+
+    folder_info = {
+        "folders": folders,
+        "files": files
+    }
+
+    print(folder_info)
+
+    return jsonify(folder_info), 200
+
 
 @app.route('/api/recents')
 def recents():
@@ -782,20 +830,60 @@ def folder_details(id):
     folder_info = cursor.fetchone()
     if folder_info is None:
         return jsonify("error_Folder not found."), 400
+
+    # fetch files in folder
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND dir_id = %s AND is_deleted = FALSE", (str(session["user_id"]), id))
+    files = []
+    size = 0
+    filenumber = 0
+    for file in cursor:
+        file_data = {
+            "id": file[2],
+            "filename": file[1],
+            "file_type": file[3],
+            "size": file[5],
+            "size_simple": file[6],
+            "date": file[17],
+            "date_updated": file[18]
+        }
+        files.append(file_data)
+        size += file[5]
+        filenumber += 1
+
+    # fetch folders in folder
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND parent_dir_id = %s", (str(session["user_id"]), id))
+    folders = []
+    dirnumber = 0
+    for folder in cursor:
+        folder_data = {
+            "id": folder[0],
+            "name": folder[1],
+            "dir_id": folder[2],
+            "date_created": folder[6],
+            "date_updated": folder[7]
+        }
+        folders.append(folder_data)
+        dirnumber += 1
+
+
     folder_info = {
         "id": folder_info[3],
-        "filename": folder_info[2],
-        "file_type": "dir",
+        "name": folder_info[2],
         "description": folder_info[4],
         "dir_id": folder_info[1],
+        "file_number": filenumber,
+        "dir_number": dirnumber,
+        "folders": folders,
+        "size": size,
         "date": folder_info[6],
         "date_updated": folder_info[7]
     }
 
-    print(folder_info)
+    # print(folder_info)
 
     return jsonify(folder_info), 200
-# TODO: fix folder details
 
 @app.route('/api/details/file/<path:id>')
 def file_details(id):
@@ -819,7 +907,7 @@ def file_details(id):
         "date_updated": file_info[18]
     }
 
-    print(file_info)
+    # print(file_info)
 
     return jsonify(file_info), 200
 
