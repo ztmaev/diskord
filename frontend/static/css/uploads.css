@@ -234,6 +234,7 @@
     flex-direction: column;
     gap: 10px;
     position: relative;
+    padding: 2px 0;
 }
 
 .body-section-files p {
@@ -874,4 +875,93 @@
 .folder-view-section-folders .folder-list {
     min-height: 7rem;
     padding: 10px 0;
+}
+
+.notifs-container-header-close{
+    color: var(--light-color);
+    cursor: pointer;
+}
+
+.notifs-container-header-close:hover{
+    color: var(--accent-color);
+}
+
+.notifs-container{
+    display: none;
+}
+
+.notifs-container.active{
+    background: var(--dark-color);
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    width: 300px;
+    min-height: 2rem;
+    z-index: 999;
+    border: 1px solid var(--grey-light-color);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    display: block;
+}
+.notifs-container-header{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0;
+    font-size: 2rem;
+}
+.notifs-container-inner{
+    padding: 5px;
+    min-height: 2rem;
+}
+
+.notifs-processes-downloads{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.download-info{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+}
+.download-info p{
+    margin: 0;
+}
+.download-item{
+    background: var(--darker-color);
+    border: 1px solid var(--accent-darker-color);
+    border-radius: 5px;
+    padding: 8px;
+    color: var(--lighter-color);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.download-progress progress{
+    width: 100%;
+    height: 6px;
+    border: none;
+    border-radius: 10px;
+    background: var(--darker-color);
+}
+
+.download-progress progress::-webkit-progress-bar {
+    background: var(--dark-color);
+    border-radius: 10px;
+}
+
+.download-progress progress::-webkit-progress-value {
+    background: var(--accent-darker-color);
+    border-radius: 10px;
+}
+.notifs-container-header-close{
+    height: 100%;
+    display: flex;
+    align-items: center;
 }

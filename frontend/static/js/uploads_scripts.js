@@ -717,7 +717,7 @@ const updateFolderViewName = (name, id) => {
     folderViewName.setAttribute('value', id);
 }
 
-function showfolderView(name,id) {
+function showfolderView(name, id) {
     //hierarchy
     //check if folderview is open
     if (folderViewContainer.classList.contains('active')) {
@@ -741,8 +741,6 @@ function showfolderView(name,id) {
 
         // console.log(oldPath);
 
-        folderViewParentPath
-
 
     } else {
         //clear hierarchy
@@ -753,6 +751,19 @@ function showfolderView(name,id) {
     folderViewContainer.classList.add('active');
     updateFolderViewName(name, id);
     populateFolderView(id);
+    updateOldPathsLinks();
+}
+
+function updateOldPathsLinks() {
+    const oldPaths = document.querySelectorAll('.folder-view-header-title-inner-path-old-item p');
+    oldPaths.forEach(path => {
+        path.addEventListener('click', () => {
+            const id = path.getAttribute('value');
+            const name = path.innerHTML;
+
+            showfolderView(name, id);
+        });
+    });
 }
 
 function hidefolderView() {
@@ -888,10 +899,249 @@ function populateFolderView(id) {
 
 }
 
+const notifActivityClose = document.querySelector('.notifs-container-header-close');
+const notifActivityContainer = document.querySelector('.notifs-container');
+const downloadsList = document.querySelector('.notifs-processes-downloads');
+notifActivityClose.addEventListener('click', () => {
+        hideNotifActivity();
+    }
+);
+
+function showNotifActivity() {
+    notifActivityContainer.classList.add('active');
+}
+
+function hideNotifActivity() {
+    notifActivityContainer.classList.remove('active');
+}
 
 function showOptionsModal(activity, id = null, type = 'file') {
-    folderOptionsModalOverlay.classList.add('active');
-    folderOptionsModal.classList.add('active');
+    if (activity == "download") {
+        showNotifActivity();
+        //create download item
+        const downloadItem = document.createElement('div');
+        downloadItem.classList.add('download-item');
+        downloadItem.setAttribute('value', id);
+
+        downloadItem.innerHTML = `
+            <div class="download-progress">
+                    <progress max="100" value="0" id="${id}-progress"></progress>
+                </div>
+                <div class="download-info">
+                    <p class="download-info-text" id="${id}-status">Prepairing File</p>
+                    <p class="download-info-percent" id="${id}-percent">0%</p>
+            </div>`
+
+        downloadsList.appendChild(downloadItem);
+
+        //initiate download
+        //make get request to /download/:id, if 200, show notif, else show error
+        fetch(`/download/${id}`)
+            .then(response => {
+                if (response.status === 200) {
+                    //get filename(/api/details/file/:id)
+                    fetch(`/api/details/file/${id}`)
+                        .then(response => response.json())
+                        .then(data => {
+                                // console.log(data);
+                                const fileName = data.filename;
+                                // console.log(fileName);
+                                fetchProgress(id, fileName);
+                            }
+                        )
+                        .catch(error => {
+                                console.error('Error:', error);
+                            }
+                        );
+                } else {
+                    showNotifActivity();
+                    // show error
+                    console.log('error', response.status)
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+        //monitor and update download progress
+        const downloadProgress = document.getElementById(`${id}-progress`);
+        const downloadStatus = document.getElementById(`${id}-status`);
+        const downloadPercent = document.getElementById(`${id}-percent`);
+
+
+        function toFullNumber(number) {
+            return Math.round(number);
+
+        }
+
+        function updateProgress(stage, stage_percent, stage_activity) {
+            downloadStatus.innerHTML = stage_activity;
+            // calculate overall percentage according to stage, stage 1 is 0-90%, stage 2 is 90-100% and stage 3 is 100%
+            let overall_percentdownloadPercent = 0;
+            if (stage == 1) {
+                // For stage 1, the overall percentage is in the range of 0-90%
+                overallPercent = (stage_percent / 100) * 90;
+                downloadProgress.value = toFullNumber(overallPercent);
+                downloadPercent.innerHTML = toFullNumber(overallPercent) + '%';
+            } else if (stage == 2) {
+                // For stage 2, the overall percentage is in the range of 90-100%
+                overallPercent = 90 + (stage_percent / 100) * 10;
+                downloadProgress.value = toFullNumber(overallPercent);
+                downloadPercent.innerHTML = toFullNumber(overallPercent) + '%';
+            } else if (stage == 3) {
+                // For stage 3, the overall percentage is 100%
+                overallPercent = 100;
+                downloadProgress.value = toFullNumber(overallPercent);
+                downloadPercent.innerHTML = toFullNumber(overallPercent) + '%';
+                downloadStatus.innerHTML = 'File ready for download';
+            } else if (stage == 4) {
+                // For stage 4, the overall percentage is in the range of 0-90%
+                downloadProgress.value = toFullNumber(stage_percent);
+                downloadPercent.innerHTML = toFullNumber(stage_percent) + '%';
+                downloadStatus.innerHTML = stage_activity;
+
+                if (stage_percent == 100) {
+                    downloadPercent.innerHTML = 'Downloaded';
+                    // remove download item after 5 seconds
+                    setTimeout(() => {
+                        downloadItem.remove();
+                        // if no more downloads, hide notif activity
+                        if (downloadsList.innerHTML === '') {
+                            hideNotifActivity();
+                        }
+                    }, 3000);
+
+
+                }
+
+                else if (stage_percent == 400) {
+                    downloadPercent.innerHTML = '';
+                    // remove download item after 5 seconds
+                    setTimeout(() => {
+                        downloadItem.remove();
+                        // if no more downloads, hide notif activity
+                        if (downloadsList.innerHTML === '') {
+                            hideNotifActivity();
+                        }
+                    }, 5000);
+                }
+
+            }
+
+
+        }
+
+        //monitor download progress
+        function fetchProgress(id, fileName) {
+            fetch('/download_progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    fileID: id
+                })
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        response.json().then(data => {
+                            // console.log(data.message);
+                            // console.log(data.message)
+                            const stage = data.message.split('_')[0];
+                            const stage_percent = data.message.split('_')[1];
+                            const stage_activity = data.message.split('_')[2];
+                            updateProgress(stage, stage_percent, stage_activity);
+
+                            if (data.message.startsWith('3_100_')) {
+                                // console.log('Download completed!');
+                                downloadFile('/download_file/' + id, fileName);
+                            } else {
+                                // If not completed, fetch progress again
+                                fetchProgress(id, fileName);
+                            }
+                        });
+                    } else {
+                        response.json().then(data => {
+                            // console.log(data.message);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        //download file
+        function downloadFile(url, fileName) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.responseType = "blob";
+
+            xhr.addEventListener("progress", (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    updateProgress(4, percentComplete, fileName);
+                }
+            });
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const blob = xhr.response;
+                    const a = document.createElement("a");
+                    const url = window.URL.createObjectURL(blob);
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    updateProgress(4, 100, fileName)
+
+                    // make post request to delete file
+                    fetch('/download_file_complete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            fileID: id
+                        })
+                    })
+                        .then(response => {
+                            if (response.status === 200) {
+                                response.json().then(data => {
+                                    console.log(data.message);
+                                });
+                            } else {
+                                response.json().then(data => {
+                                    console.log(data.message);
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            updateProgress(4, 400, 'Error downloading file, please whitelist this site on your adblocker');
+                        });
+                }
+
+                //errors
+                xhr.onerror = () => {
+                    updateProgress(4, 400, 'Error downloading file, please whitelist this site on your adblocker');
+                }
+            };
+
+
+
+            xhr.send();
+        }
+
+
+    } else {
+
+        folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
+    }
+
 }
 
 //general context menu
