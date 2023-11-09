@@ -44,12 +44,14 @@
                                 <div class="folder-view-body-inner">
                                     <div class="folder-view-section-folders">
                                         <p class="folder-view-headings">Folders</p>
+                                        <div class="folder-list-loading"></div>
                                         <div class="folder-list">
 
                                         </div>
                                     </div>
                                     <div class="folder-view-section-files">
                                         <p class="folder-view-headings">Files</p>
+                                        <div class="files-list-loading"></div>
                                         <div class="files-list">
 
                                         </div>
@@ -65,6 +67,7 @@
                                 <p>Recent</p>
                             </div>
                             <div class="files-body">
+                                <div class="recents-loader"></div>
                                 <div class="recents-list">
 
                                 </div>
@@ -76,6 +79,7 @@
 
                             </div>
                             <div class="files-body">
+                                <div class="folders-loader"></div>
                                 <div class="folders-list">
 
                                 </div>
@@ -97,6 +101,7 @@
                                 </div>
                             </div>
                             <div class="files-body">
+                                <div class="files-loader"></div>
                                 <div class="files-list">
 
                                 </div>
@@ -117,6 +122,7 @@
                                         <i class="bx bx-x"></i>
                                     </div>
                                 </div>
+                                <div class="details-options-modal-body"></div>
 
                             </div>
                         </div>
@@ -253,6 +259,12 @@
                 </div>
             </div>
             <div class="context-menu-item">
+                <div class="folder-context-new-folder">
+                    <i class="bx bx-folder-plus"></i>
+                    <p>New folder</p>
+                </div>
+            </div>
+            <div class="context-menu-item">
                 <div class="folder-context-move">
                     <i class="bx bx-move"></i>
                     <p>Move</p>
@@ -299,6 +311,9 @@
     </div>
 </div>
 
+<div class="notifs-popup">
+    <div class="notifs-list"></div>
+</div>
 
 <div class="notifs-container">
     <div class="notifs-container-header">
@@ -309,13 +324,9 @@
         </div>
     </div>
     <div class="notifs-container-inner">
-        <div class="notifs-messages">
-
-        </div>
         <div class="notifs-processes">
             <div class="notifs-processes-downloads"></div>
         </div>
-
     </div>
 </div>
 </div>

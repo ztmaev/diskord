@@ -1,5 +1,6 @@
 // RECENTS
 const recentsList = document.querySelector('.recents-list');
+const mainRecentsLoading = document.querySelector('.recents-loader');
 
 const getRecents = async () => {
     const response = await fetch('/api/recents');
@@ -9,16 +10,17 @@ const getRecents = async () => {
 
 const renderRecents = async () => {
     //loading animation
-    recentsList.innerHTML = `
+    mainRecentsLoading.innerHTML = `
             <div class="loading">
                 <i class='bx bx-loader-alt bx-spin'></i>
             </div>
         `;
     const recents = await getRecents();
     recentsList.innerHTML = '';
+    mainRecentsLoading.innerHTML = '';
 
     if (recents.length === 0) {
-        recentsList.innerHTML = `
+        mainRecentsLoading.innerHTML = `
                 <div class="loading">
                     <p>No recent files found</p>
                 </div>
@@ -30,6 +32,7 @@ const renderRecents = async () => {
         const recentItem = document.createElement('div');
         recentItem.classList.add('recent-item');
         recentItem.setAttribute('value', recent.id);
+        recentItem.setAttribute('name', recent.filename)
         recentItem.innerHTML = `
                 <div class="recent-icon">
                     <i class='bx bxs-file'></i>
@@ -67,6 +70,8 @@ const renderRecents = async () => {
 // FOLDERS
 
 const foldersList = document.querySelector('.folders-list');
+const mainFoldersLoading = document.querySelector('.folders-loader');
+
 const getFolders = async () => {
     const response = await fetch('/api/folders');
     const data = await response.json();
@@ -75,16 +80,17 @@ const getFolders = async () => {
 
 const renderFolders = async () => {
     //loading animation
-    foldersList.innerHTML = `
+    mainFoldersLoading.innerHTML = `
             <div class="loading">
                 <i class='bx bx-loader-alt bx-spin'></i>
             </div>
         `;
     const folders = await getFolders();
+    mainFoldersLoading.innerHTML = '';
     foldersList.innerHTML = '';
 
     if (folders.length === 0) {
-        foldersList.innerHTML = `
+        mainFoldersLoading.innerHTML = `
                 <div class="loading">
                     <p>No folders found</p>
                 </div>
@@ -96,6 +102,7 @@ const renderFolders = async () => {
         const folderItem = document.createElement('div');
         folderItem.classList.add('folder-item');
         folderItem.setAttribute('value', folder.dir_id);
+        folderItem.setAttribute('name', folder.name);
         folderItem.innerHTML = `
                 <div class="folder-icon">
                     <i class='bx bxs-folder'></i>
@@ -104,7 +111,7 @@ const renderFolders = async () => {
                     ${folder.name}
                 </div>
                 <div class="folder-options">
-                <i class="bx bx-dots-vertical" value="${folder.dir_id}"></i>
+                <i class="bx bx-dots-vertical" value="${folder.dir_id}" name="${folder.name}"></i>
                 </div>
             `;
         foldersList.appendChild(folderItem);
@@ -115,7 +122,7 @@ const renderFolders = async () => {
                 clearSelected();
 
                 folderItem.classList.toggle('selected');
-                showDetails(folder.dir_id, type = 'folder');
+                showDetails(folder.dir_id, type = 'folder', folderName = folder.name);
             }
         );
 
@@ -136,6 +143,7 @@ const renderFolders = async () => {
 //FILES
 // sort btns
 const filesList = document.querySelector('.files-subgroups .files-list');
+const mainFilesLoading = document.querySelector('.files-loader');
 const sortBtn = document.querySelector('.sort-type i');
 const sortSelector = document.querySelector('.sort-selector');
 
@@ -181,16 +189,17 @@ const sortFiles = async () => {
 
     // console.log(fetchFiles())
     //loading animation
-    filesList.innerHTML = `
+    mainFilesLoading.innerHTML = `
             <div class="loading">
                 <i class='bx bx-loader-alt bx-spin'></i>
             </div>
         `;
     const files = await fetchFiles();
+    mainFilesLoading.innerHTML = '';
     filesList.innerHTML = '';
 
     if (files.length === 0) {
-        filesList.innerHTML = `
+        mainFilesLoading.innerHTML = `
                 <div class="loading">
                     <p>No files found</p>
                 </div>
@@ -228,6 +237,7 @@ const sortFiles = async () => {
         const fileItem = document.createElement('div');
         fileItem.classList.add('file-item');
         fileItem.setAttribute('value', file.id);
+        fileItem.setAttribute('name', file.filename)
         fileItem.innerHTML = `
                 <div class="file-icon">
                     <i class='bx bxs-file'></i>
@@ -266,12 +276,12 @@ const sortFiles = async () => {
 //DETAILS
 const details = document.querySelector('.details-body-inner');
 
-const showDetails = async (id, type) => {
+const showDetails = async (id, type, folderName = null) => {
     if (type === 'file') {
         updateDetailsOptions(id);
     }
     if (type === 'folder') {
-        updateDirDetailsOptions(id)
+        updateDirDetailsOptions(id, folderName)
     }
 
 
@@ -372,7 +382,7 @@ function clearSelected() {
     );
 }
 
-function updateDirDetailsOptions(id) {
+function updateDirDetailsOptions(id, folderName = null) {
     const fileOptions = document.querySelector('.details-body-options-inner');
     if (fileOptions) {
         fileOptions.classList.remove("active");
@@ -388,9 +398,13 @@ function updateDirDetailsOptions(id) {
     const options = document.querySelector('.details-body-folder-options-inner');
 
     folderOptionView.setAttribute('value', id);
+    folderOptionView.setAttribute('name', folderName);
     folderOptionMove.setAttribute('value', id);
+    folderOptionMove.setAttribute('name', folderName);
     folderOptionRename.setAttribute('value', id);
+    folderOptionRename.setAttribute('name', folderName);
     folderOptionDelete.setAttribute('value', id);
+    folderOptionDelete.setAttribute('name', folderName);
 
     options.classList.add("active");
 }
@@ -455,6 +469,7 @@ const contextMenuShare = document.querySelector('.context-share');
 const contextMenuDelete = document.querySelector('.context-delete');
 
 const folderContextMenu = document.querySelector('.folder-context-menu');
+const folderContextNewdir = document.querySelector('.folder-context-new-folder');
 const folderContextMenuView = document.querySelector('.folder-context-view');
 const folderContextMenuMove = document.querySelector('.folder-context-move');
 const folderContextMenuRename = document.querySelector('.folder-context-rename');
@@ -480,6 +495,14 @@ function updateDots() {
         dot.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = e.target.getAttribute('value');
+
+            //select
+            clearSelected();
+            e.target.closest('.recent-item').classList.add('selected');
+
+            //details
+            showDetails(id, type = 'file');
+
             showContextMenu(e.pageX, e.pageY, id);
         });
     });
@@ -489,6 +512,14 @@ function updateDots() {
         dot.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = e.target.getAttribute('value');
+
+            //select
+            clearSelected();
+            e.target.closest('.file-item').classList.add('selected');
+
+            //details
+            showDetails(id, type = 'file');
+
             showContextMenu(e.pageX, e.pageY, id);
         });
     });
@@ -496,14 +527,21 @@ function updateDots() {
 
 function updateFolderDots() {
     const folderOptionsDots = document.querySelectorAll('.folder-options');
-
-
     //folder options
     folderOptionsDots.forEach(dot => {
         dot.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = e.target.getAttribute('value');
-            showFolderContextMenu(e.pageX, e.pageY, id);
+            const folderName = e.target.getAttribute('name');
+
+            //select
+            clearSelected();
+            e.target.closest('.folder-item').classList.add('selected');
+
+            //details
+            showDetails(id, type = 'folder', folderName);
+
+            showFolderContextMenu(e.pageX, e.pageY, id, folderName);
         });
     });
 }
@@ -526,6 +564,25 @@ function hideOptionsModal() {
     folderOptionsModal.classList.remove('active');
 }
 
+function enableScroll() {
+    document.querySelector('.body-section-files-inner').style.overflowY = 'scroll';
+    // enable pointer events
+    document.querySelector('*').style.pointerEvents = 'all';
+
+}
+
+function disableScroll() {
+    document.querySelector('.body-section-files-inner').style.overflowY = 'hidden';
+    // disable pointer events
+    document.querySelector('*').style.pointerEvents = 'none';
+    // enable pointer events for context menus
+    document.querySelector('.context-menu').style.pointerEvents = 'all';
+    document.querySelector('.folder-context-menu').style.pointerEvents = 'all';
+    document.querySelector('.general-context-menu').style.pointerEvents = 'all';
+
+}
+
+
 function showGeneralContextMenu(x, y) {
     // hide context menu if already shown
     hideContextMenu();
@@ -537,6 +594,7 @@ function showGeneralContextMenu(x, y) {
     generalContextMenu.style.left = `-1000px`;
     generalContextMenu.classList.add('active');
 
+
     const width = window.innerWidth;
     const height = window.innerHeight;
 
@@ -544,10 +602,10 @@ function showGeneralContextMenu(x, y) {
     const generalContextMenuHeight = generalContextMenu.offsetHeight;
 
     if (x + generalContextMenuWidth > width) {
-        x = width - generalContextMenuWidth - 20;
+        x = width - generalContextMenuWidth - 10;
     }
     if (y + generalContextMenuHeight > height) {
-        y = height - generalContextMenuHeight - 20;
+        y = height - generalContextMenuHeight - 10;
     }
 
     generalContextMenu.style.top = `${y - 45}px`;
@@ -569,6 +627,7 @@ function showContextMenu(x, y, id) {
     contextMenu.style.left = `-1000px`;
     contextMenu.classList.add('active');
 
+
     const width = window.innerWidth;
     const height = window.innerHeight;
 
@@ -576,10 +635,10 @@ function showContextMenu(x, y, id) {
     const contextMenuHeight = contextMenu.offsetHeight;
 
     if (x + contextMenuWidth > width) {
-        x = width - contextMenuWidth - 20;
+        x = width - contextMenuWidth - 10;
     }
     if (y + contextMenuHeight > height) {
-        y = height - contextMenuHeight - 20;
+        y = height - contextMenuHeight - 10;
     }
 
     contextMenu.style.top = `${y - 45}px`;
@@ -588,7 +647,7 @@ function showContextMenu(x, y, id) {
     updateContextMenuValues(id);
 }
 
-function showFolderContextMenu(x, y, id) {
+function showFolderContextMenu(x, y, id, folderName) {
     // hide context menu if already shown
     hideContextMenu();
     hideFolderContextMenu();
@@ -599,6 +658,7 @@ function showFolderContextMenu(x, y, id) {
     folderContextMenu.style.left = `-1000px`;
     folderContextMenu.classList.add('active');
 
+
     const width = window.innerWidth;
     const height = window.innerHeight;
 
@@ -606,16 +666,17 @@ function showFolderContextMenu(x, y, id) {
     const folderContextMenuHeight = folderContextMenu.offsetHeight;
 
     if (x + folderContextMenuWidth > width) {
-        x = width - folderContextMenuWidth - 20;
+        x = width - folderContextMenuWidth - 10;
     }
     if (y + folderContextMenuHeight > height) {
-        y = height - folderContextMenuHeight - 20;
+        y = height - folderContextMenuHeight - 10;
     }
 
     folderContextMenu.style.top = `${y - 45}px`;
     folderContextMenu.style.left = `${x + 5}px`;
-
-    updateFolderContextMenuValues(id);
+    //clear whitespace
+    folderName = folderName.replace(/\s/g, '');
+    updateFolderContextMenuValues(id, folderName);
 }
 
 function hideFolderContextMenu() {
@@ -632,11 +693,17 @@ function updateContextMenuValues(id) {
     contextMenuDelete.setAttribute('value', id);
 }
 
-function updateFolderContextMenuValues(id) {
+function updateFolderContextMenuValues(id, folderName) {
+    folderContextNewdir.setAttribute('value', id);
+    folderContextNewdir.setAttribute('name', folderName);
     folderContextMenuView.setAttribute('value', id);
+    folderContextMenuView.setAttribute('name', folderName);
     folderContextMenuMove.setAttribute('value', id);
+    folderContextMenuMove.setAttribute('name', folderName);
     folderContextMenuRename.setAttribute('value', id);
+    folderContextMenuRename.setAttribute('name', folderName);
     folderContextMenuDelete.setAttribute('value', id);
+    folderContextMenuDelete.setAttribute('name', folderName);
 }
 
 function hideContextMenu() {
@@ -653,11 +720,18 @@ window.addEventListener('click', (e) => {
 
 //right click
 window.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
     //Files
     if (e.target.matches('.file-item') || e.target.matches('.file-item *')) {
+        e.preventDefault();
         // get id
         const id = e.target.closest('.file-item').getAttribute('value');
+
+        //select
+        clearSelected();
+        e.target.closest('.file-item').classList.add('selected');
+
+        //details
+        showDetails(id, type = 'file');
 
         //show context menu
         showContextMenu(e.pageX, e.pageY, id);
@@ -665,8 +739,16 @@ window.addEventListener('contextmenu', (e) => {
 
     //Recents
     else if (e.target.matches('.recent-item') || e.target.matches('.recent-item *')) {
+        e.preventDefault();
         //get id
         const id = e.target.closest('.recent-item').getAttribute('value');
+
+        //select
+        clearSelected();
+        e.target.closest('.recent-item').classList.add('selected');
+
+        //details
+        showDetails(id, type = 'file');
 
         //show context menu
         showContextMenu(e.pageX, e.pageY, id);
@@ -674,18 +756,32 @@ window.addEventListener('contextmenu', (e) => {
 
 
     //Folders
-    else if (e.target.matches('.folder-item') || e.target.matches('.folder-item *')) {
+    else if (e.target.matches('.folder-item') || e.target.matches('.folder-item *') || e.target.matches('.folder-view-body') || e.target.matches('.folder-view-body *')) {
+        e.preventDefault();
         //get id
         const id = e.target.closest('.folder-item').getAttribute('value');
+        const folderName = document.querySelector(`.folder-item[value="${id}"] .folder-name`).innerHTML;
+
+        //select
+        clearSelected();
+        e.target.closest('.folder-item').classList.add('selected');
+
+        //details
+        showDetails(id, type = 'folder', folderName);
 
         //show context menu
-        showFolderContextMenu(e.pageX, e.pageY, id);
-    }
+        showFolderContextMenu(e.pageX, e.pageY, id, folderName);
 
+    }
 
     //General
     else if (e.target.matches('.body-section-files') || e.target.matches('.body-section-files *')) {
+        e.preventDefault();
         showGeneralContextMenu(e.pageX, e.pageY);
+    } else {
+        hideGeneralContextMenu()
+        hideContextMenu()
+        hideFolderContextMenu()
     }
 
 });
@@ -780,10 +876,13 @@ async function getFolderContents(id) {
 
 function populateFolderView(id) {
     const folderList = document.querySelector('.folder-view-section-folders .folder-list');
+    const foldersLoading = document.querySelector('.folder-list-loading')
+    const filesLoading = document.querySelector('.files-list-loading')
     const fileList = document.querySelector('.folder-view-section-files .files-list');
 
     folderInfo = getFolderContents(id);
-    folderList.innerHTML = `
+    folderList.innerHTML = ''
+    foldersLoading.innerHTML = `
             <div class="loading">
                 <i class='bx bx-loader-alt bx-spin'></i>
             </div>
@@ -791,10 +890,11 @@ function populateFolderView(id) {
 
     //folders
     folderListContent = folderInfo.then(data => {
+            foldersLoading.innerHTML = ''
             folderList.innerHTML = '';
 
             if (data.folders.length === 0) {
-                folderList.innerHTML = `
+                foldersLoading.innerHTML = `
                 <div class="loading">
                     <p>No folders found</p>
                 </div>
@@ -804,6 +904,7 @@ function populateFolderView(id) {
                 const folderItem = document.createElement('div');
                 folderItem.classList.add('folder-item');
                 folderItem.setAttribute('value', folder.dir_id);
+                folderItem.setAttribute('name', folder.name);
                 folderItem.innerHTML = `
                 <div class="folder-icon">
                     <i class='bx bxs-folder'></i>
@@ -812,7 +913,7 @@ function populateFolderView(id) {
                     ${folder.name}
                 </div>
                 <div class="folder-options">
-                <i class="bx bx-dots-vertical" value="${folder.dir_id}"></i>
+                <i class="bx bx-dots-vertical" value="${folder.dir_id}" name="${folder.name}"></i>
                 </div>
             `;
                 folderList.appendChild(folderItem);
@@ -823,7 +924,7 @@ function populateFolderView(id) {
                         clearSelected();
 
                         folderItem.classList.toggle('selected');
-                        showDetails(folder.dir_id, type = 'folder');
+                        showDetails(folder.dir_id, type = 'folder', folderName = folder.name);
                     }
                 );
 
@@ -842,7 +943,8 @@ function populateFolderView(id) {
     );
 
     //files
-    fileList.innerHTML = `
+    fileList.innerHTML = '';
+    filesLoading.innerHTML = `
             <div class="loading">
                 <i class='bx bx-loader-alt bx-spin'></i>
             </div>
@@ -851,9 +953,11 @@ function populateFolderView(id) {
 
     fileListContent = folderInfo.then(data => {
             fileList.innerHTML = '';
+            filesLoading.innerHTML = '';
+
 
             if (data.files.length === 0) {
-                fileList.innerHTML = `
+                filesLoading.innerHTML = `
                 <div class="loading">
                     <p>No files found</p>
                 </div>
@@ -863,6 +967,7 @@ function populateFolderView(id) {
                 const fileItem = document.createElement('div');
                 fileItem.classList.add('file-item');
                 fileItem.setAttribute('value', file.id);
+                fileItem.setAttribute('name', file.filename)
                 fileItem.innerHTML = `
                 <div class="file-icon">
                     <i class='bx bxs-file'></i>
@@ -915,7 +1020,127 @@ function hideNotifActivity() {
     notifActivityContainer.classList.remove('active');
 }
 
-function showOptionsModal(activity, id = null, type = 'file') {
+//Notifs
+const notifsContainer = document.querySelector('.notifs-popup .notifs-list');
+
+function showNotif(state, type, message) {
+    // console.log(state, type, message);
+    if (state == 'success') {
+        //create notif item
+        const notifItem = document.createElement('div');
+        notifItem.classList.add('notif-item');
+        notifItem.classList.add('success');
+
+        //get icon
+        let typeIcon = '';
+        if (type == 'file') {
+            typeIcon = '<i class="bx bxs-file"></i>';
+        } else if (type == 'account') {
+            typeIcon = '<i class="bx bxs-user"></i>';
+        } else if (type == 'system') {
+            typeIcon = '<i class="bx bxs-cog"></i>';
+        } else if (type == 'security') {
+            typeIcon = '<i class="bx bxs-lock"></i>';
+        }
+
+        notifItem.innerHTML = `
+            <div class="notif-icon">
+                ${typeIcon}
+            </div>
+            <div class="notif-body">
+                <p class="notif-message">${message}</p>
+            </div>
+            <div class="notif-close">
+                <i class='bx bx-x'></i>
+            </div>
+        `;
+        notifsContainer.appendChild(notifItem);
+        updateNotifClose();
+
+        //remove notif after 5 seconds
+        setTimeout(() => {
+            notifItem.remove();
+        }, 5000);
+    } else {
+        const notifItem = document.createElement('div');
+        notifItem.classList.add('notif-item');
+        notifItem.classList.add('error');
+
+        //icon
+        let typeIcon = '<i class="bx bxs-error"></i>';
+
+        notifItem.innerHTML = `
+            <div class="notif-icon">
+                ${typeIcon}
+            </div>
+            <div class="notif-body">
+                <p class="notif-message">${message}</p>
+            </div>
+            <div class="notif-close">
+                <i class='bx bx-x'></i>
+            </div>
+        `;
+        notifsContainer.appendChild(notifItem);
+        updateNotifClose();
+
+        //remove notif after 5 seconds
+        setTimeout(() => {
+            notifItem.remove();
+        }, 5000);
+
+    }
+
+}
+
+//notif close
+function updateNotifClose() {
+    const notifCloseBtns = document.querySelectorAll('.notif-close');
+    notifCloseBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.closest('.notif-item').remove();
+            });
+        }
+    );
+}
+
+
+function submitFormCreation(event) {
+    event.preventDefault();
+    const name = document.getElementById('new-folder-name').value;
+    const isRoot = document.getElementById('new-folder-is-root').value
+    const parentdirid = document.getElementById('new-folder-parent-id').value
+    let root
+    if (isRoot == 'false') {
+        root = false
+    } else {
+        root = true
+    }
+
+    //create folder
+    console.log(name, root, parentdirid);
+    createFolder(name, root, parentdirid);
+}
+
+function submitFormDirDelete(event) {
+    event.preventDefault();
+    const id = document.getElementById('folder-delete-id').value;
+    const name = document.getElementById('folder-delete-name').value;
+    //delete folder
+    console.log(id, name);
+    deleteFolder(id, name);
+}
+
+function submitFormDirRename(event) {
+    event.preventDefault();
+    const id = document.getElementById('folder-rename-id').value;
+    const name = document.getElementById('folder-rename-name').value;
+    const newName = document.getElementById('folder-rename-new-name').value;
+    //rename folder
+    console.log(id, name, newName);
+    renameFolder(id, name, newName);
+}
+
+function showOptionsModal(activity, id = null, type = 'file', name = null) {
     if (activity == "download") {
         showNotifActivity();
         //create download item
@@ -974,7 +1199,7 @@ function showOptionsModal(activity, id = null, type = 'file') {
 
         }
 
-        function updateProgress(stage, stage_percent, stage_activity) {
+        function updateProgress(stage, stage_percent, stage_activity, filename = null) {
             downloadStatus.innerHTML = stage_activity;
             // calculate overall percentage according to stage, stage 1 is 0-90%, stage 2 is 90-100% and stage 3 is 100%
             let overall_percentdownloadPercent = 0;
@@ -1009,12 +1234,10 @@ function showOptionsModal(activity, id = null, type = 'file') {
                         if (downloadsList.innerHTML === '') {
                             hideNotifActivity();
                         }
-                    }, 3000);
+                    }, 100);
 
 
-                }
-
-                else if (stage_percent == 400) {
+                } else if (stage_percent == 400) {
                     downloadPercent.innerHTML = '';
                     // remove download item after 5 seconds
                     setTimeout(() => {
@@ -1023,7 +1246,8 @@ function showOptionsModal(activity, id = null, type = 'file') {
                         if (downloadsList.innerHTML === '') {
                             hideNotifActivity();
                         }
-                    }, 5000);
+                    }, 2000);
+
                 }
 
             }
@@ -1050,7 +1274,7 @@ function showOptionsModal(activity, id = null, type = 'file') {
                             const stage = data.message.split('_')[0];
                             const stage_percent = data.message.split('_')[1];
                             const stage_activity = data.message.split('_')[2];
-                            updateProgress(stage, stage_percent, stage_activity);
+                            updateProgress(stage, stage_percent, stage_activity, fileName);
 
                             if (data.message.startsWith('3_100_')) {
                                 // console.log('Download completed!');
@@ -1080,7 +1304,7 @@ function showOptionsModal(activity, id = null, type = 'file') {
             xhr.addEventListener("progress", (event) => {
                 if (event.lengthComputable) {
                     const percentComplete = (event.loaded / event.total) * 100;
-                    updateProgress(4, percentComplete, fileName);
+                    updateProgress(4, percentComplete, fileName, fileName);
                 }
             });
 
@@ -1093,9 +1317,11 @@ function showOptionsModal(activity, id = null, type = 'file') {
                     a.download = fileName;
                     document.body.appendChild(a);
                     a.click();
+                    showNotif('success', 'system', (fileName + 'downloaded successfully'));
+
                     window.URL.revokeObjectURL(url);
 
-                    updateProgress(4, 100, fileName)
+                    updateProgress(4, 100, fileName, fileName);
 
                     // make post request to delete file
                     fetch('/download_file_complete', {
@@ -1110,37 +1336,261 @@ function showOptionsModal(activity, id = null, type = 'file') {
                         .then(response => {
                             if (response.status === 200) {
                                 response.json().then(data => {
-                                    console.log(data.message);
+                                    // console.log(data.message);
                                 });
                             } else {
                                 response.json().then(data => {
-                                    console.log(data.message);
+                                    // console.log(data.message);
                                 });
                             }
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            updateProgress(4, 400, 'Error downloading file, please whitelist this site on your adblocker');
+                            updateProgress(4, 400, 'Error downloading file, please whitelist this site on your adblocker', fileName);
                         });
                 }
 
                 //errors
                 xhr.onerror = () => {
-                    updateProgress(4, 400, 'Error downloading file, please whitelist this site on your adblocker');
+                    updateProgress(4, 400, 'Error downloading file, please whitelist this site on your adblocker', fileName);
                 }
             };
 
 
-
             xhr.send();
+
         }
 
+    } else if (activity == "createfolder") {
+        //create folder
+        const folderName = document.querySelector('.details-options-modal-body-input input').value;
+        const isRoot = document.querySelector('.details-options-modal-body-input input').getAttribute('value');
+        const parentID = document.querySelector('.details-options-modal-body-input input').getAttribute('value');
 
-    } else {
+        createFolder(folderName, isRoot, parentID);
+
+    } else if (activity == "newdir") {
+        console.log(activity, id, type, name);
 
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
+
+        //name form
+        const detailsOptionsModalBody = document.querySelector('.details-options-modal-body');
+        const folderNameForm = document.createElement('div');
+        folderNameForm.classList.add('details-options-modal-body-input');
+        let is_root = false;
+        if (name == null) {
+            name = '';
+            is_root = true;
+        }
+        folderNameForm.innerHTML = `
+        <div>
+        <p>Create new folder in <span class="paths">/${name}</span></p>
+            <form onsubmit="submitFormCreation(event)">
+                <input type="hidden" name="parentId" value="${id}" id="new-folder-parent-id">
+                <input type="hidden" name="isRoot" value="${is_root}" id="new-folder-is-root">
+                <input type="text" name="folderName" placeholder="Folder name" id="new-folder-name" required>
+                <p onclick="hideOptionsModal()">Cancel</p>
+                <button type="submit" class="btn btn-primary">Create</button>
+            </form>
+        </div>
+        `;
+
+        detailsOptionsModalBody.innerHTML = '';
+        detailsOptionsModalBody.appendChild(folderNameForm);
+
+
+    } else if (activity == "delete") {
+        folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
+
+        //name form
+        const detailsOptionsModalBody = document.querySelector('.details-options-modal-body');
+        const folderNameForm = document.createElement('div');
+        folderNameForm.classList.add('details-options-modal-body-input');
+        folderNameForm.innerHTML = `
+        <div>
+        <p>Are you sure you want to delete <span class="paths">/${name}</span>?</p>
+        <p>All files and folders inside will be deleted as well</p>
+        <i class='bx bxs-error'>This action cannot be undone</i>
+            <form onsubmit="submitFormDirDelete(event)">
+                <input type="hidden" name="dirId" value="${id}" id="folder-delete-id">
+                <input type="hidden" name="dirName" value="${name}" id="folder-delete-name">
+                <p onclick="hideOptionsModal()">Cancel</p>
+                <button type="submit" class="btn btn-primary">Delete</button>
+            </form>
+        </div>
+        `;
+
+        detailsOptionsModalBody.innerHTML = '';
+        detailsOptionsModalBody.appendChild(folderNameForm);
+
+    } else if (activity == "rename") {
+        folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
+
+        //name form
+        const detailsOptionsModalBody = document.querySelector('.details-options-modal-body');
+        const folderNameForm = document.createElement('div');
+        folderNameForm.classList.add('details-options-modal-body-input');
+        folderNameForm.innerHTML = `
+        <div>
+        <p>Rename <span class="paths">/${name}</span></p>
+            <form onsubmit="submitFormDirRename(event)">
+                <input type="hidden" name="dirId" value="${id}" id="folder-rename-id">
+                <input type="hidden" name="dirName" value="${name}" id="folder-rename-name">
+                <input type="text" name="folderName" placeholder="Folder name" id="folder-rename-new-name" required>
+                <p onclick="hideOptionsModal()">Cancel</p>
+                <button type="submit" class="btn btn-primary">Rename</button>
+            </form>
+        </div>
+        `;
+
+        detailsOptionsModalBody.innerHTML = '';
+        detailsOptionsModalBody.appendChild(folderNameForm);
+
+
+    } else {
+        folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
     }
+
+
+}
+
+function createFolder(foldername, is_root, parentid = null) {
+    fetch('/api/create_folder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            folderName: foldername,
+            isRoot: is_root,
+            parentId: parentid,
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                response.json().then(data => {
+                    showNotif('success', 'system', foldername + ' created successfully');
+                    //refresh notifs
+
+                    if (is_root) {
+                        renderFolders()
+                    }
+
+                    if (document.querySelector('.folder-view-name').getAttribute('value') == parentid) {
+                        populateFolderView(parentid)
+                    }
+
+                    hideOptionsModal();
+                });
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'system', data);
+                    hideOptionsModal();
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotif('error', 'system', 'Error creating folder');
+        });
+
+}
+
+function deleteFolder(id, name) {
+    fetch('/api/delete_folder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            folderId: id,
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                response.json().then(data => {
+                    showNotif('success', 'system', name + ' deleted successfully');
+                    //refresh notifs
+                    // renderFolders()
+                    //remove folder from folder view or folders list
+                    folderItems = document.querySelectorAll('.folder-item');
+                    folderItems.forEach(folder => {
+                            if (folder.getAttribute('value') == id) {
+                                folder.remove();
+                            }
+                        }
+                    );
+
+                    //close folder view if folder is deleted
+                    if (document.querySelector('.folder-view-name').getAttribute('value') == id) {
+                        hidefolderView();
+                    }
+
+                    hideOptionsModal();
+                });
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'system', data);
+                    hideOptionsModal();
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotif('error', 'system', 'Error deleting folder');
+        });
+}
+
+function renameFolder(id, name, newname) {
+    fetch('/api/rename_folder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            folderId: id,
+            newName: newname
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                response.json().then(data => {
+                    showNotif('success', 'system', name + ' renamed to ' + newname + ' successfully');
+                    //refresh notifs
+                    // renderFolders()
+                    //rename folder from folder view or folders list
+                    folderItems = document.querySelectorAll('.folder-item');
+                    folderItems.forEach(folder => {
+                            if (folder.getAttribute('value') == id) {
+                                folder.querySelector('.folder-name').innerHTML = newname;
+                                folder.setAttribute('name', newname);
+                            }
+                        }
+                    );
+
+                    //close folder view if folder is deleted
+                    if (document.querySelector('.folder-view-name').getAttribute('value') == id) {
+                        document.querySelector('.folder-view-name').innerHTML = newname;
+                    }
+
+                    hideOptionsModal();
+                });
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'system', data);
+                    hideOptionsModal();
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotif('error', 'system', 'Error renaming folder');
+        });
 
 }
 
@@ -1246,7 +1696,17 @@ function showOptionsModal(activity, id = null, type = 'file') {
 
 //folder context menu
 {
-//view
+//new dir +
+    folderContextNewdir.addEventListener('click', () => {
+            const id = folderContextNewdir.getAttribute('value');
+            const name = folderContextNewdir.getAttribute('name');
+            console.log(id, name);
+            showOptionsModal('newdir', id, type = 'folder', name);
+        }
+    );
+
+
+//view +
     folderOptionView.addEventListener('click', () => {
         const id = folderOptionView.getAttribute('value');
         const folderName = document.querySelector(`.folder-item[value="${id}"] .folder-name`).innerHTML;
@@ -1264,34 +1724,46 @@ function showOptionsModal(activity, id = null, type = 'file') {
 //move
     folderOptionMove.addEventListener('click', () => {
         const id = folderOptionMove.getAttribute('value');
-        showOptionsModal('move', id, type = 'folder');
+        const fileName = folderOptionMove.getAttribute('name');
+
+        showOptionsModal('move', id, type = 'folder', name = fileName);
     });
 
     folderContextMenuMove.addEventListener('click', () => {
         const id = folderContextMenuMove.getAttribute('value');
-        showOptionsModal('move', id, type = 'folder');
+        const fileName = folderContextMenuMove.getAttribute('name');
+
+        showOptionsModal('move', id, type = 'folder', name = fileName);
     });
 
 //rename
     folderOptionRename.addEventListener('click', () => {
         const id = folderOptionRename.getAttribute('value');
-        showOptionsModal('rename', id, type = 'folder');
+        const fileName = folderOptionRename.getAttribute('name');
+
+        showOptionsModal('rename', id, type = 'folder', name = fileName);
     });
 
     folderContextMenuRename.addEventListener('click', () => {
         const id = folderContextMenuRename.getAttribute('value');
-        showOptionsModal('rename', id, type = 'folder');
+        const fileName = folderContextMenuRename.getAttribute('name');
+
+        showOptionsModal('rename', id, type = 'folder', name = fileName);
     });
 
-//delete
+//delete +
     folderOptionDelete.addEventListener('click', () => {
         const id = folderOptionDelete.getAttribute('value');
-        showOptionsModal('delete', id, type = 'folder');
+        const fileName = folderOptionDelete.getAttribute('name');
+
+        showOptionsModal('delete', id, type = 'folder', name = fileName);
     });
 
     folderContextMenuDelete.addEventListener('click', () => {
         const id = folderContextMenuDelete.getAttribute('value');
-        showOptionsModal('delete', id, type = 'folder');
+        const fileName = folderContextMenuDelete.getAttribute('name');
+
+        showOptionsModal('delete', id, type = 'folder', name = fileName);
     });
 }
 

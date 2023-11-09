@@ -728,6 +728,7 @@ def folders():
     # print("folders: ", folders)
     return jsonify(folders), 200
 
+
 @app.route('/api/folder/<path:id>')
 def folder(id):
     if 'username' not in session:
@@ -752,7 +753,8 @@ def folder(id):
 
     # fetch files inside dir
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND dir_id = %s AND is_deleted = FALSE", (str(session["user_id"]), id))
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND dir_id = %s AND is_deleted = FALSE",
+                   (str(session["user_id"]), id))
     files = []
     for file in cursor:
         file_data = {
@@ -777,6 +779,130 @@ def folder(id):
     return jsonify(folder_info), 200
 
 
+@app.route('/api/create_folder', methods=['POST'])
+def create_folder():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # create folder in db
+    data = request.get_json()
+    folder_name = data.get('folderName', '')
+    is_root = data.get('isRoot', False)
+    parent_id = data.get('parentId', None)
+    conn = get_db()
+    cursor = conn.cursor()
+    if is_root:
+        # check if folder already exists in root
+        cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_name = %s AND is_root = TRUE",
+                       (str(session["user_id"]), folder_name))
+        folder = cursor.fetchone()
+        print(folder)
+
+        if folder is None or folder == "":
+            cursor.execute("""
+                INSERT INTO file_dirs (dir_name, owner_id, dir_id, is_root, date_created, date_updated)
+                VALUES (%s, %s, %s, TRUE, NOW(), NOW())
+            """, (folder_name, str(session["user_id"]), (generate_temp_uuid())))
+            conn.commit()
+
+        else:
+            return jsonify("Folder already exists in the current path (/)."), 400
+
+
+    else:
+        # check if folder already exists in parent dir
+        cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_name = %s AND parent_dir_id = %s",
+                       (str(session["user_id"]), folder_name, parent_id))
+        folder = cursor.fetchone()
+        print(folder)
+
+        if folder is None or folder == "":
+            cursor.execute("""
+                INSERT INTO file_dirs (dir_name, owner_id, dir_id, parent_dir_id, is_root, date_created, date_updated)
+                VALUES (%s, %s, %s, %s, FALSE, NOW(), NOW())
+            """, (folder_name, str(session["user_id"]), (generate_temp_uuid()), parent_id))
+            conn.commit()
+
+        else:
+            return jsonify("Folder already exists in the current path."), 400
+
+    conn.commit()
+    cursor.close()
+
+    return jsonify("success_Folder created successfully."), 200
+
+
+@app.route('/api/delete_folder', methods=['POST'])
+def delete_folder():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # delete folder in db
+    data = request.get_json()
+    folder_id = data.get('folderId', '')
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), folder_id))
+        folder = cursor.fetchone()
+        print(folder)
+        if folder is None or folder == "":
+            return jsonify("Folder not found."), 400
+        else:
+            cursor.execute("DELETE FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), folder_id))
+            conn.commit()
+            return jsonify("success_Folder deleted successfully."), 200
+    except Exception as e:
+        print(e)
+        return jsonify("Folder not found."), 400
+
+@app.route('/api/rename_folder', methods=['POST'])
+def rename_folder():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # rename folder in db
+    data = request.get_json()
+    folder_id = data.get('folderId', '')
+    new_name = data.get('newName', '')
+
+    print(folder_id, new_name)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), folder_id))
+    folder = cursor.fetchone()
+
+    if folder is None or folder == "":
+        return jsonify("Folder not found."), 400
+
+    parent_dir_id = folder[4]
+    print(parent_dir_id)
+
+    # check if folder already exists in same parent dir
+    conn = get_db()
+    cursor = conn.cursor()
+    if parent_dir_id is None or parent_dir_id == "":
+        cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_name = %s AND is_root = TRUE",
+                          (str(session["user_id"]), new_name))
+    else:
+        cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_name = %s AND parent_dir_id = %s",
+                          (str(session["user_id"]), new_name, folder[2]))
+    folder = cursor.fetchone()
+
+    if folder is None or folder == "":
+        cursor.execute("UPDATE file_dirs SET dir_name = %s WHERE owner_id = %s AND dir_id = %s", (new_name, str(session["user_id"]), folder_id))
+        conn.commit()
+        return jsonify("success_Folder renamed successfully."), 200
+
+    else:
+        return jsonify("Folder already exists in the current path."), 400
+
+
+
+
 @app.route('/api/recents')
 def recents():
     if 'username' not in session:
@@ -786,7 +912,7 @@ def recents():
     # fetch last 10 files from db
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND is_deleted = FALSE ORDER BY date_updated DESC LIMIT 10",
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND is_deleted = FALSE ORDER BY date_updated DESC LIMIT 5",
                    (str(session["user_id"]),))
     files = []
     for file in cursor:
@@ -819,6 +945,7 @@ def files():
 
     return jsonify(files)
 
+
 @app.route('/api/details/folder/<path:id>')
 def folder_details(id):
     if 'username' not in session:
@@ -828,12 +955,23 @@ def folder_details(id):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), id))
     folder_info = cursor.fetchone()
+
+    #close
+
+
     if folder_info is None:
         return jsonify("error_Folder not found."), 400
 
     # fetch files in folder
+    db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND dir_id = %s AND is_deleted = FALSE", (str(session["user_id"]), id))
+
+    try:
+        cursor.execute("SELECT * FROM files WHERE owner_id = %s AND dir_id = %s AND is_deleted = FALSE",
+                   (str(session["user_id"]), id))
+    except Exception as e:
+        print(e)
+
     files = []
     size = 0
     filenumber = 0
@@ -867,7 +1005,6 @@ def folder_details(id):
         folders.append(folder_data)
         dirnumber += 1
 
-
     folder_info = {
         "id": folder_info[3],
         "name": folder_info[2],
@@ -884,6 +1021,7 @@ def folder_details(id):
     # print(folder_info)
 
     return jsonify(folder_info), 200
+
 
 @app.route('/api/details/file/<path:id>')
 def file_details(id):
