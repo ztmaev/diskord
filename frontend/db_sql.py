@@ -73,6 +73,9 @@ for table in cursor:
     if table[0] == "file_dirs":
         table_file_dirs_exists = True
         print(f"Table 'file_dirs' exists")
+    if table[0] == "shared":
+        table_shared_exists = True
+        print(f"Table 'shared' exists")
 
 # Users
 if not table_users_exists:
@@ -231,6 +234,23 @@ if not table_upload_queue_exists:
         )
     """)
     print("Created 'upload_queue' table")
+
+# Shared
+if not table_shared_exists:
+    cursor.execute("""
+        CREATE TABLE shared (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            owner_id BIGINT NOT NULL,
+            file_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            file_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            is_secured BOOLEAN NOT NULL DEFAULT FALSE,
+            password VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+            expires_at VARCHAR(255),
+            date_created VARCHAR(255) NOT NULL
+        )
+    """)
+    print("Created 'shared' table")
 
 
 # Close the cursor and connection

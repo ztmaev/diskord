@@ -1118,7 +1118,7 @@ function showNotif(state, type, message) {
         //remove notif after 5 seconds
         setTimeout(() => {
             notifItem.remove();
-        }, 100000);
+        }, 5000);
     } else {
         const notifItem = document.createElement('div');
         notifItem.classList.add('notif-item');
