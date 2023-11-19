@@ -43,7 +43,7 @@ const renderRecents = async () => {
                     <p class="filesize">${recent.size_simple}</p>
                 </div>
                 <div class="recent-options">
-                <i class="bx bx-dots-vertical" value="${recent.id}"></i>
+                <i class="bx bx-dots-vertical" value="${recent.id}" name="${recent.filename}"></i>
                 </div>
             `;
         recentsList.appendChild(recentItem);
@@ -54,7 +54,7 @@ const renderRecents = async () => {
             clearSelected();
 
             recentItem.classList.toggle('selected');
-            showDetails(recent.id, type = 'file');
+            showDetails(recent.id, type = 'file', name = recent.filename);
         });
 
         recentItem.addEventListener('dblclick', () => {
@@ -248,7 +248,7 @@ const sortFiles = async () => {
                     <p class="filesize">${file.size_simple}</p>
                 </div>
                 <div class="file-options">
-                <i class="bx bx-dots-vertical" value="${file.id}"></i>
+                <i class="bx bx-dots-vertical" value="${file.id}" name="${file.filename}"></i>
                 </div>
             `;
         filesList.appendChild(fileItem);
@@ -276,12 +276,12 @@ const sortFiles = async () => {
 //DETAILS
 const details = document.querySelector('.details-body-inner');
 
-const showDetails = async (id, type, folderName = null) => {
+const showDetails = async (id, type, name = null) => {
     if (type === 'file') {
-        updateDetailsOptions(id);
+        updateDetailsOptions(id, name);
     }
     if (type === 'folder') {
-        updateDirDetailsOptions(id, folderName)
+        updateDirDetailsOptions(id, name)
     }
 
 
@@ -369,7 +369,7 @@ const resetDetails = () => {
 
 }
 
-function updateDetailsOptions(id) {
+function updateDetailsOptions(id, name) {
     const folderOptions = document.querySelector('.details-body-folder-options-inner');
     if (folderOptions) {
         folderOptions.classList.remove("active");
@@ -377,11 +377,19 @@ function updateDetailsOptions(id) {
 
     const options = document.querySelector('.details-body-options-inner');
     fileOptionView.setAttribute('value', id);
+    fileOptionView.setAttribute('name', name);
     fileOptionCopy.setAttribute('value', id);
+    fileOptionCopy.setAttribute('name', name);
     fileOptionMove.setAttribute('value', id);
+    fileOptionMove.setAttribute('name', name);
     fileOptionDownload.setAttribute('value', id);
+    fileOptionDownload.setAttribute('name', name);
+    fileOptionRename.setAttribute('value', id);
+    fileOptionRename.setAttribute('name', name);
     fileOptionShare.setAttribute('value', id);
+    fileOptionShare.setAttribute('name', name);
     fileOptionDelete.setAttribute('value', id);
+    fileOptionDelete.setAttribute('name', name);
 
     options.classList.add("active");
 }
@@ -518,6 +526,7 @@ function updateDots() {
         dot.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = e.target.getAttribute('value');
+            const name = e.target.getAttribute('name');
 
             //select
             clearSelected();
@@ -526,7 +535,7 @@ function updateDots() {
             //details
             showDetails(id, type = 'file');
 
-            showContextMenu(e.pageX, e.pageY, id);
+            showContextMenu(e.pageX, e.pageY, id, name);
         });
     });
 
@@ -535,6 +544,7 @@ function updateDots() {
         dot.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = e.target.getAttribute('value');
+            const name = e.target.getAttribute('name');
 
             //select
             clearSelected();
@@ -543,7 +553,7 @@ function updateDots() {
             //details
             showDetails(id, type = 'file');
 
-            showContextMenu(e.pageX, e.pageY, id);
+            showContextMenu(e.pageX, e.pageY, id, name);
         });
     });
 }
@@ -639,7 +649,7 @@ function hideGeneralContextMenu() {
     generalContextMenu.classList.remove('active');
 }
 
-function showContextMenu(x, y, id) {
+function showContextMenu(x, y, id, name) {
     // hide context menu if already shown
     hideContextMenu();
     hideFolderContextMenu();
@@ -667,7 +677,7 @@ function showContextMenu(x, y, id) {
     contextMenu.style.top = `${y - 45}px`;
     contextMenu.style.left = `${x + 5}px`;
 
-    updateContextMenuValues(id);
+    updateContextMenuValues(id, name);
 }
 
 function showFolderContextMenu(x, y, id, folderName) {
@@ -707,13 +717,21 @@ function hideFolderContextMenu() {
 }
 
 
-function updateContextMenuValues(id) {
+function updateContextMenuValues(id, name) {
     contextMenuView.setAttribute('value', id);
+    contextMenuView.setAttribute('name', name);
     contextMenuCopy.setAttribute('value', id);
+    contextMenuCopy.setAttribute('name', name);
     contextMenuMove.setAttribute('value', id);
+    contextMenuMove.setAttribute('name', name);
     contextMenuDownload.setAttribute('value', id);
+    contextMenuDownload.setAttribute('name', name);
+    contextMenuRename.setAttribute('value', id);
+    contextMenuRename.setAttribute('name', name);
     contextMenuShare.setAttribute('value', id);
+    contextMenuShare.setAttribute('name', name);
     contextMenuDelete.setAttribute('value', id);
+    contextMenuDelete.setAttribute('name', name);
 }
 
 function updateFolderContextMenuValues(id, folderName) {
@@ -748,6 +766,7 @@ window.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         // get id
         const id = e.target.closest('.file-item').getAttribute('value');
+        const name = e.target.closest('.file-item').getAttribute('name');
 
         //select
         clearSelected();
@@ -757,7 +776,7 @@ window.addEventListener('contextmenu', (e) => {
         showDetails(id, type = 'file');
 
         //show context menu
-        showContextMenu(e.pageX, e.pageY, id);
+        showContextMenu(e.pageX, e.pageY, id, name);
     }
 
     //Recents
@@ -765,6 +784,7 @@ window.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         //get id
         const id = e.target.closest('.recent-item').getAttribute('value');
+        const name = e.target.closest('.recent-item').getAttribute('name');
 
         //select
         clearSelected();
@@ -774,7 +794,7 @@ window.addEventListener('contextmenu', (e) => {
         showDetails(id, type = 'file');
 
         //show context menu
-        showContextMenu(e.pageX, e.pageY, id);
+        showContextMenu(e.pageX, e.pageY, id, name);
     }
 
 
@@ -1098,7 +1118,7 @@ function showNotif(state, type, message) {
         //remove notif after 5 seconds
         setTimeout(() => {
             notifItem.remove();
-        }, 5000);
+        }, 100000);
     } else {
         const notifItem = document.createElement('div');
         notifItem.classList.add('notif-item');
@@ -1142,6 +1162,99 @@ function updateNotifClose() {
 }
 
 
+//File submissions
+//deletefile
+function submitFormFileDelete(event) {
+    event.preventDefault();
+    const id = document.getElementById('file-delete-id').value;
+    const name = document.getElementById('file-delete-name').value;
+    //delete file
+    console.log(id, name);
+    deleteFile(id, name);
+}
+
+function deleteFile(id, name) {
+    hideOptionsModal();
+    fetch('/delete_file', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            deleteFileID: id,
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                showNotif('success', 'file', `File ${name} deleted`);
+                //remove file from list
+                const files = document.querySelectorAll(`.file-item[value="${id}"]`);
+                files.forEach(file => {
+                    file.remove();
+                });
+                const recents = document.querySelectorAll(`.recent-item[value="${id}"]`);
+                recents.forEach(recent => {
+                    recent.remove();
+                });
+
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'file', data.message);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// renamefile
+function submitFormFileRename(event) {
+    event.preventDefault();
+    const id = document.getElementById('file-rename-id').value;
+    const name = document.getElementById('file-rename-new-name').value;
+    renameFile(id, name);
+}
+
+function renameFile(id, name) {
+    hideOptionsModal();
+    fetch('/update_filename', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            fileID: id, fileName: name
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                showNotif('success', 'file', `Renamed ${name}`);
+                //update the name on the file
+                const file = document.querySelectorAll(`.file-item[value="${id}"]`);
+                file.forEach(file => {
+                    file.querySelector('.filename').innerHTML = name;
+                });
+                const recent = document.querySelectorAll(`.recent-item[value="${id}"]`);
+                recent.forEach(recent => {
+                    recent.querySelector('.filename').innerHTML = name;
+                });
+
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'file', data.message);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// autofill and fix
+
+
+//Folder submissions
 function submitFormCreation(event) {
     event.preventDefault();
     const name = document.getElementById('new-folder-name').value;
@@ -1180,7 +1293,14 @@ function submitFormDirRename(event) {
 
 function showOptionsModal(activity, id = null, type = 'file', name = null) {
     //File options
-    if (activity == "filedownload") {
+    // fileview
+    if (activity == "filecopy") {
+        // TODO: inpage file preview
+
+    }
+
+    // filedownload +
+    else if (activity == "filedownload") {
         showNotifActivity();
         //create download item
         const downloadItem = document.createElement('div');
@@ -1402,11 +1522,88 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
     }
 
+    // filecopy
+    else if (activity == "filecopy") {
+        // TODO:
 
-    // Folder options
-    else if (activity == "newdir") {
+
+    }
+    // filemove
+    else if (activity == "filemove") {
+        // TODO:
+
+
+    }
+    // fileshare
+    else if (activity == "fileshare") {
+        // TODO:
+
+
+    }
+    // filerename
+    else if (activity == "filerename") {
+        console.log(activity, id, type, name);
+        folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
+
+        const detailsOptionsModalBody = document.querySelector('.details-options-modal-body');
+        const fileNameForm = document.createElement('div');
+        fileNameForm.classList.add('details-options-modal-body-input');
+        fileNameForm.innerHTML = `
+        <div>
+        <p>Rename <span class="paths">/${name}</span></p>
+            <form onsubmit="submitFormFileRename(event)">
+                <input type="hidden" name="fileId" value="${id}" id="file-rename-id">
+                <input type="hidden" name="fileName" value="${name}" id="file-rename-name">
+                <input type="text" name="fileName" placeholder="File name" id="file-rename-new-name" value="${name}" required>
+                <p onclick="hideOptionsModal()">Cancel</p>
+                <button type="submit" class="btn btn-primary">Rename</button>
+            </form>
+        </div>
+        `;
+
+        detailsOptionsModalBody.innerHTML = '';
+        detailsOptionsModalBody.appendChild(fileNameForm);
+
+
+    }
+    // filedelete
+    else if (activity == "filedelete") {
         console.log(activity, id, type, name);
 
+        folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
+
+        const deleteForm = document.createElement('div');
+        deleteForm.classList.add('details-options-modal-body-input');
+        let is_root = false;
+        if (name == null) {
+            name = '';
+            is_root = true;
+        }
+
+        deleteForm.innerHTML = `
+        <div>
+        <p>Are you sure you want to delete <span class="paths">/${name}</span>?</p>
+        <i class='bx bxs-error'>This action cannot be undone</i>
+            <form onsubmit="submitFormFileDelete(event)">
+                <input type="hidden" name="fileId" value="${id}" id="file-delete-id">
+                <input type="hidden" name="fileName" value="${name}" id="file-delete-name">
+                <p onclick="hideOptionsModal()">Cancel</p>
+                <button type="submit" class="btn btn-primary">Delete</button>
+            </form>
+            
+        </div>
+        `;
+        const detailsOptionsModalBody = document.querySelector('.details-options-modal-body');
+        detailsOptionsModalBody.innerHTML = '';
+        detailsOptionsModalBody.appendChild(deleteForm);
+    }
+
+
+        // Folder options
+    // Folder new folder
+    else if (activity == "newdir") {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
 
@@ -1436,7 +1633,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
         detailsOptionsModalBody.appendChild(folderNameForm);
 
 
-    } else if (activity == "dirdelete") {
+    }
+
+    // Folder delete
+    else if (activity == "dirdelete") {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
 
@@ -1461,7 +1661,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
         detailsOptionsModalBody.innerHTML = '';
         detailsOptionsModalBody.appendChild(folderNameForm);
 
-    } else if (activity == "dirrename") {
+    }
+
+    //Folder rename
+    else if (activity == "dirrename") {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
 
@@ -1485,7 +1688,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
         detailsOptionsModalBody.appendChild(folderNameForm);
 
 
-    } else if (activity == "dirmove") {
+    }
+
+    // Folder move
+    else if (activity == "dirmove") {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
 
@@ -1494,11 +1700,19 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
         const folderNameForm = document.createElement('div');
         folderNameForm.classList.add('details-options-modal-body-input');
         folderNameForm.innerHTML = `
-        <div>
-        <p>Choose a folder to move /${name}</p>
+        <div class="options-modal-dir-move">
+        <p>Choose a folder to move <span class="folder-move-data" name="${name}" value="${id}">/${name}</span></p>
+        <div class="folder-list-paths">
+            <div class="folder-list-up">
+                <i class='bx bx-home'></i>
+            </div>
+            <p class="paths">/root</p>
+            <div class="folder-list-paths-inner"></div>
+        </div>
             <div class="folder-list">
                 <div class="loading">
                     <i class='bx bx-loader-alt bx-spin'></i>
+                    <p>Fetching folders</p>
                 </div>
             </div>
         </div>
@@ -1507,7 +1721,186 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
         detailsOptionsModalBody.innerHTML = '';
         detailsOptionsModalBody.appendChild(folderNameForm);
 
-    } else {
+        // fetch folders
+        const folderStructure = getDirStructure();
+        const folderPaths = document.querySelector('.options-modal-dir-move .folder-list-paths-inner');
+        const folderList = document.querySelector('.options-modal-dir-move .folder-list');
+        const folderListUp = document.querySelector('.options-modal-dir-move .folder-list-up');
+
+        folderListUp.addEventListener('click', () => {
+            // Get the current folder path
+            const currentPath = folderPaths.textContent;
+
+            // If the current path is not the root, navigate up one level
+            if (currentPath !== '/root') {
+                const newPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                folderPaths.textContent = newPath;
+
+                // Reload the folders for the new path
+                reloadFolders(newPath);
+            }
+        });
+
+        function reloadFolders(path) {
+            //loading
+            folderList.innerHTML = `
+            <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+                <p>Fetching folders</p>
+            </div>
+        `;
+
+            // Fetch folders based on the provided path
+            const updatedFolderStructure = getDirStructure(path);
+
+            // Update the folder list with the new data
+            updatedFolderStructure.then(data => {
+                folderList.innerHTML = '';
+
+                if (data.length === 0) {
+                    folderList.innerHTML = `
+                <div class="loading">
+                    <p>No folders found</p>
+                </div>
+            `;
+                }
+
+                data.forEach(folder => {
+                    const folderItem = document.createElement('div');
+                    folderItem.classList.add('dirs-folder-item');
+                    folderItem.setAttribute('value', folder.dir_id);
+                    folderItem.setAttribute('name', folder.name);
+                    folderItem.innerHTML = `
+                        <div class="folder-icon">
+                            <i class='bx bxs-folder'></i>
+                        </div>
+                        <div class="folder-name">
+                            ${folder.name}
+                        </div>
+                    `;
+                    folderList.appendChild(folderItem);
+
+                    // add click event to select folder and double-click to load the folder's subfolders
+                    folderItem.addEventListener('click', () => {
+                        // remove selected from all files
+                        clearSelected();
+                        folderItem.classList.toggle('selected');
+                    });
+
+                    folderItem.addEventListener('dblclick', () => {
+                        loadSubfolders(folderItem, data);
+                    });
+                });
+            });
+        }
+
+        // list folders
+        folderStructure.then(data => {
+            folderList.innerHTML = '';
+
+            if (data.length === 0) {
+                folderList.innerHTML = `
+            <div class="loading">
+                <p>No folders found</p>
+            </div>
+        `;
+            }
+
+            data.forEach(folder => {
+                const folderItem = document.createElement('div');
+                folderItem.classList.add('dirs-folder-item');
+                folderItem.setAttribute('value', folder.dir_id);
+                folderItem.setAttribute('name', folder.name);
+                folderItem.innerHTML = `
+                    <div class="folder-icon">
+                        <i class='bx bxs-folder'></i>
+                    </div>
+                    <div class="folder-name">
+                        ${folder.name}
+                    </div>
+                `;
+                folderList.appendChild(folderItem);
+
+                // add click event to select folder and double-click to load the folder's subfolders
+                folderItem.addEventListener('click', () => {
+                    // remove selected from all files
+                    clearSelected();
+                    folderItem.classList.toggle('selected');
+                });
+
+                folderItem.addEventListener('dblclick', () => {
+                    loadSubfolders(folderItem, data);
+                });
+            });
+            // add cancel and move buttons
+            const folderMoveBtns = document.createElement('div');
+            folderMoveBtns.classList.add('options-modal-dir-move-btns');
+            folderMoveBtns.innerHTML = `
+            <button onclick="hideOptionsModal()">Cancel</button>
+            <button onclick="submitDirMove()" class="btn btn-primary">Move</button>
+        `;
+
+            detailsOptionsModalBody.appendChild(folderMoveBtns);
+
+        });
+
+        function loadSubfolders(folderItem, data) {
+            data.forEach(folder => {
+                if (folder.dir_id == folderItem.getAttribute('value')) {
+                    // replace list with the subfolders
+                    folderList.innerHTML = '';
+
+                    if (folder.children.length === 0) {
+                        folderList.innerHTML = `
+                    <div class="loading">
+                        <p>No folders found</p>
+                    </div>
+                `;
+                    }
+
+                    folder.children.forEach(subfolder => {
+                        const subfolderItem = document.createElement('div');
+                        subfolderItem.classList.add('dirs-folder-item');
+                        subfolderItem.setAttribute('value', subfolder.dir_id);
+                        subfolderItem.setAttribute('name', subfolder.name);
+                        subfolderItem.innerHTML = `
+                            <div class="folder-icon">
+                                <i class='bx bxs-folder'></i>
+                            </div>
+                            <div class="folder-name">
+                                ${subfolder.name}
+                            </div>
+                        `;
+
+                        folderList.appendChild(subfolderItem);
+
+                        // update event listeners for the new subfolder items
+                        subfolderItem.addEventListener('click', () => {
+                            clearSelected();
+                            subfolderItem.classList.toggle('selected');
+                        });
+
+                        subfolderItem.addEventListener('dblclick', () => {
+                            loadSubfolders(subfolderItem, folder.children);
+                        });
+                    });
+                }
+            });
+        }
+
+
+        function clearSelected() {
+            // Remove 'selected' class from all folder items
+            const folderItems = document.querySelectorAll('.dirs-folder-item');
+            folderItems.forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+    }
+
+    //TODO: remove
+    else {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
     }
@@ -1515,8 +1908,68 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
 }
 
+function submitDirMove() {
+    // find selected item
+    const selectedFolder = document.querySelector('.dirs-folder-item.selected');
+    const selectedFolderId = selectedFolder.getAttribute('value');
+    const selectedFolderName = selectedFolder.getAttribute('name');
+    const folderMoveData = document.querySelector('.folder-move-data');
+    const folderMoveDataId = folderMoveData.getAttribute('value');
+    const folderMoveDataName = folderMoveData.getAttribute('name');
+
+    console.log(selectedFolderId, selectedFolderName);
+
+    // make post request to move folder
+    fetch('/api/move_folder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            folderId: folderMoveDataId,
+            newParentId: selectedFolderId
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                response.json().then(data => {
+                    showNotif('success', 'system', folderMoveDataName + ' moved to ' + selectedFolderName + ' successfully');
+                    //refresh notifs
+                    // renderFolders()
+                    //rename folder from folder view or folders list
+                    folderItems = document.querySelectorAll('.folder-item');
+                    folderItems.forEach(folder => {
+                            if (folder.getAttribute('value') == folderMoveDataId) {
+                                folder.remove();
+                                resetDetails();
+                            }
+                        }
+                    );
+
+                    //close folder view if folder is deleted
+                    if (document.querySelector('.folder-view-name').getAttribute('value') == folderMoveDataId) {
+                        hidefolderView();
+                        resetDetails();
+                    }
+
+                    hideOptionsModal();
+                });
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'system', data);
+                    hideOptionsModal();
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotif('error', 'system', 'Error moving folder');
+        });
+}
+
 // fetch dir_structure
-async function getDirStructure() {
+async function getDirStructure(path = null) {
+    console.log(path)
     const response = await fetch(`/api/dir_structure`);
     const data = await response.json();
     console.log(data);
@@ -1696,78 +2149,78 @@ function renameFolder(id, name, newname) {
     fileOptionCopy.addEventListener('click', () => {
         const id = fileOptionCopy.getAttribute('value');
         const fileName = fileOptionCopy.getAttribute('name');
-        showOptionsModal('filecopy', id, name = fileName);
+        showOptionsModal('filecopy', id, type = 'file', name = fileName);
     });
 
     contextMenuCopy.addEventListener('click', () => {
         const id = contextMenuCopy.getAttribute('value');
         const fileName = contextMenuCopy.getAttribute('name');
-        showOptionsModal('filecopy', id, name = fileName);
+        showOptionsModal('filecopy', id, type = 'file', name = fileName);
     });
 
 //move
     fileOptionMove.addEventListener('click', () => {
         const id = fileOptionMove.getAttribute('value');
         const fileName = fileOptionMove.getAttribute('name');
-        showOptionsModal('filemove', id, name = fileName);
+        showOptionsModal('filemove', id, type = 'file', name = fileName);
     });
 
     contextMenuMove.addEventListener('click', () => {
         const id = contextMenuMove.getAttribute('value');
         const fileName = contextMenuMove.getAttribute('name');
-        showOptionsModal('filemove', id, name = fileName);
+        showOptionsModal('filemove', id, type = 'file', name = fileName);
     });
 
 //download
     fileOptionDownload.addEventListener('click', () => {
         const id = fileOptionDownload.getAttribute('value');
         const fileName = fileOptionDownload.getAttribute('name');
-        showOptionsModal('filedownload', id, name = fileName);
+        showOptionsModal('filedownload', id, type = 'file', name = fileName);
     });
 
     contextMenuDownload.addEventListener('click', () => {
         const id = contextMenuDownload.getAttribute('value');
         const fileName = contextMenuDownload.getAttribute('name');
-        showOptionsModal('filedownload', id, name = fileName);
+        showOptionsModal('filedownload', id, type = 'file', name = fileName);
     });
 
 //share
     fileOptionShare.addEventListener('click', () => {
         const id = fileOptionShare.getAttribute('value');
         const fileName = fileOptionShare.getAttribute('name');
-        showOptionsModal('fileshare', id, name = fileName);
+        showOptionsModal('fileshare', id, type = 'file', name = fileName);
     });
 
     contextMenuShare.addEventListener('click', () => {
         const id = contextMenuShare.getAttribute('value');
         const fileName = contextMenuShare.getAttribute('name');
-        showOptionsModal('fileshare', id, name = fileName);
+        showOptionsModal('fileshare', id, type = 'file', name = fileName);
     });
 
 //rename
     fileOptionRename.addEventListener('click', () => {
         const id = fileOptionRename.getAttribute('value');
         const fileName = fileOptionRename.getAttribute('name');
-        showOptionsModal('filerename', id, name = fileName);
+        showOptionsModal('filerename', id, type = 'file', name = fileName);
     });
 
     contextMenuRename.addEventListener('click', () => {
         const id = contextMenuRename.getAttribute('value');
         const fileName = contextMenuRename.getAttribute('name');
-        showOptionsModal('filerename', id, name = fileName);
+        showOptionsModal('filerename', id, type = 'file', name = fileName);
     });
 
 //delete
     fileOptionDelete.addEventListener('click', () => {
         const id = fileOptionDelete.getAttribute('value');
         const fileName = fileOptionDelete.getAttribute('name');
-        showOptionsModal('filedelete', id, name = fileName);
+        showOptionsModal('filedelete', id, type = 'file', name = fileName);
     });
 
     contextMenuDelete.addEventListener('click', () => {
         const id = contextMenuDelete.getAttribute('value');
         const fileName = contextMenuDelete.getAttribute('name');
-        showOptionsModal('filedelete', id, name = fileName);
+        showOptionsModal('filedelete', id, type = 'file', name = fileName);
     });
 
 }

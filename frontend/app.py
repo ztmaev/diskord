@@ -900,9 +900,83 @@ def rename_folder():
     else:
         return jsonify("Folder already exists in the current path."), 400
 
+def is_child_foldercheck(folder_id, new_parent_id):
+    if dirhaschildren(new_parent_id):
+        children = getdirchildren(new_parent_id)
+        for child in children:
+            if child["dir_id"] == folder_id:
+                return True
+            else:
+                return False
+    else:
+        return False
 
-# /api/dir_structure
-# eg response: {"id": "root", "name": "root", "children": [{"id": "folder1", "name": "folder1", "children": [{"id": "folder2", "name": "folder2", "children": []}, {"id": "folder3", "name": "folder3", "children": []}]}, {"id": "folder4", "name": "folder4", "children": []}]}
+# /api/move_folder
+@app.route('/api/move_folder', methods=['POST'])
+def move_folder():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+    # get folder info
+    data = request.get_json()
+    folder_id = data.get('folderId', '')
+    new_parent_id = data.get('newParentId', '')
+    print(folder_id, new_parent_id)
+
+    # check if folders exists and if new parent is not a child of folder
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), folder_id))
+    folder = cursor.fetchone()
+
+    is_child_folder = is_child_foldercheck(folder_id, new_parent_id)
+    print(is_child_folder)
+
+    if folder is None or folder == "":
+        return jsonify("Folder not found."), 400
+    else:
+        # check if new parent is not a child of folder
+        if is_child_folder:
+            return jsonify("Cannot move folder to its child."), 400
+        else:
+            # update parent dir id in db
+            cursor.execute("UPDATE file_dirs SET parent_dir_id = %s WHERE owner_id = %s AND dir_id = %s", (new_parent_id, str(session["user_id"]), folder_id))
+            conn.commit()
+            return jsonify("success_Folder moved successfully."), 200
+
+
+def getdirchildren(dir_id):
+    conn=get_db()
+    cursor=conn.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND parent_dir_id = %s", (str(session["user_id"]), dir_id))
+    folders = []
+    for folder in cursor:
+        if dirhaschildren(folder[2]):
+            children = getdirchildren(folder[2])
+        else:
+            children = []
+        folder_data = {
+            "id": folder[0],
+            "name": folder[1],
+            "dir_id": folder[2],
+            "children": children
+        }
+        folders.append(folder_data)
+
+    return folders
+
+def dirhaschildren(dir_id):
+    conn=get_db()
+    cursor=conn.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND parent_dir_id = %s", (str(session["user_id"]), dir_id))
+    folder = cursor.fetchone()
+    if folder is None or folder == "":
+        return False
+    else:
+        return True
+
+
+
 @app.route('/api/dir_structure')
 def dir_structure():
     if 'username' not in session:
@@ -918,51 +992,22 @@ def dir_structure():
         folder_data = {
             "id": folder[0],
             "name": folder[1],
-            "dir_id": folder[2],
-            "date_created": folder[6],
-            "date_updated": folder[7]
+            "dir_id": folder[2]
         }
         folders.append(folder_data)
     cursor.close()
 
-    # create root folder
-    root = {
-        "id": "root",
-        "name": "root",
-        "children": []
-    }
+    # continously fetch children of folders until no more children
+    while True:
+        for folder in folders:
+            if dirhaschildren(folder["dir_id"]):
+                folder["children"] = getdirchildren(folder["dir_id"])
+            else:
+                folder["children"] = []
+        break
 
-    # fetch children of each folder
-    for folder in folders:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND parent_dir_id = %s", (str(session["user_id"]), folder["id"]))
-        children = []
-        for child in cursor:
-            child_data = {
-                "id": child[0],
-                "name": child[1],
-                "dir_id": child[2],
-                "date_created": child[6],
-                "date_updated": child[7]
-            }
-            children.append(child_data)
-        cursor.close()
-        folder["children"] = children
-
-
-
-    # add folders to root
-    root["children"] = folders
-
-
-
-    print(root)
-
-    # return folder structure
-    return jsonify(root), 200
-
-
-
+    print("folders: ", folders)
+    return jsonify(folders), 200
 
 @app.route('/api/recents')
 def recents():

@@ -42,6 +42,7 @@ table_subfiles_exists = False
 table_upload_queue_exists = False
 table_2fa_login_exists = False
 table_file_dirs_exists = False
+table_shared_exists = False
 
 
 for table in cursor:
