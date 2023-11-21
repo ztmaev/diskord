@@ -1036,7 +1036,7 @@ function populateFolderView(id) {
                     <p class="filesize">${file.size_simple}</p>
                 </div>
                 <div class="file-options">
-                <i class="bx bx-dots-vertical" value="${file.id}"></i>
+                <i class="bx bx-dots-vertical" value="${file.id}" name="${file.filename}"></i>
                 </div>
             `;
                 fileList.appendChild(fileItem);
@@ -1047,7 +1047,7 @@ function populateFolderView(id) {
                     clearSelected();
 
                     fileItem.classList.toggle('selected');
-                    showDetails(file.id, type = 'file');
+                    showDetails(file.id, type = 'file', name = file.filename);
                 });
 
                 fileItem.addEventListener('dblclick', () => {
@@ -1294,9 +1294,8 @@ function submitFormDirRename(event) {
 function showOptionsModal(activity, id = null, type = 'file', name = null) {
     //File options
     // fileview
-    if (activity == "filecopy") {
+    if (activity == "fileview") {
         // TODO: inpage file preview
-
     }
 
     // filedownload +
@@ -1522,25 +1521,438 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
     }
 
-    // filecopy
+    // filecopy +
     else if (activity == "filecopy") {
-        // TODO:
+        folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
+
+        //name form
+        const detailsOptionsModalBody = document.querySelector('.details-options-modal-body');
+        const folderNameForm = document.createElement('div');
+        folderNameForm.classList.add('details-options-modal-body-input');
+        folderNameForm.innerHTML = `
+        <div class="options-modal-dir-move">
+        <p>Choose a folder to move <span class="file-move-data" name="${name}" value="${id}">/${name}</span></p>
+        <div class="folder-list-paths">
+            <div class="folder-list-up">
+                <i class='bx bx-home'></i>
+            </div>
+            <p class="paths">/root</p>
+            <div class="folder-list-paths-inner"></div>
+        </div>
+            <div class="folder-list">
+                <div class="loading">
+                    <i class='bx bx-loader-alt bx-spin'></i>
+                    <p>Fetching folders</p>
+                </div>
+            </div>
+        </div>
+        `;
+
+        detailsOptionsModalBody.innerHTML = '';
+        detailsOptionsModalBody.appendChild(folderNameForm);
+
+        // fetch folders
+        const folderStructure = getDirStructure();
+        const folderPaths = document.querySelector('.options-modal-dir-move .folder-list-paths-inner');
+        const folderList = document.querySelector('.options-modal-dir-move .folder-list');
+        const folderListUp = document.querySelector('.options-modal-dir-move .folder-list-up');
+
+        folderListUp.addEventListener('click', () => {
+            // Get the current folder path
+            const currentPath = folderPaths.textContent;
+
+            // If the current path is not the root, navigate up one level
+            if (currentPath !== '/root') {
+                const newPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                folderPaths.textContent = newPath;
+
+                // Reload the folders for the new path
+                reloadFolders(newPath);
+            }
+        });
+
+        function reloadFolders(path) {
+            //loading
+            folderList.innerHTML = `
+            <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+                <p>Fetching folders</p>
+            </div>
+        `;
+
+            // Fetch folders based on the provided path
+            const updatedFolderStructure = getDirStructure(path);
+
+            // Update the folder list with the new data
+            updatedFolderStructure.then(data => {
+                folderList.innerHTML = '';
+
+                if (data.length === 0) {
+                    folderList.innerHTML = `
+                <div class="loading">
+                    <p>No folders found</p>
+                </div>
+            `;
+                }
+
+                data.forEach(folder => {
+                    const folderItem = document.createElement('div');
+                    folderItem.classList.add('dirs-folder-item');
+                    folderItem.setAttribute('value', folder.dir_id);
+                    folderItem.setAttribute('name', folder.name);
+                    folderItem.innerHTML = `
+                        <div class="folder-icon">
+                            <i class='bx bxs-folder'></i>
+                        </div>
+                        <div class="folder-name">
+                            ${folder.name}
+                        </div>
+                    `;
+                    folderList.appendChild(folderItem);
+
+                    // add click event to select folder and double-click to load the folder's subfolders
+                    folderItem.addEventListener('click', () => {
+                        // remove selected from all files
+                        clearSelected();
+                        folderItem.classList.toggle('selected');
+                    });
+
+                    folderItem.addEventListener('dblclick', () => {
+                        loadSubfolders(folderItem, data);
+                    });
+                });
+            });
+        }
+
+        // list folders
+        folderStructure.then(data => {
+            folderList.innerHTML = '';
+
+            if (data.length === 0) {
+                folderList.innerHTML = `
+            <div class="loading">
+                <p>No folders found</p>
+            </div>
+        `;
+            }
+
+            data.forEach(folder => {
+                const folderItem = document.createElement('div');
+                folderItem.classList.add('dirs-folder-item');
+                folderItem.setAttribute('value', folder.dir_id);
+                folderItem.setAttribute('name', folder.name);
+                folderItem.innerHTML = `
+                    <div class="folder-icon">
+                        <i class='bx bxs-folder'></i>
+                    </div>
+                    <div class="folder-name">
+                        ${folder.name}
+                    </div>
+                `;
+                folderList.appendChild(folderItem);
+
+                // add click event to select folder and double-click to load the folder's subfolders
+                folderItem.addEventListener('click', () => {
+                    // remove selected from all files
+                    clearSelected();
+                    folderItem.classList.toggle('selected');
+                });
+
+                folderItem.addEventListener('dblclick', () => {
+                    loadSubfolders(folderItem, data);
+                });
+            });
+            // add cancel and move buttons
+            const folderMoveBtns = document.createElement('div');
+            folderMoveBtns.classList.add('options-modal-dir-move-btns');
+            folderMoveBtns.innerHTML = `
+            <div class="option-choices">
+                <button onclick="hideOptionsModal()" class="btn-choices-false">Cancel</button>
+                <button onclick="submitFileCopy()" class="btn-choices-true">Copy</button>
+            </div>
+        `;
+
+            detailsOptionsModalBody.appendChild(folderMoveBtns);
+
+        });
+
+        function loadSubfolders(folderItem, data) {
+            data.forEach(folder => {
+                if (folder.dir_id == folderItem.getAttribute('value')) {
+                    // replace list with the subfolders
+                    folderList.innerHTML = '';
+
+                    if (folder.children.length === 0) {
+                        folderList.innerHTML = `
+                    <div class="loading">
+                        <p>No folders found</p>
+                    </div>
+                `;
+                    }
+
+                    folder.children.forEach(subfolder => {
+                        const subfolderItem = document.createElement('div');
+                        subfolderItem.classList.add('dirs-folder-item');
+                        subfolderItem.setAttribute('value', subfolder.dir_id);
+                        subfolderItem.setAttribute('name', subfolder.name);
+                        subfolderItem.innerHTML = `
+                            <div class="folder-icon">
+                                <i class='bx bxs-folder'></i>
+                            </div>
+                            <div class="folder-name">
+                                ${subfolder.name}
+                            </div>
+                        `;
+
+                        folderList.appendChild(subfolderItem);
+
+                        // update event listeners for the new subfolder items
+                        subfolderItem.addEventListener('click', () => {
+                            clearSelected();
+                            subfolderItem.classList.toggle('selected');
+                        });
+
+                        subfolderItem.addEventListener('dblclick', () => {
+                            loadSubfolders(subfolderItem, folder.children);
+                        });
+                    });
+                }
+            });
+        }
+
+
+        function clearSelected() {
+            // Remove 'selected' class from all folder items
+            const folderItems = document.querySelectorAll('.dirs-folder-item');
+            folderItems.forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
 
 
     }
-    // filemove
+
+    // filemove +
     else if (activity == "filemove") {
-        // TODO:
+          folderOptionsModalOverlay.classList.add('active');
+        folderOptionsModal.classList.add('active');
+
+        //name form
+        const detailsOptionsModalBody = document.querySelector('.details-options-modal-body');
+        const folderNameForm = document.createElement('div');
+        folderNameForm.classList.add('details-options-modal-body-input');
+        folderNameForm.innerHTML = `
+        <div class="options-modal-dir-move">
+        <p>Choose a folder to move <span class="file-move-data" name="${name}" value="${id}">/${name}</span></p>
+        <div class="folder-list-paths">
+            <div class="folder-list-up">
+                <i class='bx bx-home'></i>
+            </div>
+            <p class="paths">/root</p>
+            <div class="folder-list-paths-inner"></div>
+        </div>
+            <div class="folder-list">
+                <div class="loading">
+                    <i class='bx bx-loader-alt bx-spin'></i>
+                    <p>Fetching folders</p>
+                </div>
+            </div>
+        </div>
+        `;
+
+        detailsOptionsModalBody.innerHTML = '';
+        detailsOptionsModalBody.appendChild(folderNameForm);
+
+        // fetch folders
+        const folderStructure = getDirStructure();
+        const folderPaths = document.querySelector('.options-modal-dir-move .folder-list-paths-inner');
+        const folderList = document.querySelector('.options-modal-dir-move .folder-list');
+        const folderListUp = document.querySelector('.options-modal-dir-move .folder-list-up');
+
+        folderListUp.addEventListener('click', () => {
+            // Get the current folder path
+            const currentPath = folderPaths.textContent;
+
+            // If the current path is not the root, navigate up one level
+            if (currentPath !== '/root') {
+                const newPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                folderPaths.textContent = newPath;
+
+                // Reload the folders for the new path
+                reloadFolders(newPath);
+            }
+        });
+
+        function reloadFolders(path) {
+            //loading
+            folderList.innerHTML = `
+            <div class="loading">
+                <i class='bx bx-loader-alt bx-spin'></i>
+                <p>Fetching folders</p>
+            </div>
+        `;
+
+            // Fetch folders based on the provided path
+            const updatedFolderStructure = getDirStructure(path);
+
+            // Update the folder list with the new data
+            updatedFolderStructure.then(data => {
+                folderList.innerHTML = '';
+
+                if (data.length === 0) {
+                    folderList.innerHTML = `
+                <div class="loading">
+                    <p>No folders found</p>
+                </div>
+            `;
+                }
+
+                data.forEach(folder => {
+                    const folderItem = document.createElement('div');
+                    folderItem.classList.add('dirs-folder-item');
+                    folderItem.setAttribute('value', folder.dir_id);
+                    folderItem.setAttribute('name', folder.name);
+                    folderItem.innerHTML = `
+                        <div class="folder-icon">
+                            <i class='bx bxs-folder'></i>
+                        </div>
+                        <div class="folder-name">
+                            ${folder.name}
+                        </div>
+                    `;
+                    folderList.appendChild(folderItem);
+
+                    // add click event to select folder and double-click to load the folder's subfolders
+                    folderItem.addEventListener('click', () => {
+                        // remove selected from all files
+                        clearSelected();
+                        folderItem.classList.toggle('selected');
+                    });
+
+                    folderItem.addEventListener('dblclick', () => {
+                        loadSubfolders(folderItem, data);
+                    });
+                });
+            });
+        }
+
+        // list folders
+        folderStructure.then(data => {
+            folderList.innerHTML = '';
+
+            if (data.length === 0) {
+                folderList.innerHTML = `
+            <div class="loading">
+                <p>No folders found</p>
+            </div>
+        `;
+            }
+
+            data.forEach(folder => {
+                const folderItem = document.createElement('div');
+                folderItem.classList.add('dirs-folder-item');
+                folderItem.setAttribute('value', folder.dir_id);
+                folderItem.setAttribute('name', folder.name);
+                folderItem.innerHTML = `
+                    <div class="folder-icon">
+                        <i class='bx bxs-folder'></i>
+                    </div>
+                    <div class="folder-name">
+                        ${folder.name}
+                    </div>
+                `;
+                folderList.appendChild(folderItem);
+
+                // add click event to select folder and double-click to load the folder's subfolders
+                folderItem.addEventListener('click', () => {
+                    // remove selected from all files
+                    clearSelected();
+                    folderItem.classList.toggle('selected');
+                });
+
+                folderItem.addEventListener('dblclick', () => {
+                    loadSubfolders(folderItem, data);
+                });
+            });
+            // add cancel and move buttons
+            const folderMoveBtns = document.createElement('div');
+            folderMoveBtns.classList.add('options-modal-dir-move-btns');
+            folderMoveBtns.innerHTML = `
+            <div class="option-choices">
+                <button onclick="hideOptionsModal()" class="btn-choices-false">Cancel</button>
+                <button onclick="submitFileMove()" class="btn-choices-true">Move</button>
+            </div>
+        `;
+
+            detailsOptionsModalBody.appendChild(folderMoveBtns);
+
+        });
+
+        function loadSubfolders(folderItem, data) {
+            data.forEach(folder => {
+                if (folder.dir_id == folderItem.getAttribute('value')) {
+                    // replace list with the subfolders
+                    folderList.innerHTML = '';
+
+                    if (folder.children.length === 0) {
+                        folderList.innerHTML = `
+                    <div class="loading">
+                        <p>No folders found</p>
+                    </div>
+                `;
+                    }
+
+                    folder.children.forEach(subfolder => {
+                        const subfolderItem = document.createElement('div');
+                        subfolderItem.classList.add('dirs-folder-item');
+                        subfolderItem.setAttribute('value', subfolder.dir_id);
+                        subfolderItem.setAttribute('name', subfolder.name);
+                        subfolderItem.innerHTML = `
+                            <div class="folder-icon">
+                                <i class='bx bxs-folder'></i>
+                            </div>
+                            <div class="folder-name">
+                                ${subfolder.name}
+                            </div>
+                        `;
+
+                        folderList.appendChild(subfolderItem);
+
+                        // update event listeners for the new subfolder items
+                        subfolderItem.addEventListener('click', () => {
+                            clearSelected();
+                            subfolderItem.classList.toggle('selected');
+                        });
+
+                        subfolderItem.addEventListener('dblclick', () => {
+                            loadSubfolders(subfolderItem, folder.children);
+                        });
+                    });
+                }
+            });
+        }
+
+
+        function clearSelected() {
+            // Remove 'selected' class from all folder items
+            const folderItems = document.querySelectorAll('.dirs-folder-item');
+            folderItems.forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
 
 
     }
+
     // fileshare
     else if (activity == "fileshare") {
         // TODO:
 
 
     }
-    // filerename
+    // filerename +
     else if (activity == "filerename") {
         console.log(activity, id, type, name);
         folderOptionsModalOverlay.classList.add('active');
@@ -1556,8 +1968,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
                 <input type="hidden" name="fileId" value="${id}" id="file-rename-id">
                 <input type="hidden" name="fileName" value="${name}" id="file-rename-name">
                 <input type="text" name="fileName" placeholder="File name" id="file-rename-new-name" value="${name}" required>
-                <p onclick="hideOptionsModal()">Cancel</p>
-                <button type="submit" class="btn btn-primary">Rename</button>
+                <div class="option-choices">
+                    <p class="btn-choices-false" onclick="hideOptionsModal()">Cancel</p>
+                    <button type="submit" class="btn-choices-true">Rename</button>
+                </div>
             </form>
         </div>
         `;
@@ -1567,7 +1981,8 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
 
     }
-    // filedelete
+
+    // filedelete +
     else if (activity == "filedelete") {
         console.log(activity, id, type, name);
 
@@ -1589,8 +2004,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
             <form onsubmit="submitFormFileDelete(event)">
                 <input type="hidden" name="fileId" value="${id}" id="file-delete-id">
                 <input type="hidden" name="fileName" value="${name}" id="file-delete-name">
-                <p onclick="hideOptionsModal()">Cancel</p>
-                <button type="submit" class="btn btn-primary">Delete</button>
+                <div class="option-choices">
+                    <p class="btn-choices-false" onclick="hideOptionsModal()">Cancel</p>
+                    <button type="submit" class="btn-choices-true">Delete</button>
+                </div>
             </form>
             
         </div>
@@ -1599,7 +2016,6 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
         detailsOptionsModalBody.innerHTML = '';
         detailsOptionsModalBody.appendChild(deleteForm);
     }
-
 
         // Folder options
     // Folder new folder
@@ -1623,8 +2039,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
                 <input type="hidden" name="parentId" value="${id}" id="new-folder-parent-id">
                 <input type="hidden" name="isRoot" value="${is_root}" id="new-folder-is-root">
                 <input type="text" name="folderName" placeholder="Folder name" id="new-folder-name" required>
-                <p onclick="hideOptionsModal()">Cancel</p>
-                <button type="submit" class="btn btn-primary">Create</button>
+                <div class="option-choices">
+                    <p class="btn-choices-false" onclick="hideOptionsModal()">Cancel</p>
+                    <button type="submit" class="btn-choices-true">Create</button>
+                </div>
             </form>
         </div>
         `;
@@ -1635,7 +2053,7 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
     }
 
-    // Folder delete
+    // Folder delete +
     else if (activity == "dirdelete") {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
@@ -1652,8 +2070,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
             <form onsubmit="submitFormDirDelete(event)">
                 <input type="hidden" name="dirId" value="${id}" id="folder-delete-id">
                 <input type="hidden" name="dirName" value="${name}" id="folder-delete-name">
-                <p onclick="hideOptionsModal()">Cancel</p>
-                <button type="submit" class="btn btn-primary">Delete</button>
+                <div class="option-choices">
+                    <p class="btn-choices-false" onclick="hideOptionsModal()">Cancel</p>
+                    <button type="submit" class="btn-choices-true">Delete</button>
+                </div>
             </form>
         </div>
         `;
@@ -1663,7 +2083,7 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
     }
 
-    //Folder rename
+    //Folder rename +
     else if (activity == "dirrename") {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
@@ -1678,8 +2098,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
                 <input type="hidden" name="dirId" value="${id}" id="folder-rename-id">
                 <input type="hidden" name="dirName" value="${name}" id="folder-rename-name">
                 <input type="text" name="folderName" placeholder="Folder name" id="folder-rename-new-name" required>
-                <p onclick="hideOptionsModal()">Cancel</p>
-                <button type="submit" class="btn btn-primary">Rename</button>
+                <div class="option-choices">
+                    <p class="btn-choices-false" onclick="hideOptionsModal()">Cancel</p>
+                    <button type="submit" class="btn-choices-true">Rename</button>
+                </div>
             </form>
         </div>
         `;
@@ -1690,7 +2112,7 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
     }
 
-    // Folder move
+    // Folder move +
     else if (activity == "dirmove") {
         folderOptionsModalOverlay.classList.add('active');
         folderOptionsModal.classList.add('active');
@@ -1836,8 +2258,10 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
             const folderMoveBtns = document.createElement('div');
             folderMoveBtns.classList.add('options-modal-dir-move-btns');
             folderMoveBtns.innerHTML = `
-            <button onclick="hideOptionsModal()">Cancel</button>
-            <button onclick="submitDirMove()" class="btn btn-primary">Move</button>
+            <div class="option-choices">
+                <button onclick="hideOptionsModal()" class="btn-choices-false">Cancel</button>
+                <button onclick="submitDirMove()" class="btn-choices-true">Move</button>
+            </div>
         `;
 
             detailsOptionsModalBody.appendChild(folderMoveBtns);
@@ -1907,6 +2331,88 @@ function showOptionsModal(activity, id = null, type = 'file', name = null) {
 
 
 }
+function submitFileCopy(){
+    // find selected item
+    const selectedFolder = document.querySelector('.dirs-folder-item.selected');
+    const selectedFolderId = selectedFolder.getAttribute('value');
+    const selectedFolderName = selectedFolder.getAttribute('name');
+    const fileCopyData = document.querySelector('.file-move-data');
+    const fileCopyDataId = fileCopyData.getAttribute('value');
+    const fileCopyDataName = fileCopyData.getAttribute('name');
+
+    console.log(selectedFolderId, selectedFolderName);
+
+    // make post request to move file
+    fetch('/api/copy_file', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            fileId: fileCopyDataId,
+            parentDirId: selectedFolderId
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                response.json().then(data => {
+                    showNotif('success', 'system', fileCopyDataName + ' copied to ' + selectedFolderName + ' successfully');
+                    hideOptionsModal();
+                });
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'system', data);
+                    hideOptionsModal();
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotif('error', 'system', 'Error moving file');
+        });
+}
+
+function submitFileMove(){
+    // find selected item
+    const selectedFolder = document.querySelector('.dirs-folder-item.selected');
+    const selectedFolderId = selectedFolder.getAttribute('value');
+    const selectedFolderName = selectedFolder.getAttribute('name');
+    const fileMoveData = document.querySelector('.file-move-data');
+    const fileMoveDataId = fileMoveData.getAttribute('value');
+    const fileMoveDataName = fileMoveData.getAttribute('name');
+
+    console.log(selectedFolderId, selectedFolderName);
+
+    // make post request to move file
+    fetch('/api/move_file', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            fileId: fileMoveDataId,
+            parentDirId: selectedFolderId
+        })
+    })
+        .then(response => {
+            if (response.status === 200) {
+                response.json().then(data => {
+                    showNotif('success', 'system', fileMoveDataName + ' moved to ' + selectedFolderName + ' successfully');
+                    hideOptionsModal();
+                });
+            } else {
+                response.json().then(data => {
+                    showNotif('error', 'system', data);
+                    hideOptionsModal();
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotif('error', 'system', 'Error moving file');
+        });
+}
+
 
 function submitDirMove() {
     // find selected item

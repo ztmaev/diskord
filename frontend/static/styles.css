@@ -648,7 +648,7 @@
     width: 80%;
     background: var(--dark-color);
     border-radius: 5px;
-    height: 4.2rem;
+    height: 5rem;
 }
 
 .login-form {
@@ -726,6 +726,7 @@
     flex-direction: column;
     gap: 5px;
     width: 85%;
+    height: 5rem;
 }
 
 .login-form .form-fields div {

@@ -259,6 +259,7 @@
     overflow: scroll;
     border-radius: 10px;
     position: relative;
+    padding-bottom: 1rem;
 }
 
 .files-header {
@@ -663,6 +664,47 @@
     color: var(--accent-color);
 }
 
+.details-options-modal-inner p {
+    margin: 0;
+}
+
+.details-options-modal-body div {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+
+.details-options-modal-body .option-choices {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+}
+
+.btn-choices-true,
+.btn-choices-false {
+    cursor: pointer;
+    color: var(--darker-color);
+    background: var(--lighter-color);
+    font-size: 1.1rem;
+    font-weight: 6;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+.btn-choices-true:hover {
+    color: var(--lighter-color);
+    background: var(--accent-darker-color);
+}
+
+.btn-choices-false:hover {
+    color: var(--lighter-color);
+    background: var(--warning-color);
+}
+
 /*Context menu*/
 .context-menu,
 .folder-context-menu,
@@ -1033,6 +1075,7 @@
     font-size: 1.5rem;
     color: var(--lighter-color);
 }
+
 .notif-close i {
     cursor: pointer;
 }
@@ -1046,11 +1089,11 @@
     word-break: break-word;
 }
 
-.options-modal-dir-move p{
+.options-modal-dir-move p {
     margin: 0;
 }
 
-.options-modal-dir-move .folder-list-paths{
+.options-modal-dir-move .folder-list-paths {
     display: flex;
     align-items: center;
     flex-direction: row;
@@ -1059,13 +1102,13 @@
     padding: 10px 0;
 }
 
-.options-modal-dir-move .folder-list-paths i{
+.options-modal-dir-move .folder-list-paths i {
     font-size: 1.5rem;
     color: var(--light-color);
     cursor: pointer;
 }
 
-.options-modal-dir-move .folder-list-paths i:hover{
+.options-modal-dir-move .folder-list-paths i:hover {
     color: var(--accent-color);
 }
 
@@ -1089,6 +1132,7 @@
     border-radius: 5px;
     user-select: none;
 }
+
 .options-modal-dir-move .folder-list .dirs-folder-item:hover,
 .options-modal-dir-move .folder-list .dirs-folder-item.selected {
     background: var(--accent-darker-color);
@@ -1102,22 +1146,8 @@
     align-items: center;
 }
 
-.options-modal-dir-move-btns{
+.options-modal-dir-move-btns {
     padding: 15px 0 0 0;
     display: flex;
     justify-content: space-between;
-}
-
-.options-modal-dir-move-btns button{
-    cursor: pointer;
-    padding: 5px 10px;
-    color: var(--darker-color);
-    background: var(--light-color);
-    border: none;
-    border-radius: 5px;
-}
-
-.options-modal-dir-move-btns button:hover{
-    background: var(--accent-color);
-    color: var(--lighter-color);
 }

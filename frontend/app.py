@@ -331,7 +331,7 @@ def login():
                 flash("Your account has been deleted.")
                 session["deleted"] = True
 
-            flash("success_Logged in successfully as " + username)
+            flash("success_Logged in as " + username)
             return jsonify({'message': 'Logged in successfully.'}), 200
     else:
         # get user info from db
@@ -901,15 +901,128 @@ def rename_folder():
         return jsonify("Folder already exists in the current path."), 400
 
 def is_child_foldercheck(folder_id, new_parent_id):
-    if dirhaschildren(new_parent_id):
-        children = getdirchildren(new_parent_id)
-        for child in children:
-            if child["dir_id"] == folder_id:
-                return True
-            else:
-                return False
+    # get parent dir id of folder
+    print(folder_id, new_parent_id)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), folder_id))
+    folder = cursor.fetchone()
+    print(folder)
+    parent_dir_id = folder[4]
+    # continously check if parent dir id is equal to new parent id until parent dir id is null
+    while True:
+        if parent_dir_id is None or parent_dir_id == "":
+            return False
+        elif parent_dir_id == new_parent_id:
+            return True
+        else:
+            cursor.execute("SELECT * FROM file_dirs WHERE owner_id = %s AND dir_id = %s", (str(session["user_id"]), parent_dir_id))
+            folder = cursor.fetchone()
+            parent_dir_id = folder[4]
+# /api/copy_file
+@app.route('/api/copy_file', methods=['POST'])
+def copy_file():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # Get file info
+    data = request.get_json()
+    file_id = data.get('fileId', '')
+    new_parent_id = data.get('parentDirId', '')
+    print(file_id, new_parent_id)
+
+    # Copy file and rename if file already exists
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Check if the file to be copied exists
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND file_id = %s", (str(session["user_id"]), file_id))
+    source_file = cursor.fetchone()
+
+    if source_file is None:
+        return jsonify("File not found."), 400
+
+    # Check if the file already exists in the new parent directory
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND file_name = %s AND dir_id = %s",
+                   (str(session["user_id"]), source_file[1], new_parent_id))
+    existing_file = cursor.fetchone()
+
+    if existing_file is None:
+        # Copy the file
+        new_file_id = generate_temp_uuid()
+        dir_id = new_parent_id
+        print("ID:",dir_id)
+        try:
+            cursor.execute("""
+                INSERT INTO files (file_name, file_id, file_type, file_type_icon_url, file_size, file_size_simple, chunks_number, chunks_size, files_directory, owner_id, thread_id, thread_url, dir_id, is_deleted, permalink, direct_url, date_created, date_updated)
+                SELECT file_name, %s, file_type, file_type_icon_url, file_size, file_size_simple, chunks_number, chunks_size, files_directory, owner_id, thread_id, thread_url, %s, is_deleted, permalink, direct_url, NOW(), NOW()
+                FROM files
+                WHERE file_id = %s
+            """, (new_file_id, dir_id, file_id))
+
+
+
+
+        except Exception as e:
+            print(e)
+            return jsonify("File not found."), 400
+        conn.commit()
+        return jsonify("success_File copied successfully."), 200
     else:
-        return False
+        # Rename the file
+        cursor.execute("SELECT * FROM files WHERE owner_id = %s AND file_name LIKE %s AND dir_id = %s",
+                       (str(session["user_id"]), source_file[1] + " (copy%)", new_parent_id))
+        duplicate_file = cursor.fetchone()
+
+        if duplicate_file is None:
+            # Rename file to "filename (copy)"
+            cursor.execute("UPDATE files SET file_name = %s WHERE owner_id = %s AND file_id = %s",
+                           (source_file[1] + " (copy)", str(session["user_id"]), file_id))
+        else:
+            # Rename file to "filename (copy x)"
+            cursor.execute("UPDATE files SET file_name = %s WHERE owner_id = %s AND file_id = %s",
+                           (source_file[1] + " (copy " + str(duplicate_file[1]) + ")", str(session["user_id"]), file_id))
+
+        conn.commit()
+        return jsonify("success_File copied successfully."), 200
+
+# /api/move_file
+@app.route('/api/move_file', methods=['POST'])
+def move_file():
+    if 'username' not in session:
+        flash("error_Please log in first.")
+        return redirect(url_for('index'))
+
+    # Get file info
+    data = request.get_json()
+    file_id = data.get('fileId', '')
+    new_parent_id = data.get('parentDirId', '')
+    print(file_id, new_parent_id)
+
+    # Check if the file to be moved exists
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND file_id = %s", (str(session["user_id"]), file_id))
+    source_file = cursor.fetchone()
+
+    if source_file is None:
+        return jsonify("File not found."), 400
+
+    # Check if the file already exists in the new parent directory
+    cursor.execute("SELECT * FROM files WHERE owner_id = %s AND file_name = %s AND dir_id = %s",
+                   (str(session["user_id"]), source_file[1], new_parent_id))
+    existing_file = cursor.fetchone()
+
+    if existing_file is None:
+        # Move the file
+        cursor.execute("UPDATE files SET dir_id = %s WHERE owner_id = %s AND file_id = %s",
+                       (new_parent_id, str(session["user_id"]), file_id))
+        conn.commit()
+        return jsonify("success_File moved successfully."), 200
+    else:
+        return jsonify("File already exists in the current path."), 400
+
 
 # /api/move_folder
 @app.route('/api/move_folder', methods=['POST'])
@@ -936,11 +1049,14 @@ def move_folder():
         return jsonify("Folder not found."), 400
     else:
         # check if new parent is not a child of folder
+        if folder_id == new_parent_id:
+            return jsonify("Cannot move folder to itself."), 400
+
         if is_child_folder:
             return jsonify("Cannot move folder to its child."), 400
         else:
-            # update parent dir id in db
-            cursor.execute("UPDATE file_dirs SET parent_dir_id = %s WHERE owner_id = %s AND dir_id = %s", (new_parent_id, str(session["user_id"]), folder_id))
+            # update parent dir id in db and set is_root to false
+            cursor.execute("UPDATE file_dirs SET parent_dir_id = %s, is_root = %s WHERE owner_id = %s AND dir_id = %s", (new_parent_id, 0, str(session["user_id"]), folder_id))
             conn.commit()
             return jsonify("success_Folder moved successfully."), 200
 
@@ -1276,16 +1392,16 @@ def delete_file():
     return jsonify({'message': 'File deleted successfully.'}), 200
 
 
-@app.route('/uploads')
-def uploads():
+@app.route('/uploads_old')
+def uploads_old():
     if 'username' not in session:
         flash("error_Please log in first.")
         return redirect(url_for('index'))
     return render_template('uploads.html')
 
 
-@app.route('/uploads_1')
-def uploads_1():
+@app.route('/uploads')
+def uploads():
     if 'username' not in session:
         flash("error_Please log in first.")
         return redirect(url_for('index'))
