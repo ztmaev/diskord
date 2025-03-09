@@ -4,7 +4,7 @@ from urllib import parse
 
 import websockets
 
-uri = "ws://arc.maev.site:8765"
+uri = "ws:/...:8765"
 config_password = "password"
 
 
@@ -34,8 +34,8 @@ webhook_name = config["webhook_name"]
 webhook_avatar_url = config["webhook_avatar_url"]
 webhook_url = config["webhook_url"]
 
-token = "MTE0MTAwMDg0MzA3MjY0NzI5MA.G1jGag.htRqZBklgFzeIZI1Ka6xhcRLTW77OtEzN7e1VQ"
-client_id = 1141000843072647290
-client_secret = "QWVGp6-duEfKk51-cX_fal2Z_EL1GDez"
-redirect_uri = "https://diskord.maev.site/oauth/callback"
-oauth_url = f"https://discord.com/api/oauth2/authorize?client_id=1141000843072647290&redirect_uri={parse.quote(redirect_uri)}&response_type=code&scope=identify"
+token = ""
+client_id = ""
+client_secret = ""
+redirect_uri = ""
+oauth_url = ""
