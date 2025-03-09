@@ -1,7 +1,7 @@
 {
-    "token": "MTE0MTAwMDg0MzA3MjY0NzI5MA.G1jGag.htRqZBklgFzeIZI1Ka6xhcRLTW77OtEzN7e1VQ",
-    "webhook_name": "Maev's assistant",
-    "webhook_avatar_url": "https://xhost.maev.site/icons/diskord.png",
-    "diskord_channel_id": 1152990352005922926,
-    "webhook_url": "https://discord.com/api/webhooks/1152990355235557457/I873f2PlZ3iLM8YRBAS6SdtWBhS6CL5_-3uWfeAabOfQ6HLkq83emtx8qiBNAhBpWk7h"
+    "token": "",
+    "webhook_name": "",
+    "webhook_avatar_url": "",
+    "diskord_channel_id": "",
+    "webhook_url": ""
 }
