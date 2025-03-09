@@ -5,7 +5,7 @@ from urllib import parse
 import mysql.connector
 import websockets
 
-uri = "ws://arc.maev.site:8765"
+uri = "ws://...:8765"
 config_password = "password"
 # db_name = "dirs_v1"
 db_name = "maev"
@@ -43,21 +43,19 @@ webhook_avatar_url = config["webhook_avatar_url"]
 webhook_url = config["webhook_url"]
 token = config["token"]
 
-client_id = 1141000843072647290
-client_secret = "QWVGp6-duEfKk51-cX_fal2Z_EL1GDez"
+client_id = ""
+client_secret = ""
 redirect_uri = "http://localhost:4321/oauth/callback"
-# redirect_uri = "http://arc.maev.site:4321/oauth/callback"
-# redirect_uri = "https://diskord.maev.site/oauth/callback"
-oauth_url = f"https://discord.com/api/oauth2/authorize?client_id=1141000843072647290&redirect_uri={parse.quote(redirect_uri)}&response_type=code&scope=identify"
+oauth_url = ""
 
-admin_ids = ["1135978748689256468"]
+admin_ids = []
 
 
 def get_db():
     db = mysql.connector.connect(
         host=db_host,
-        user="maev",
-        passwd="Alph4",
+        user="",
+        passwd="",
         port="3306",
         database=db_name,
         charset="utf8mb4",
